@@ -2,20 +2,31 @@ package com.achyutpal.scrolljourney.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.achyutpal.scrolljourney.ui.apppicker.AppPickerScreen
+import com.achyutpal.scrolljourney.ui.dailylimit.DailyLimitScreen
 import com.achyutpal.scrolljourney.ui.home.HomePlaceholderScreen
 import com.achyutpal.scrolljourney.ui.onboarding.IntroScreen
 import com.achyutpal.scrolljourney.ui.onboarding.UsageAccessScreen
 import com.achyutpal.scrolljourney.ui.startup.StartDestination
 
 object Routes {
+    const val ARG_ONBOARDING = "onboarding"
+
     const val INTRO = "intro"
     const val USAGE_ACCESS = "usage_access"
-    const val APP_PICKER = "app_picker"
     const val HOME = "home"
+
+    // Picker and limit are used both in onboarding (default) and from Home (onboarding=false).
+    const val APP_PICKER = "app_picker?$ARG_ONBOARDING={$ARG_ONBOARDING}"
+    const val DAILY_LIMIT = "daily_limit?$ARG_ONBOARDING={$ARG_ONBOARDING}"
+
+    fun appPicker(onboarding: Boolean) = "app_picker?$ARG_ONBOARDING=$onboarding"
+    fun dailyLimit(onboarding: Boolean) = "daily_limit?$ARG_ONBOARDING=$onboarding"
 }
 
 fun StartDestination.toRoute(): String = when (this) {
@@ -24,6 +35,14 @@ fun StartDestination.toRoute(): String = when (this) {
     StartDestination.HOME -> Routes.HOME
 }
 
+private val onboardingArgument = listOf(
+    navArgument(Routes.ARG_ONBOARDING) {
+        type = NavType.BoolType
+        defaultValue = true
+    },
+)
+
+/** Onboarding: intro → usage access → app picker → daily limit → home. */
 @Composable
 fun AppNavHost(startDestination: String) {
     val navController = rememberNavController()
@@ -33,22 +52,38 @@ fun AppNavHost(startDestination: String) {
             IntroScreen(onFinished = { navController.navigate(Routes.USAGE_ACCESS) })
         }
         composable(Routes.USAGE_ACCESS) {
-            UsageAccessScreen(onGranted = { navController.navigateClearingBackStack(Routes.APP_PICKER) })
+            UsageAccessScreen(onGranted = { navController.navigateClearingBackStack(Routes.appPicker(onboarding = true)) })
         }
-        composable(Routes.APP_PICKER) {
+        composable(Routes.APP_PICKER, arguments = onboardingArgument) { entry ->
+            val onboarding = entry.arguments?.getBoolean(Routes.ARG_ONBOARDING) ?: true
             AppPickerScreen(
                 onDone = {
-                    // Opened from Home ("Change apps"): just go back. During onboarding: continue to Home.
-                    if (navController.previousBackStackEntry != null) {
-                        navController.popBackStack()
+                    if (onboarding) {
+                        navController.navigate(Routes.dailyLimit(onboarding = true))
                     } else {
+                        navController.popBackStack()
+                    }
+                },
+            )
+        }
+        composable(Routes.DAILY_LIMIT, arguments = onboardingArgument) { entry ->
+            val onboarding = entry.arguments?.getBoolean(Routes.ARG_ONBOARDING) ?: true
+            DailyLimitScreen(
+                isOnboarding = onboarding,
+                onDone = {
+                    if (onboarding) {
                         navController.navigateClearingBackStack(Routes.HOME)
+                    } else {
+                        navController.popBackStack()
                     }
                 },
             )
         }
         composable(Routes.HOME) {
-            HomePlaceholderScreen(onChangeApps = { navController.navigate(Routes.APP_PICKER) })
+            HomePlaceholderScreen(
+                onChangeApps = { navController.navigate(Routes.appPicker(onboarding = false)) },
+                onChangeLimit = { navController.navigate(Routes.dailyLimit(onboarding = false)) },
+            )
         }
     }
 }

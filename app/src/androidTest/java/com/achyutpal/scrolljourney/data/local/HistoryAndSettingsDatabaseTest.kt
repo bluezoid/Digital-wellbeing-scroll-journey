@@ -7,6 +7,7 @@ import com.achyutpal.scrolljourney.data.history.RoomHistoryRepository
 import com.achyutpal.scrolljourney.data.settings.RoomSettingsRepository
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
+import com.achyutpal.scrolljourney.domain.model.DayStatus
 import com.achyutpal.scrolljourney.domain.model.Planet
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -82,8 +83,26 @@ class HistoryAndSettingsDatabaseTest {
     @Test
     fun markFinalizedFreezesExistingDay() = runTest {
         history.saveDay(DailyRecord(day, 44, finalized = false), emptyList())
-        history.markFinalized(day)
-        assertEquals(DailyRecord(day, 44, finalized = true), history.getDay(day))
+        history.markFinalized(day, DayStatus.GREEN)
+        assertEquals(DailyRecord(day, 44, status = DayStatus.GREEN, finalized = true), history.getDay(day))
+    }
+
+    @Test
+    fun updateStatusKeepsMinutes() = runTest {
+        history.saveDay(DailyRecord(day, 80, finalized = true), emptyList())
+        history.updateStatus(day, DayStatus.RED)
+        assertEquals(DailyRecord(day, 80, status = DayStatus.RED, finalized = true), history.getDay(day))
+    }
+
+    @Test
+    fun dailyLimitPersists() = runTest {
+        settings.setDailyLimit(90)
+        assertEquals(90, settings.getSettings().dailyLimitMinutes)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun invalidDailyLimitIsRejected() = runTest {
+        settings.setDailyLimit(241)
     }
 
     @Test

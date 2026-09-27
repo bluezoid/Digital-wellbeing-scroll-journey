@@ -22,4 +22,7 @@ interface UserSettingsDao {
 
     @Query("UPDATE user_settings SET onboardingComplete = 1 WHERE id = 1")
     suspend fun setOnboardingComplete()
+
+    @Query("UPDATE user_settings SET dailyLimitMinutes = :minutes WHERE id = 1")
+    suspend fun setDailyLimit(minutes: Int)
 }

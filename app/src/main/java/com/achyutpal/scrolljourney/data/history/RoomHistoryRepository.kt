@@ -7,6 +7,7 @@ import com.achyutpal.scrolljourney.data.local.entity.toDomain
 import com.achyutpal.scrolljourney.data.local.entity.toEntity
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
+import com.achyutpal.scrolljourney.domain.model.DayStatus
 import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -36,8 +37,12 @@ class RoomHistoryRepository(
         }
     }
 
-    override suspend fun markFinalized(date: LocalDate) {
-        dailyUsageDao.markFinalized(date.toString())
+    override suspend fun markFinalized(date: LocalDate, status: DayStatus) {
+        dailyUsageDao.markFinalized(date.toString(), status)
+    }
+
+    override suspend fun updateStatus(date: LocalDate, status: DayStatus) {
+        dailyUsageDao.updateStatus(date.toString(), status)
     }
 
     override suspend fun getRange(start: LocalDate, end: LocalDate): List<DailyRecord> =

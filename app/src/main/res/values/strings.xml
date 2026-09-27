@@ -28,6 +28,12 @@
     <string name="home_no_usage">No usage recorded yet today.</string>
     <string name="home_usage_error">Couldn’t read usage: %1$s</string>
     <string name="action_refresh">Refresh</string>
+    <string name="home_change_limit">Change daily limit</string>
+    <string name="home_limit_of">of %1$s limit</string>
+    <string name="status_green">Green day</string>
+    <string name="status_yellow">Yellow day</string>
+    <string name="status_red">Red day</string>
+    <string name="status_so_far">" so far"</string>
     <string name="home_recent_title">Last 7 days</string>
     <string name="home_recent_live">today, live</string>
     <string name="home_change_apps">Change apps</string>
@@ -38,4 +44,14 @@
     <string name="app_picker_search">Search apps</string>
     <string name="app_picker_empty">No apps found. Android may be hiding installed apps from Scroll Journey.</string>
     <string name="app_picker_continue">Continue (%1$d selected)</string>
+
+    <!-- Daily limit -->
+    <string name="limit_title">Set your daily limit</string>
+    <string name="limit_body">Total time across all your tracked apps each day. Stay under it for a green day and fuel your rocket.</string>
+    <string name="limit_per_day">per day</string>
+    <string name="limit_legend_green">Up to %1$s: green day, +1 fuel</string>
+    <string name="limit_legend_yellow">Up to %1$s: yellow day, no fuel</string>
+    <string name="limit_legend_red">Over %1$s: red day, −1 fuel</string>
+    <string name="limit_start_journey">Start my journey</string>
+    <string name="limit_save">Save</string>
 </resources>

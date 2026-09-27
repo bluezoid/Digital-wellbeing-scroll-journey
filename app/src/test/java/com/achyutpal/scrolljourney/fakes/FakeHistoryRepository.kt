@@ -2,6 +2,7 @@ package com.achyutpal.scrolljourney.fakes
 
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
+import com.achyutpal.scrolljourney.domain.model.DayStatus
 import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,9 +26,14 @@ class FakeHistoryRepository(initial: List<DailyRecord> = emptyList()) : HistoryR
         appRows[record.date] = apps
     }
 
-    override suspend fun markFinalized(date: LocalDate) {
+    override suspend fun markFinalized(date: LocalDate, status: DayStatus) {
         val day = days.value[date] ?: return
-        days.value = days.value + (date to day.copy(finalized = true))
+        days.value = days.value + (date to day.copy(finalized = true, status = status))
+    }
+
+    override suspend fun updateStatus(date: LocalDate, status: DayStatus) {
+        val day = days.value[date] ?: return
+        days.value = days.value + (date to day.copy(status = status))
     }
 
     override suspend fun getRange(start: LocalDate, end: LocalDate) =

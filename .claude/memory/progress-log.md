@@ -126,3 +126,28 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - **How to run on-device tests WITHOUT wiping app data:** `./gradlew assembleDebugAndroidTest`, then `adb install -r -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`, then `adb shell am instrument -w com.achyutpal.scrolljourney.test/androidx.test.runner.AndroidJUnitRunner`, then `adb uninstall com.achyutpal.scrolljourney.test`. **Never use connectedAndroidTest**: it uninstalls the app, which loses the data and Usage Access.
 - Inspect the phone DB: `adb exec-out run-as com.achyutpal.scrolljourney cat databases/scroll_journey.db > x.db` (also -wal and -shm), then open it with sqlite3 or python.
 - Pending: the user checks the "Last 7 days" card on the phone (the phone was locked).
+- **Device check passed (2026-09-27):** the Last 7 days card shows 20 Sep to 27 Sep, only the selected apps count, the minutes are correct, and it persists across relaunch. The **realme keeps at least 7 days of usage events.** **Phase 4 ✅.**
+
+## 2026-09-27: Phase 5, limit and day-status engine + Daily Limit step (session 2, continued)
+
+- Domain:
+  - `domain/calculator/LimitEvaluator.evaluate(usage, limit)` uses integer maths: GREEN if usage ≤ limit; YELLOW if usage×100 ≤ limit×125; else RED. `yellowMaxMinutes(limit)` = floor(limit×1.25).
+  - `DailyLimitRules`: MIN 15, MAX 240, STEP 5, DEFAULT 60, isValid, snap.
+- Sync now takes SettingsRepository and uses the current limit:
+  - Today is saved with its live status.
+  - Past days get their status when they're finalized; markFinalized takes a status.
+  - Days finalized in Phase 4 with a null status get it once from their saved minutes (updateStatus), with no usage re-read.
+  - The status of a finalized day is **never** re-evaluated when the limit changes later.
+- `TodayUsageResult.Success(summary, limitMinutes, status)`.
+- Data:
+  - `DailyUsageDao.markFinalized(date, status)` and `updateStatus`.
+  - `UserSettingsDao.setDailyLimit`. `RoomSettingsRepository.setDailyLimit` rejects values outside 15–240 (require).
+  - No schema change: still DB v2.
+- UI:
+  - New `ui/dailylimit/{DailyLimitScreen, DailyLimitViewModel}`: a slider (15–240, step 5; `steps = 44`), presets 30/60/90/120, and a live legend (green up to limit +1 fuel / yellow up to 125% no fuel / red above −1 fuel). The button reads "Start my journey" in onboarding, "Save" from Home.
+  - **Onboarding is now intro → usage access → app picker → daily limit → home.** Saving the limit (onboarding=true) sets onboardingComplete; the app picker no longer does.
+  - Routes `app_picker?onboarding={onboarding}` and `daily_limit?onboarding={onboarding}` (BoolType, default true). Home opens them with onboarding=false and they pop back. DailyLimitViewModel reads the arg from the SavedStateHandle.
+  - Home card: status label ("Green day so far"), total coloured by status, "of 1h 00m limit", progress bar. The Last 7 days card has a coloured dot per day. New "Change daily limit" button.
+  - `ui/theme/StatusColors.kt`: StatusGreen, StatusYellow, StatusRed, `DayStatus.color()`.
+- Tests: **67 JVM** (new: LimitEvaluator 6, DailyLimitRules 4, DailyLimitViewModel 4, Sync +4 status cases) and **13 on-device** (+updateStatus, dailyLimit persists, invalid limit rejected). All pass.
+- Installed on the phone; the user's visual check is pending (the phone was locked).

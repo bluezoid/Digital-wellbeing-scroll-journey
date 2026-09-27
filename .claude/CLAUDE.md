@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 4 (Room history). The code is done, 49 unit + 10 on-device tests pass, and the real v1→v2 migration is verified on the phone. **Waiting on the user to check the "Last 7 days" card.**
-- **Last done (2026-09-27):** DB v2 (daily_usage, daily_app_usage, user_settings), SyncUsageHistoryUseCase (backfill 7 days, finalize past days, save today), onboardingComplete flag, and the Last-7-days card on the temporary home.
-- **Waiting on:** the user to open the app and confirm the history card looks right.
-- **Next step:** Phase 5, the limit and day-status engine (integer maths) plus the Daily Limit onboarding step (15–240, default 60).
+- **Phase:** 5 (limit + green/yellow/red engine + Daily Limit onboarding step). The code is done; 67 unit + 13 on-device tests pass. **Waiting on the user's phone check.**
+- **Last done (2026-09-27):** Phase 4 ✅ (7 days of history verified). Built LimitEvaluator (integer maths), DailyLimitRules, the Daily Limit screen (onboarding + from Home), statuses saved on today and on finalized days, and coloured status on the home screen.
+- **Waiting on:** the user to check the status colours, the limit screen, and the history dots on the phone.
+- **Next step:** Phase 6, the distance engine (DistanceConfig, "estimated scroll distance", a few comparisons).
 - **Never run `connectedAndroidTest`** (it uninstalls the app). See progress-log for the manual on-device test commands.
 
 ## Memory index: read on demand
@@ -53,7 +53,7 @@ navigate_scrolling/
     │   ├─ MainActivity.kt       picks the start route, hosts navigation
     │   ├─ di/AppContainer.kt    manual DI
     │   ├─ domain/model/{UsageAccessState, InstalledApp, SelectedApp}.kt
-    │   ├─ domain/calculator/AppSelectionRules.kt
+    │   ├─ domain/calculator/{AppSelectionRules, LimitEvaluator, DailyLimitRules}.kt
     │   ├─ domain/repository/{UsageAccessRepository, AppRepository}.kt
     │   ├─ domain/model/{UsageEvent, DailyUsageSummary}.kt, domain/calculator/UsageCalculator.kt
     │   ├─ domain/usecase/{SyncUsageHistoryUseCase, TodayUsageResult}.kt
@@ -63,9 +63,10 @@ navigate_scrolling/
     │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt
     │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
     │   ├─ util/UsageAccessSettings.kt
-    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker, home
+    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, home
     │   └─ ui/{theme, startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
-    │          apppicker/{AppPickerScreen, AppPickerViewModel}, home/{HomePlaceholderScreen, HomePlaceholderViewModel}}
+    │          apppicker/{AppPickerScreen, AppPickerViewModel}, dailylimit/{DailyLimitScreen, DailyLimitViewModel},
+    │          home/{HomePlaceholderScreen, HomePlaceholderViewModel}, common/DurationFormat, theme/StatusColors}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/
     └─ androidTest/.../data/local/   on-device Room + migration tests

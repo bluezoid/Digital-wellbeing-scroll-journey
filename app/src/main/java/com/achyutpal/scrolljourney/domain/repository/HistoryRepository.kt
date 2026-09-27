@@ -2,6 +2,7 @@ package com.achyutpal.scrolljourney.domain.repository
 
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
+import com.achyutpal.scrolljourney.domain.model.DayStatus
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -12,8 +13,11 @@ interface HistoryRepository {
     /** Saves a day and replaces its per-app rows, atomically. Safe to call repeatedly. */
     suspend fun saveDay(record: DailyRecord, apps: List<AppUsage>)
 
-    /** Freezes an already-saved day as-is (used when Android no longer has its events). */
-    suspend fun markFinalized(date: LocalDate)
+    /** Freezes an already-saved day with its current totals (used when Android no longer has its events). */
+    suspend fun markFinalized(date: LocalDate, status: DayStatus)
+
+    /** Sets the status of a saved day without touching its minutes. */
+    suspend fun updateStatus(date: LocalDate, status: DayStatus)
 
     /** Days in [start, end] inclusive, oldest first. */
     suspend fun getRange(start: LocalDate, end: LocalDate): List<DailyRecord>

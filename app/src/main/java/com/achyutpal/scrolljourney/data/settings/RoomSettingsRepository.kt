@@ -3,6 +3,7 @@ package com.achyutpal.scrolljourney.data.settings
 import com.achyutpal.scrolljourney.data.local.dao.UserSettingsDao
 import com.achyutpal.scrolljourney.data.local.entity.toDomain
 import com.achyutpal.scrolljourney.data.local.entity.toEntity
+import com.achyutpal.scrolljourney.domain.calculator.DailyLimitRules
 import com.achyutpal.scrolljourney.domain.model.UserSettings
 import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
@@ -29,6 +30,14 @@ class RoomSettingsRepository(
     override suspend fun setOnboardingComplete() {
         ensureRow()
         dao.setOnboardingComplete()
+    }
+
+    override suspend fun setDailyLimit(minutes: Int) {
+        require(DailyLimitRules.isValid(minutes)) {
+            "daily limit must be ${DailyLimitRules.MIN_MINUTES}–${DailyLimitRules.MAX_MINUTES}, was $minutes"
+        }
+        ensureRow()
+        dao.setDailyLimit(minutes)
     }
 
     private suspend fun ensureRow() {

@@ -1,5 +1,6 @@
 package com.achyutpal.scrolljourney.domain.usecase
 
+import com.achyutpal.scrolljourney.domain.calculator.LimitEvaluator
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DailyUsageSummary
@@ -8,6 +9,7 @@ import com.achyutpal.scrolljourney.domain.model.SelectedApp
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.domain.repository.AppRepository
 import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
+import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageRepository
 import kotlinx.coroutines.CancellationException
@@ -21,19 +23,20 @@ import java.time.ZoneId
  * Runs on every app open/resume (and later from WorkManager), so it must be idempotent.
  *
  * For each of the last [BACKFILL_DAYS] days (oldest first):
- * - already finalized → skip (never recalculate a frozen day)
- * - Android still has events → save it, finalized
+ * - already finalized → skip (never recalculate a frozen day); only fill in a missing status
+ * - Android still has events → save it, finalized, with its day status
  * - no events, but we saved it earlier (e.g. as "today") → freeze what we have
  * - no events and nothing saved → skip (unknown ≠ 0 minutes)
- * Then today (midnight → now) is recalculated and saved, not finalized.
+ * Then today (midnight → now) is recalculated and saved, not finalized, with its status so far.
  *
- * Only the currently enabled apps are counted, for past days too.
+ * Only the currently enabled apps and the current daily limit are used, for past days too.
  */
 class SyncUsageHistoryUseCase(
     private val usageAccessRepository: UsageAccessRepository,
     private val appRepository: AppRepository,
     private val usageRepository: UsageRepository,
     private val historyRepository: HistoryRepository,
+    private val settingsRepository: SettingsRepository,
     private val now: () -> Instant = Instant::now,
     private val zone: () -> ZoneId = ZoneId::systemDefault,
 ) {
@@ -46,9 +49,10 @@ class SyncUsageHistoryUseCase(
             val nowInstant = now()
             val today = LocalDate.ofInstant(nowInstant, zoneId)
             val tracked = appRepository.observeEnabledApps().first()
+            val limit = settingsRepository.getSettings().dailyLimitMinutes
 
             for (daysAgo in BACKFILL_DAYS downTo 1) {
-                syncPastDay(today.minusDays(daysAgo.toLong()), tracked, zoneId)
+                syncPastDay(today.minusDays(daysAgo.toLong()), tracked, limit, zoneId)
             }
 
             val todayUsage = usageRepository.getForegroundUsage(
@@ -57,9 +61,13 @@ class SyncUsageHistoryUseCase(
                 packages = tracked.packageNames(),
             )
             val summary = summarize(today, tracked, todayUsage)
-            historyRepository.saveDay(DailyRecord(today, summary.totalMinutes, finalized = false), summary.apps)
+            val status = LimitEvaluator.evaluate(summary.totalMinutes, limit)
+            historyRepository.saveDay(
+                DailyRecord(today, summary.totalMinutes, status = status, finalized = false),
+                summary.apps,
+            )
 
-            TodayUsageResult.Success(summary)
+            TodayUsageResult.Success(summary, limit, status)
         } catch (e: CancellationException) {
             throw e // never swallow coroutine cancellation
         } catch (e: SecurityException) {
@@ -69,9 +77,15 @@ class SyncUsageHistoryUseCase(
         }
     }
 
-    private suspend fun syncPastDay(date: LocalDate, tracked: List<SelectedApp>, zoneId: ZoneId) {
+    private suspend fun syncPastDay(date: LocalDate, tracked: List<SelectedApp>, limit: Int, zoneId: ZoneId) {
         val existing = historyRepository.getDay(date)
-        if (existing?.finalized == true) return
+        if (existing?.finalized == true) {
+            // Days frozen before the status engine existed (Phase 4) get their colour once, from saved minutes.
+            if (existing.status == null) {
+                historyRepository.updateStatus(date, LimitEvaluator.evaluate(existing.totalMinutes, limit))
+            }
+            return
+        }
 
         val usage = usageRepository.getForegroundUsage(
             startMillis = date.startMillis(zoneId),
@@ -81,9 +95,14 @@ class SyncUsageHistoryUseCase(
         when {
             usage.hasData -> {
                 val summary = summarize(date, tracked, usage)
-                historyRepository.saveDay(DailyRecord(date, summary.totalMinutes, finalized = true), summary.apps)
+                val status = LimitEvaluator.evaluate(summary.totalMinutes, limit)
+                historyRepository.saveDay(
+                    DailyRecord(date, summary.totalMinutes, status = status, finalized = true),
+                    summary.apps,
+                )
             }
-            existing != null -> historyRepository.markFinalized(date)
+            existing != null ->
+                historyRepository.markFinalized(date, LimitEvaluator.evaluate(existing.totalMinutes, limit))
         }
     }
 

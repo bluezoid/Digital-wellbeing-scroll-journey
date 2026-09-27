@@ -1,6 +1,14 @@
 package com.achyutpal.scrolljourney.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.Alignment
+import com.achyutpal.scrolljourney.domain.model.DayStatus
+import com.achyutpal.scrolljourney.ui.theme.color
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -51,6 +59,7 @@ import java.util.Date
 @Composable
 fun HomePlaceholderScreen(
     onChangeApps: () -> Unit,
+    onChangeLimit: () -> Unit,
     viewModel: HomePlaceholderViewModel = viewModel(factory = HomePlaceholderViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -69,6 +78,7 @@ fun HomePlaceholderScreen(
         onRefresh = viewModel::refresh,
         onOpenSettings = { context.openUsageAccessSettings() },
         onChangeApps = onChangeApps,
+        onChangeLimit = onChangeLimit,
     )
 }
 
@@ -79,6 +89,7 @@ private fun HomePlaceholderContent(
     onRefresh: () -> Unit,
     onOpenSettings: () -> Unit,
     onChangeApps: () -> Unit,
+    onChangeLimit: () -> Unit,
 ) {
     Scaffold { innerPadding ->
         Column(
@@ -117,7 +128,7 @@ private fun HomePlaceholderContent(
                     text = stringResource(R.string.home_usage_error, result.message),
                     color = MaterialTheme.colorScheme.error,
                 )
-                is TodayUsageResult.Success -> UsageCard(result.summary)
+                is TodayUsageResult.Success -> UsageCard(result.summary, result.limitMinutes, result.status)
             }
 
             if (recentDays.isNotEmpty()) {
@@ -133,27 +144,44 @@ private fun HomePlaceholderContent(
             OutlinedButton(onClick = onChangeApps, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.home_change_apps))
             }
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onChangeLimit, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.home_change_limit))
+            }
         }
     }
 }
 
 @Composable
-private fun UsageCard(summary: DailyUsageSummary) {
+private fun UsageCard(summary: DailyUsageSummary, limitMinutes: Int, status: DayStatus) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(Modifier.padding(20.dp)) {
-            Text(
-                text = formatMinutes(summary.totalMinutes),
-                style = MaterialTheme.typography.displaySmall,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                text = stringResource(R.string.home_total_label),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            StatusLabel(status, suffix = stringResource(R.string.status_so_far))
+            Spacer(Modifier.height(8.dp))
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = formatMinutes(summary.totalMinutes),
+                    style = MaterialTheme.typography.displaySmall,
+                    color = status.color(),
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.home_limit_of, formatMinutes(limitMinutes)),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 6.dp),
+                )
+            }
+            Spacer(Modifier.height(12.dp))
+            LinearProgressIndicator(
+                progress = { (summary.totalMinutes.toFloat() / limitMinutes).coerceIn(0f, 1f) },
+                color = status.color(),
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                modifier = Modifier.fillMaxWidth().height(8.dp),
             )
             if (!summary.hasAnyUsage) {
                 Spacer(Modifier.height(8.dp))
@@ -190,6 +218,34 @@ private fun UsageCard(summary: DailyUsageSummary) {
 }
 
 @Composable
+private fun StatusLabel(status: DayStatus, suffix: String = "") {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        StatusDot(status)
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = stringResource(status.labelRes()) + suffix,
+            style = MaterialTheme.typography.labelLarge,
+            color = status.color(),
+        )
+    }
+}
+
+@Composable
+private fun StatusDot(status: DayStatus?) {
+    Box(
+        Modifier
+            .size(10.dp)
+            .background(status?.color() ?: MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+    )
+}
+
+private fun DayStatus.labelRes(): Int = when (this) {
+    DayStatus.GREEN -> R.string.status_green
+    DayStatus.YELLOW -> R.string.status_yellow
+    DayStatus.RED -> R.string.status_red
+}
+
+@Composable
 private fun RecentDaysCard(days: List<DailyRecord>) {
     val dateFormat = remember { DateTimeFormatter.ofPattern("EEE d MMM") }
     Card(
@@ -208,9 +264,12 @@ private fun RecentDaysCard(days: List<DailyRecord>) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    StatusDot(day.status)
+                    Spacer(Modifier.width(12.dp))
                     Text(
+                        modifier = Modifier.weight(1f),
                         text = day.date.format(dateFormat) +
                             if (day.finalized) "" else " · " + stringResource(R.string.home_recent_live),
                         style = MaterialTheme.typography.bodyLarge,
@@ -260,8 +319,8 @@ private fun HomePreview() {
     ScrollJourneyTheme(darkTheme = true) {
         HomePlaceholderContent(
             recentDays = listOf(
-                DailyRecord(LocalDate.of(2026, 9, 27), 49),
-                DailyRecord(LocalDate.of(2026, 9, 26), 72, finalized = true),
+                DailyRecord(LocalDate.of(2026, 9, 27), 49, status = DayStatus.GREEN),
+                DailyRecord(LocalDate.of(2026, 9, 26), 72, status = DayStatus.YELLOW, finalized = true),
             ),
             state = HomeUiState(
                 isLoading = false,
@@ -273,12 +332,15 @@ private fun HomePreview() {
                             AppUsage("com.google.android.youtube", "YouTube", 17 * 60_000L),
                         ),
                     ),
+                    limitMinutes = 60,
+                    status = DayStatus.GREEN,
                 ),
                 updatedAtMillis = 0L,
             ),
             onRefresh = {},
             onOpenSettings = {},
             onChangeApps = {},
+            onChangeLimit = {},
         )
     }
 }

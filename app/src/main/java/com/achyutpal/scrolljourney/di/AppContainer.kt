@@ -60,6 +60,12 @@ class AppContainer(context: Context) {
     }
 
     val syncUsageHistoryUseCase: SyncUsageHistoryUseCase by lazy {
-        SyncUsageHistoryUseCase(usageAccessRepository, appRepository, usageRepository, historyRepository)
+        SyncUsageHistoryUseCase(
+            usageAccessRepository,
+            appRepository,
+            usageRepository,
+            historyRepository,
+            settingsRepository,
+        )
     }
 }

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
 import com.achyutpal.scrolljourney.data.local.entity.DailyUsageEntity
+import com.achyutpal.scrolljourney.domain.model.DayStatus
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -15,8 +16,11 @@ interface DailyUsageDao {
     @Upsert
     suspend fun upsert(day: DailyUsageEntity)
 
-    @Query("UPDATE daily_usage SET finalized = 1 WHERE date = :date")
-    suspend fun markFinalized(date: String)
+    @Query("UPDATE daily_usage SET finalized = 1, status = :status WHERE date = :date")
+    suspend fun markFinalized(date: String, status: DayStatus)
+
+    @Query("UPDATE daily_usage SET status = :status WHERE date = :date")
+    suspend fun updateStatus(date: String, status: DayStatus)
 
     /** Dates are "YYYY-MM-DD" text, so string comparison = date comparison. */
     @Query("SELECT * FROM daily_usage WHERE date BETWEEN :start AND :end ORDER BY date ASC")
