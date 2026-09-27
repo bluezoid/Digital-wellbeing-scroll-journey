@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 3 (UsageStats integration). The code is done and 41 unit tests pass. **Waiting on the phone comparison with Digital Wellbeing.**
-- **Last done (2026-09-27):** Phase 2 ✅ verified (33 apps). Built UsageCalculator (queryEvents pairing), GetTodayUsageUseCase, and a home screen showing today's minutes per tracked app.
-- **Waiting on:** the user to compare the app's minutes with Digital Wellbeing (target within about ±1 min per app).
-- **Next step:** Phase 4, Room history. Add DailyUsage, DailyAppUsage and UserSettings entities via a DB v2 migration, the onboardingComplete flag, and backfill of past days.
+- **Phase:** 3 ✅ verified (minutes match Digital Wellbeing exactly). Phase 4 not started.
+- **Last done (2026-09-27):** Phases 0–3 are complete and verified on the realme Android 13 phone. 41 unit tests pass.
+- **Waiting on:** the user's approval of the Phase 4 plan (Room history: DB v2 migration, daily tables, settings/onboarding flag, backfill, reconciliation on app open).
+- **Next step:** Phase 4 once approved.
 
 ## Memory index: read on demand
 

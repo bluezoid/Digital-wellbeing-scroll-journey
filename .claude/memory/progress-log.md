@@ -100,3 +100,4 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Tests: 41 JVM tests pass. New: UsageCalculator 12, GetTodayUsage 9, DurationFormat 1. Fakes are shared in `test/.../fakes/`.
 - Installed on the phone; the **device comparison with Digital Wellbeing is pending** (the phone was locked).
 - Debug: `adb logcat -s UsageTracking:D` shows the event count and per-package milliseconds on each refresh.
+- **Device check passed (2026-09-27):** Scroll Journey's minutes matched Digital Wellbeing **exactly** for all selected apps (Instagram, YouTube, Facebook) on the realme. The queryEvents approach and rounding down are confirmed. **Phase 3 ✅.**
