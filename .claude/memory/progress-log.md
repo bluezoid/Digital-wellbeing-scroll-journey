@@ -249,3 +249,19 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Route `Routes.HISTORY = "history"`. The dashboard opens it via the ⋮ menu "History", a tap on the streak/week card, and "See full history ›". `DashboardCard` now takes an optional onClick (Card(onClick)).
 - Tests: **123 JVM** (new: MonthCalendar 3, HistoryViewModel 6) and **16 on-device**. All pass.
 - Installed with no crash; the phone check is pending.
+- **Device check passed (2026-09-27):** History OK (streak 0/3, Sep grid colours, counts, day detail, month bounds). **Phase 9 ✅.**
+
+## 2026-09-27: Phase 10, WorkManager background sync (session 2, continued)
+
+- Added `androidx.work:work-runtime-ktx:2.9.1` (minCompileSdk 34; 2.10 needs 35) and `work-testing` (androidTest).
+- `worker/DailyUsageWorker` (CoroutineWorker): if onboarding isn't complete → success. Otherwise it runs the **same** `syncUsageHistoryUseCase()` as app open. Outcome via `DailySyncPolicy.outcomeFor`: Success or AccessDenied → success; Failure → retry (exponential backoff, 30 min). Log tag `DailyUsageWorker`.
+- `worker/DailySyncPolicy` (pure): PREFERRED_RUN_TIME 00:30; `initialDelay(now)` → the next 00:30.
+- `worker/DailySyncScheduler.schedule(context)`: PeriodicWorkRequest 24 h, initial delay to 00:30, constraint battery-not-low, unique name `daily-usage-sync`, **ExistingPeriodicWorkPolicy.KEEP** (app starts don't reset timing). Called from `ScrollJourneyApp.onCreate`.
+- WorkManager persists jobs across reboots by itself (no receiver of ours).
+- Device verification (realme):
+  - `adb shell dumpsys jobscheduler | grep -A14 "com.achyutpal.scrolljourney/androidx.work"` shows JOB #0, min latency about 1h44m (→ 00:30), required BATTERY_NOT_LOW + TIMING_DELAY.
+  - `adb shell cmd jobscheduler run -f com.achyutpal.scrolljourney 0` wakes WorkManager, but it **won't run periodic work before its initial delay** (expected). Its logs are silent at default level.
+  - The on-device test `worker/DailyUsageWorkerTest` (TestListenableWorkerBuilder, real container) ran the worker: Result.success, and today's row is saved. Log: `sync result=Success outcome=SUCCESS`.
+- realme/ColorOS ("OplusHansManager") freezes background apps when the screen is off. Periodic work may be delayed; the sync on app open is the primary path, the worker is the backup. Consider guiding users to allow background activity (Settings).
+- Tests: **127 JVM** (+DailySyncPolicy 4) and **17 on-device** (+DailyUsageWorkerTest). All pass.
+- Still to observe in real life: after 00:30 tonight, `adb logcat -s DailyUsageWorker:D` (or the next day's history) should show the 27 Sep finalization and a fuel badge without opening the app first.

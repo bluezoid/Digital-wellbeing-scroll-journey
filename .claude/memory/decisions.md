@@ -4,6 +4,8 @@ Newest first. Don't re-open a settled decision unless the user asks. Record reve
 
 | Date | Decision | Why | Status |
 |---|---|---|---|
+| 2026-09-27 | Background sync = WorkManager periodic 24 h, first run about 00:30, battery-not-low, unique KEEP; the worker reuses the idempotent sync. App-open sync stays the primary path | Spec §50–51: don't depend on exact midnight; the worker is a safety net | Final |
+| 2026-09-27 | WorkManager 2.9.1 (not 2.10) | 2.10 requires compileSdk 35; we're pinned to 34 | Revisit with the targetSdk bump |
 | 2026-09-27 | **User requirement:** the journey UI must become a real 3D solar system (Sun and all planets, rotate 360°, zoom), not a simple flat UI | The user's explicit product direction; recorded as roadmap Phase 12b with a SceneView/Filament plan | Planned, confirm timing |
 | 2026-09-27 | The journey starts on the day onboarding completes; users onboarded earlier start "today" (the next sync). Backfilled days before the start never give fuel | Fuel should reward days lived under a chosen limit, not history from before the user committed | Final (the user may ask to count backfill; that's easy to change before any real fuel exists) |
 | 2026-09-27 | Fuel is applied exactly once per finalized day via `fuelApplied` + a conditional UPDATE inside a Room transaction with the rocket save (DB v4) | Idempotent across repeated/concurrent syncs and crash-safe | Final |
