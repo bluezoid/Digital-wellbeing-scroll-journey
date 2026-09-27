@@ -64,7 +64,7 @@ class SyncUsageHistoryUseCaseTest {
 
         assertEquals(30, result.summary.totalMinutes) // Instagram 20 + YouTube 10; Facebook off, Chrome unselected
         assertEquals(listOf("Instagram", "YouTube"), result.summary.apps.map { it.appName })
-        assertEquals(DailyRecord(today, 30, status = DayStatus.GREEN, finalized = false), history.records[today])
+        assertEquals(DailyRecord(today, 30, status = DayStatus.GREEN, limitMinutes = 60, finalized = false), history.records[today])
         assertEquals(listOf(20, 10), history.appRows.getValue(today).map { it.minutes })
     }
 
@@ -80,7 +80,7 @@ class SyncUsageHistoryUseCaseTest {
 
         val pastDays = (1..7).map { today.minusDays(it.toLong()) }
         pastDays.forEach { day ->
-            assertEquals(DailyRecord(day, 30, status = DayStatus.GREEN, finalized = true), history.records[day])
+            assertEquals(DailyRecord(day, 30, status = DayStatus.GREEN, limitMinutes = 60, finalized = true), history.records[day])
         }
         assertNull(history.records[today.minusDays(8)])
     }
@@ -123,7 +123,7 @@ class SyncUsageHistoryUseCaseTest {
 
         useCase()()
 
-        assertEquals(DailyRecord(yesterday, 30, status = DayStatus.GREEN, finalized = true), history.records[yesterday])
+        assertEquals(DailyRecord(yesterday, 30, status = DayStatus.GREEN, limitMinutes = 60, finalized = true), history.records[yesterday])
     }
 
     @Test
@@ -137,7 +137,7 @@ class SyncUsageHistoryUseCaseTest {
 
         useCase()()
 
-        assertEquals(DailyRecord(old, 44, status = DayStatus.GREEN, finalized = true), history.records[old])
+        assertEquals(DailyRecord(old, 44, status = DayStatus.GREEN, limitMinutes = 60, finalized = true), history.records[old])
     }
 
     @Test
@@ -183,7 +183,7 @@ class SyncUsageHistoryUseCaseTest {
 
         useCase()()
 
-        assertEquals(DailyRecord(yesterday, 90, status = DayStatus.RED, finalized = true), history.records[yesterday])
+        assertEquals(DailyRecord(yesterday, 90, status = DayStatus.RED, limitMinutes = 60, finalized = true), history.records[yesterday])
         assertFalse(usage.calls.any { it.first == startOf(yesterday) })
     }
 
@@ -193,8 +193,12 @@ class SyncUsageHistoryUseCaseTest {
         settings.setDailyLimit(15)
         useCase()()
 
-        assertEquals(DayStatus.GREEN, history.records.getValue(today.minusDays(1)).status)
-        assertEquals(DayStatus.RED, history.records.getValue(today).status) // today is live, re-evaluated
+        val yesterday = history.records.getValue(today.minusDays(1))
+        assertEquals(DayStatus.GREEN, yesterday.status)
+        assertEquals(60, yesterday.limitMinutes) // keeps the limit it was judged against
+        val live = history.records.getValue(today)
+        assertEquals(DayStatus.RED, live.status) // today is live, re-evaluated
+        assertEquals(15, live.limitMinutes)
     }
 
     @Test

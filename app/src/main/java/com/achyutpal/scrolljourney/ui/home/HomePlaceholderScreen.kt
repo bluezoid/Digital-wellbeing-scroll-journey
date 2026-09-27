@@ -268,13 +268,21 @@ private fun RecentDaysCard(days: List<DailyRecord>) {
                 ) {
                     StatusDot(day.status)
                     Spacer(Modifier.width(12.dp))
-                    Text(
-                        modifier = Modifier.weight(1f),
-                        text = day.date.format(dateFormat) +
-                            if (day.finalized) "" else " · " + stringResource(R.string.home_recent_live),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = day.date.format(dateFormat) +
+                                if (day.finalized) "" else " · " + stringResource(R.string.home_recent_live),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        day.limitMinutes?.let {
+                            Text(
+                                text = stringResource(R.string.home_recent_limit, formatMinutes(it)),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                     Text(
                         text = formatMinutes(day.totalMinutes),
                         style = MaterialTheme.typography.bodyLarge,
@@ -319,8 +327,8 @@ private fun HomePreview() {
     ScrollJourneyTheme(darkTheme = true) {
         HomePlaceholderContent(
             recentDays = listOf(
-                DailyRecord(LocalDate.of(2026, 9, 27), 49, status = DayStatus.GREEN),
-                DailyRecord(LocalDate.of(2026, 9, 26), 72, status = DayStatus.YELLOW, finalized = true),
+                DailyRecord(LocalDate.of(2026, 9, 27), 49, status = DayStatus.GREEN, limitMinutes = 60),
+                DailyRecord(LocalDate.of(2026, 9, 26), 72, status = DayStatus.YELLOW, limitMinutes = 60, finalized = true),
             ),
             state = HomeUiState(
                 isLoading = false,

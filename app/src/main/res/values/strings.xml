@@ -36,6 +36,7 @@
     <string name="status_so_far">" so far"</string>
     <string name="home_recent_title">Last 7 days</string>
     <string name="home_recent_live">today, live</string>
+    <string name="home_recent_limit">limit %1$s</string>
     <string name="home_change_apps">Change apps</string>
 
     <!-- App picker -->

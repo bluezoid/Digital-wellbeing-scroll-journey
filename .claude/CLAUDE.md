@@ -18,11 +18,11 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 5 (limit + green/yellow/red engine + Daily Limit onboarding step). The code is done; 67 unit + 13 on-device tests pass. **Waiting on the user's phone check.**
-- **Last done (2026-09-27):** Phase 4 ✅ (7 days of history verified). Built LimitEvaluator (integer maths), DailyLimitRules, the Daily Limit screen (onboarding + from Home), statuses saved on today and on finalized days, and coloured status on the home screen.
-- **Waiting on:** the user to check the status colours, the limit screen, and the history dots on the phone.
+- **Phase:** 5, finishing. The user verified everything except the colour of Fri 25 Sep, which was explained as by design; they chose option A (show the judged limit per day). DB v3 was added and migrated on the phone. 67 unit + 14 on-device tests pass.
+- **Last done (2026-09-27):** `daily_usage.limitMinutes` (DB v3); the history rows show "limit X" under each date.
+- **Waiting on:** the user to confirm the "limit 1h 00m" label shows on past days (and "limit 30m" on today), then Phase 5 is ✅.
 - **Next step:** Phase 6, the distance engine (DistanceConfig, "estimated scroll distance", a few comparisons).
-- **Never run `connectedAndroidTest`** (it uninstalls the app). See progress-log for the manual on-device test commands.
+- **Never run `connectedAndroidTest`** (it uninstalls the app). See progress-log for the manual on-device test commands, and the schema-bump gotcha.
 
 ## Memory index: read on demand
 
@@ -59,7 +59,7 @@ navigate_scrolling/
     │   ├─ domain/usecase/{SyncUsageHistoryUseCase, TodayUsageResult}.kt
     │   ├─ domain/repository/{Usage,History,Settings}Repository.kt, domain/model/{DayStatus,Planet,UserSettings,DailyRecord,ForegroundUsage}.kt
     │   ├─ data/usage/{AndroidUsageAccessRepository, UsageDataSource, AndroidUsageRepository}.kt
-    │   ├─ data/local/ScrollJourneyDatabase.kt (v2)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
+    │   ├─ data/local/ScrollJourneyDatabase.kt (v3)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
     │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt
     │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
     │   ├─ util/UsageAccessSettings.kt

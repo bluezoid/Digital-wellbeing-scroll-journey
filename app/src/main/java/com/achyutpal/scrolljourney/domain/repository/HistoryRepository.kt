@@ -14,10 +14,10 @@ interface HistoryRepository {
     suspend fun saveDay(record: DailyRecord, apps: List<AppUsage>)
 
     /** Freezes an already-saved day with its current totals (used when Android no longer has its events). */
-    suspend fun markFinalized(date: LocalDate, status: DayStatus)
+    suspend fun markFinalized(date: LocalDate, status: DayStatus, limitMinutes: Int)
 
-    /** Sets the status of a saved day without touching its minutes. */
-    suspend fun updateStatus(date: LocalDate, status: DayStatus)
+    /** Sets the status (and the limit it was judged against) without touching the day's minutes. */
+    suspend fun updateStatus(date: LocalDate, status: DayStatus, limitMinutes: Int)
 
     /** Days in [start, end] inclusive, oldest first. */
     suspend fun getRange(start: LocalDate, end: LocalDate): List<DailyRecord>

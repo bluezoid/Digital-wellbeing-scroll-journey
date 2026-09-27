@@ -151,3 +151,16 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
   - `ui/theme/StatusColors.kt`: StatusGreen, StatusYellow, StatusRed, `DayStatus.color()`.
 - Tests: **67 JVM** (new: LimitEvaluator 6, DailyLimitRules 4, DailyLimitViewModel 4, Sync +4 status cases) and **13 on-device** (+updateStatus, dailyLimit persists, invalid limit rejected). All pass.
 - Installed on the phone; the user's visual check is pending (the phone was locked).
+
+## 2026-09-27: Phase 5 follow-up, store the judged limit per day (DB v3)
+
+- The user reported Fri 25 Sep showing 🟢 with 44m after they changed the limit to 30. The DB confirmed it was **by design**: the day was finalized and coloured at the first Phase-5 sync with the default limit 60 (44 ≤ 60), and finalized colours are locked. 25 Sep was the only day where 30 and 60 give different colours. (23 Sep is absent because Android had no events that day, so it's skipped.)
+- Options offered: A) keep locking + show the judged limit; B) recolour history with the current limit; C) A plus a one-time recolour. **The user chose A.**
+- Implementation:
+  - `DailyRecord.limitMinutes: Int?` and the `daily_usage.limitMinutes` column.
+  - **DB v3** via `AutoMigration(2→3, spec = Migration2To3)`. onPostMigrate sets limitMinutes = 60 where status IS NOT NULL AND finalized = 1. That's safe because every pre-v3 status came from the first Phase-5 sync with the default 60; the live today row is rewritten by the next sync.
+  - Sync stores the limit whenever it sets a status (today, finalize, markFinalized, updateStatus); the repository/DAO signatures take limitMinutes.
+  - Home Last-7-days rows show "limit 1h 00m" under the date.
+- Real v2→v3 migration verified on the phone DB: version 3, all finalized days have limitMinutes 60, today NULL until the next sync, and the user's limit of 30 is kept.
+- Tests: 67 JVM + **14 on-device** (new MigrationTest migrate2To3) all pass.
+- **Gotcha:** after a schema version bump, run `./gradlew assembleDebugAndroidTest` again *after* the main compile has exported the new `N.json`. Otherwise the test APK lacks the schema asset and the MigrationTest fails with FileNotFoundException. Check with `unzip -l app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk | grep json`.

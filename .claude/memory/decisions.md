@@ -4,6 +4,7 @@ Newest first. Don't re-open a settled decision unless the user asks. Record reve
 
 | Date | Decision | Why | Status |
 |---|---|---|---|
+| 2026-09-27 | **Option A chosen by the user:** keep locked colours and store the limit each day was judged against (`daily_usage.limitMinutes`, DB v3), shown as "limit X" in history | Explains old colours after a limit change without breaking the fuel-once rule; the user rejected recolouring (B) and a one-time recolour (C) | Final |
 | 2026-09-27 | A day's status is fixed when it's finalized, using the limit at that moment; later limit changes don't recolour past days. Today is re-evaluated live | History shouldn't shift under the user; fuel (Phase 7) is applied once per finalized day | Final |
 | 2026-09-27 | Saving the daily limit (not the app picker) completes onboarding | Spec onboarding order: picker → limit → dashboard | Final |
 | 2026-09-27 | The limit slider moves in 5-minute steps (15–240); presets are 30/60/90/120 | Easy to hit common values; still covers the spec range | Final |

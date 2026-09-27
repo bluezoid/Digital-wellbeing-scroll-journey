@@ -16,11 +16,11 @@ interface DailyUsageDao {
     @Upsert
     suspend fun upsert(day: DailyUsageEntity)
 
-    @Query("UPDATE daily_usage SET finalized = 1, status = :status WHERE date = :date")
-    suspend fun markFinalized(date: String, status: DayStatus)
+    @Query("UPDATE daily_usage SET finalized = 1, status = :status, limitMinutes = :limitMinutes WHERE date = :date")
+    suspend fun markFinalized(date: String, status: DayStatus, limitMinutes: Int)
 
-    @Query("UPDATE daily_usage SET status = :status WHERE date = :date")
-    suspend fun updateStatus(date: String, status: DayStatus)
+    @Query("UPDATE daily_usage SET status = :status, limitMinutes = :limitMinutes WHERE date = :date")
+    suspend fun updateStatus(date: String, status: DayStatus, limitMinutes: Int)
 
     /** Dates are "YYYY-MM-DD" text, so string comparison = date comparison. */
     @Query("SELECT * FROM daily_usage WHERE date BETWEEN :start AND :end ORDER BY date ASC")

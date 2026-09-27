@@ -63,7 +63,7 @@ class SyncUsageHistoryUseCase(
             val summary = summarize(today, tracked, todayUsage)
             val status = LimitEvaluator.evaluate(summary.totalMinutes, limit)
             historyRepository.saveDay(
-                DailyRecord(today, summary.totalMinutes, status = status, finalized = false),
+                DailyRecord(today, summary.totalMinutes, status = status, limitMinutes = limit, finalized = false),
                 summary.apps,
             )
 
@@ -82,7 +82,7 @@ class SyncUsageHistoryUseCase(
         if (existing?.finalized == true) {
             // Days frozen before the status engine existed (Phase 4) get their colour once, from saved minutes.
             if (existing.status == null) {
-                historyRepository.updateStatus(date, LimitEvaluator.evaluate(existing.totalMinutes, limit))
+                historyRepository.updateStatus(date, LimitEvaluator.evaluate(existing.totalMinutes, limit), limit)
             }
             return
         }
@@ -97,12 +97,12 @@ class SyncUsageHistoryUseCase(
                 val summary = summarize(date, tracked, usage)
                 val status = LimitEvaluator.evaluate(summary.totalMinutes, limit)
                 historyRepository.saveDay(
-                    DailyRecord(date, summary.totalMinutes, status = status, finalized = true),
+                    DailyRecord(date, summary.totalMinutes, status = status, limitMinutes = limit, finalized = true),
                     summary.apps,
                 )
             }
             existing != null ->
-                historyRepository.markFinalized(date, LimitEvaluator.evaluate(existing.totalMinutes, limit))
+                historyRepository.markFinalized(date, LimitEvaluator.evaluate(existing.totalMinutes, limit), limit)
         }
     }
 

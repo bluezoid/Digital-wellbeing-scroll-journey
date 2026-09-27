@@ -83,15 +83,15 @@ class HistoryAndSettingsDatabaseTest {
     @Test
     fun markFinalizedFreezesExistingDay() = runTest {
         history.saveDay(DailyRecord(day, 44, finalized = false), emptyList())
-        history.markFinalized(day, DayStatus.GREEN)
-        assertEquals(DailyRecord(day, 44, status = DayStatus.GREEN, finalized = true), history.getDay(day))
+        history.markFinalized(day, DayStatus.GREEN, limitMinutes = 60)
+        assertEquals(DailyRecord(day, 44, status = DayStatus.GREEN, limitMinutes = 60, finalized = true), history.getDay(day))
     }
 
     @Test
     fun updateStatusKeepsMinutes() = runTest {
         history.saveDay(DailyRecord(day, 80, finalized = true), emptyList())
-        history.updateStatus(day, DayStatus.RED)
-        assertEquals(DailyRecord(day, 80, status = DayStatus.RED, finalized = true), history.getDay(day))
+        history.updateStatus(day, DayStatus.RED, limitMinutes = 30)
+        assertEquals(DailyRecord(day, 80, status = DayStatus.RED, limitMinutes = 30, finalized = true), history.getDay(day))
     }
 
     @Test
