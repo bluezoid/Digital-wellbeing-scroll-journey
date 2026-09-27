@@ -209,3 +209,24 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Tests: **100 JVM** (new: RocketProgressCalculator 10 [spec §38, §40, §58–61], ApplyJourneyFuel 7, Sync +2, DailyLimitVM journey start) and **16 on-device** (+applyDay exactly once in a transaction, journey start COALESCE, MigrationTest 3→4). All pass.
 - Phone DB after installing: version 4, settings (limit 120, onboarded, fuel 0, EARTH, journeyStartDate NULL until the first sync), and no fuel applied to backfilled days.
 - Expected on the device: the journey starts 27 Sep. Today (137 min against a 120 limit) is YELLOW so far, so it would give 0 fuel when finalized on 28 Sep unless the status changes.
+- **Device check passed (2026-09-27):** the rocket card shows Earth, Fuel 0/3 → Moon, journey started 27 Sep. The user accepted that the journey starts today (no backfilled fuel). **Phase 7 ✅.**
+
+## 2026-09-27: Phase 8, real Dashboard (session 2, continued)
+
+- **Replaced the temporary home** (`ui/home/*` deleted) with `ui/dashboard/{DashboardScreen, DashboardViewModel, DashboardUiState}`. Route `Routes.DASHBOARD = "dashboard"` and `StartDestination.DASHBOARD` (renamed from HOME).
+- `DashboardViewModel` combines 3 sources into **one immutable `DashboardUiState`** (spec §34):
+  1. a sync result MutableStateFlow (refresh() on every resume),
+  2. `settingsRepository.observeSettings()`,
+  3. `historyRepository.observeRecentDays(400)`.
+  The mapping lives in the pure `DashboardStateBuilder.build(...)`. Fields: isLoading, accessDenied, errorMessage, today summary, limit, status, distance, rocket, journeyStartDate, currentStreak, week (7 × WeekDay), updatedAt.
+- `domain/calculator/StreakCalculator` (pulled forward from Phase 9 because the dashboard shows the streak): `calculate(List<DayStatus?>)` gives Streak(current, best). Only GREEN extends a streak; yellow, red and missing (null) days break it; the current streak counts back from today, including a live green today (safe, since usage only grows). `contiguousStatuses(records, today)` fills gaps with null.
+- `ui/journey/RocketJourneyView` (hero):
+  - A header with "⛽ N fuel".
+  - The headline ("🌍 On Earth, ready for launch" / "🌙 Moon reached").
+  - The current leg: planet emoji, then a **Compose Canvas** dashed track with the travelled part solid, and the 🚀 rotated 45° positioned by an **animateFloatAsState** of legProgress; then the next planet.
+  - "Fuel X / Y · next stop", a **route strip** of 8 planet emojis (reached = full alpha, current = dot), the journey start and rules.
+- Dashboard layout: TopAppBar ("Scroll Journey", ⟳ refresh, ⋮ menu with Change apps / Change daily limit), then the access-denied card if needed, the rocket card, the Today card (status, total vs limit, progress, per-app), the streak and 7-day dot strip card ("🔥 N-day green streak" plurals / "No green streak right now…"), the distance card, and "Updated at".
+- Shared UI helpers moved to `ui/common/{PlanetUi (emoji, nameRes), StatusUi (labelRes, StatusDot, StatusLabel, formatFuel), ComparisonUi (comparisonText, Landmark.nameRes)}`.
+- Tests: **114 JVM** (new: StreakCalculator 9 [spec §36, §62, §63], DashboardViewModel 5 [spec §85, full fake stack incl. fuel → Mars]) and **16 on-device**. All pass.
+  - Test gotcha: to keep a `WhileSubscribed` stateIn alive in runTest, use `backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { flow.collect {} }`. `launchIn(backgroundScope)` never ran.
+- Installed on the phone with no crash; the visual check is pending (the phone was locked).

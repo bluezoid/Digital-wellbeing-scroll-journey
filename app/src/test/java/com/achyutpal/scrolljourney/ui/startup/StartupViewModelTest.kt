@@ -39,7 +39,7 @@ class StartupViewModelTest {
     }
 
     @Test
-    fun `onboarded user goes home even if access was revoked`() {
-        assertEquals(StartDestination.HOME, start(UsageAccessState.REVOKED, onboarded = true))
+    fun `onboarded user goes to the dashboard even if access was revoked`() {
+        assertEquals(StartDestination.DASHBOARD, start(UsageAccessState.REVOKED, onboarded = true))
     }
 }

@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 7 (rocket engine). The code is done; 100 unit + 16 on-device tests pass; DB v4 migrated on the phone. **Waiting on the user's phone check.**
-- **Last done (2026-09-27):** Phase 6 ✅ (1 m/min final). Planet thresholds, RocketProgressCalculator, exactly-once fuel application in a transaction, journey start date (the onboarding day, or "today" for existing users), a rocket card and fuel badges on home.
-- **Waiting on:** the user to check the rocket card (it should show Earth, journey started 27 Sep). Real fuel first appears on 28 Sep when 27 Sep is finalized.
-- **Next step:** Phase 8, the real Dashboard (single DashboardUiState; replaces HomePlaceholderScreen; rocket visuals).
+- **Phase:** 8 (Dashboard). The code is done; 114 unit + 16 on-device tests pass. **Waiting on the user's phone check.**
+- **Last done (2026-09-27):** Phase 7 ✅. Replaced the temporary home with DashboardScreen/ViewModel/UiState (single immutable state), a rocket hero (Canvas track + animated rocket + route strip), the streak and 7-day strip, and a top-bar menu. StreakCalculator was pulled forward from Phase 9.
+- **Waiting on:** the user to check the dashboard on the phone.
+- **Next step:** Phase 9, the History screen (monthly calendar grid, current and best streak).
 - **Never run `connectedAndroidTest`** (it uninstalls the app). See progress-log for the manual on-device test commands, and the schema-bump gotcha.
 
 ## Memory index: read on demand
@@ -53,7 +53,7 @@ navigate_scrolling/
     │   ├─ MainActivity.kt       picks the start route, hosts navigation
     │   ├─ di/AppContainer.kt    manual DI
     │   ├─ domain/model/{UsageAccessState, InstalledApp, SelectedApp}.kt
-    │   ├─ domain/calculator/{AppSelectionRules, LimitEvaluator, DailyLimitRules, DistanceConfig, DistanceCalculator, DistanceComparisons, RocketProgressCalculator}.kt
+    │   ├─ domain/calculator/{AppSelectionRules, LimitEvaluator, DailyLimitRules, DistanceConfig, DistanceCalculator, DistanceComparisons, RocketProgressCalculator, StreakCalculator}.kt
     │   ├─ domain/repository/{UsageAccessRepository, AppRepository}.kt
     │   ├─ domain/model/{UsageEvent, DailyUsageSummary}.kt, domain/calculator/UsageCalculator.kt
     │   ├─ domain/usecase/{SyncUsageHistoryUseCase, ApplyJourneyFuelUseCase, TodayUsageResult}.kt
@@ -63,10 +63,10 @@ navigate_scrolling/
     │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt, data/journey/RoomJourneyRepository.kt
     │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
     │   ├─ util/UsageAccessSettings.kt
-    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, home
-    │   └─ ui/{theme, startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
-    │          apppicker/{AppPickerScreen, AppPickerViewModel}, dailylimit/{DailyLimitScreen, DailyLimitViewModel},
-    │          home/{HomePlaceholderScreen, HomePlaceholderViewModel}, common/{DurationFormat, DistanceFormat}, theme/StatusColors}
+    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, dashboard
+    │   └─ ui/{theme (+StatusColors), startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
+    │          apppicker/*, dailylimit/*, dashboard/{DashboardScreen, DashboardViewModel, DashboardUiState(+Builder)},
+    │          journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, PlanetUi, StatusUi, ComparisonUi}}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/
     └─ androidTest/.../data/local/   on-device Room + migration tests

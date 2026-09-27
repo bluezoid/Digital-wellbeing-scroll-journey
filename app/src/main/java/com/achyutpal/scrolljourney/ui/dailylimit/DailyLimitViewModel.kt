@@ -26,7 +26,7 @@ data class DailyLimitUiState(
 )
 
 /**
- * Picks the combined daily limit. During onboarding, saving it is the final step
+ * Picks the combined daily limit (onboarding, or from the dashboard menu). During onboarding, saving it is the final step
  * and marks onboarding complete.
  */
 class DailyLimitViewModel(

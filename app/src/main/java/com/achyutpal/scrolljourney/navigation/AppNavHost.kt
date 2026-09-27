@@ -9,7 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.achyutpal.scrolljourney.ui.apppicker.AppPickerScreen
 import com.achyutpal.scrolljourney.ui.dailylimit.DailyLimitScreen
-import com.achyutpal.scrolljourney.ui.home.HomePlaceholderScreen
+import com.achyutpal.scrolljourney.ui.dashboard.DashboardScreen
 import com.achyutpal.scrolljourney.ui.onboarding.IntroScreen
 import com.achyutpal.scrolljourney.ui.onboarding.UsageAccessScreen
 import com.achyutpal.scrolljourney.ui.startup.StartDestination
@@ -19,9 +19,9 @@ object Routes {
 
     const val INTRO = "intro"
     const val USAGE_ACCESS = "usage_access"
-    const val HOME = "home"
+    const val DASHBOARD = "dashboard"
 
-    // Picker and limit are used both in onboarding (default) and from Home (onboarding=false).
+    // Picker and limit are used both in onboarding (default) and from the dashboard (onboarding=false).
     const val APP_PICKER = "app_picker?$ARG_ONBOARDING={$ARG_ONBOARDING}"
     const val DAILY_LIMIT = "daily_limit?$ARG_ONBOARDING={$ARG_ONBOARDING}"
 
@@ -32,7 +32,7 @@ object Routes {
 fun StartDestination.toRoute(): String = when (this) {
     StartDestination.ONBOARDING -> Routes.INTRO
     StartDestination.APP_PICKER -> Routes.APP_PICKER
-    StartDestination.HOME -> Routes.HOME
+    StartDestination.DASHBOARD -> Routes.DASHBOARD
 }
 
 private val onboardingArgument = listOf(
@@ -42,7 +42,7 @@ private val onboardingArgument = listOf(
     },
 )
 
-/** Onboarding: intro → usage access → app picker → daily limit → home. */
+/** Onboarding: intro → usage access → app picker → daily limit → dashboard. */
 @Composable
 fun AppNavHost(startDestination: String) {
     val navController = rememberNavController()
@@ -72,15 +72,15 @@ fun AppNavHost(startDestination: String) {
                 isOnboarding = onboarding,
                 onDone = {
                     if (onboarding) {
-                        navController.navigateClearingBackStack(Routes.HOME)
+                        navController.navigateClearingBackStack(Routes.DASHBOARD)
                     } else {
                         navController.popBackStack()
                     }
                 },
             )
         }
-        composable(Routes.HOME) {
-            HomePlaceholderScreen(
+        composable(Routes.DASHBOARD) {
+            DashboardScreen(
                 onChangeApps = { navController.navigate(Routes.appPicker(onboarding = false)) },
                 onChangeLimit = { navController.navigate(Routes.dailyLimit(onboarding = false)) },
             )

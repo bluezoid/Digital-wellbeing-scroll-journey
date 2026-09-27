@@ -14,11 +14,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-enum class StartDestination { ONBOARDING, APP_PICKER, HOME }
+enum class StartDestination { ONBOARDING, APP_PICKER, DASHBOARD }
 
 /**
  * Decides the first screen:
- * - Onboarding finished → HOME (which itself warns if Usage Access was revoked later).
+ * - Onboarding finished → DASHBOARD (which itself warns if Usage Access was revoked later).
  * - Not finished but access already granted → APP_PICKER (resume where the user left off).
  * - Otherwise → ONBOARDING.
  */
@@ -33,7 +33,7 @@ class StartupViewModel(
     init {
         viewModelScope.launch {
             _start.value = when {
-                settingsRepository.getSettings().onboardingComplete -> StartDestination.HOME
+                settingsRepository.getSettings().onboardingComplete -> StartDestination.DASHBOARD
                 usageAccessRepository.checkUsageAccess() == UsageAccessState.GRANTED -> StartDestination.APP_PICKER
                 else -> StartDestination.ONBOARDING
             }
