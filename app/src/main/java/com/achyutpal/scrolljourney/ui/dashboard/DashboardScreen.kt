@@ -2,6 +2,7 @@ package com.achyutpal.scrolljourney.ui.dashboard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -73,6 +74,7 @@ import java.util.Locale
 fun DashboardScreen(
     onChangeApps: () -> Unit,
     onChangeLimit: () -> Unit,
+    onOpenHistory: () -> Unit,
     viewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -89,6 +91,7 @@ fun DashboardScreen(
         onOpenSettings = { context.openUsageAccessSettings() },
         onChangeApps = onChangeApps,
         onChangeLimit = onChangeLimit,
+        onOpenHistory = onOpenHistory,
     )
 }
 
@@ -100,6 +103,7 @@ private fun DashboardContent(
     onOpenSettings: () -> Unit,
     onChangeApps: () -> Unit,
     onChangeLimit: () -> Unit,
+    onOpenHistory: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -116,6 +120,10 @@ private fun DashboardContent(
                         Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.action_more))
                     }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.history_title)) },
+                            onClick = { menuOpen = false; onOpenHistory() },
+                        )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.home_change_apps)) },
                             onClick = { menuOpen = false; onChangeApps() },
@@ -151,7 +159,7 @@ private fun DashboardContent(
                 TodayCard(today, state.limitMinutes, state.status)
             }
 
-            StreakWeekCard(streak = state.currentStreak, week = state.week)
+            StreakWeekCard(streak = state.currentStreak, week = state.week, onOpenHistory = onOpenHistory)
 
             if (state.today != null) DistanceCard(state.distanceCentimetres)
 
@@ -233,8 +241,8 @@ private fun TodayCard(summary: DailyUsageSummary, limitMinutes: Int, status: Day
 }
 
 @Composable
-private fun StreakWeekCard(streak: Int, week: List<WeekDay>) {
-    DashboardCard {
+private fun StreakWeekCard(streak: Int, week: List<WeekDay>, onOpenHistory: () -> Unit) {
+    DashboardCard(onClick = onOpenHistory) {
         Text(
             text = if (streak > 0) {
                 pluralStringResource(R.plurals.streak_days, streak, streak)
@@ -260,6 +268,13 @@ private fun StreakWeekCard(streak: Int, week: List<WeekDay>) {
                 }
             }
         }
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = stringResource(R.string.history_open) + " ›",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.align(Alignment.End),
+        )
     }
 }
 
@@ -313,12 +328,16 @@ private fun AccessDeniedCard(onOpenSettings: () -> Unit) {
 }
 
 @Composable
-private fun DashboardCard(content: @Composable () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Column(Modifier.padding(20.dp)) { content() }
+private fun DashboardCard(onClick: (() -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
+    val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    if (onClick != null) {
+        Card(onClick = onClick, colors = colors, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp)) { content() }
+        }
+    } else {
+        Card(colors = colors, modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(20.dp)) { content() }
+        }
     }
 }
 
@@ -350,6 +369,7 @@ private fun DashboardPreview() {
             onOpenSettings = {},
             onChangeApps = {},
             onChangeLimit = {},
+            onOpenHistory = {},
         )
     }
 }

@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 8 (Dashboard). The code is done; 114 unit + 16 on-device tests pass. **Waiting on the user's phone check.**
-- **Last done (2026-09-27):** Phase 7 ✅. Replaced the temporary home with DashboardScreen/ViewModel/UiState (single immutable state), a rocket hero (Canvas track + animated rocket + route strip), the streak and 7-day strip, and a top-bar menu. StreakCalculator was pulled forward from Phase 9.
-- **Waiting on:** the user to check the dashboard on the phone.
-- **Next step:** Phase 9, the History screen (monthly calendar grid, current and best streak).
+- **Phase:** 9 (History screen). The code is done; 123 unit + 16 on-device tests pass. **Waiting on the user's phone check.**
+- **Last done (2026-09-27):** Phase 8 ✅. History screen: Monday-first month calendar, current/best streak, month counts, a selected-day detail with per-app minutes; opened from the dashboard (menu, streak card, link). The user requested a **3D solar system UI**, recorded as roadmap Phase 12b.
+- **Waiting on:** the user to check the History screen.
+- **Next step:** Phase 10, WorkManager DailyUsageWorker (a reliability backup for the sync; missed days, no duplicates). Then 11 Settings, 12b 3D (confirm timing), 12 validation.
 - **Never run `connectedAndroidTest`** (it uninstalls the app). See progress-log for the manual on-device test commands, and the schema-bump gotcha.
 
 ## Memory index: read on demand
@@ -63,10 +63,10 @@ navigate_scrolling/
     │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt, data/journey/RoomJourneyRepository.kt
     │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
     │   ├─ util/UsageAccessSettings.kt
-    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, dashboard
+    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, dashboard, history
     │   └─ ui/{theme (+StatusColors), startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
     │          apppicker/*, dailylimit/*, dashboard/{DashboardScreen, DashboardViewModel, DashboardUiState(+Builder)},
-    │          journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, PlanetUi, StatusUi, ComparisonUi}}
+    │          history/{HistoryScreen, HistoryViewModel, MonthCalendar}, journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, PlanetUi, StatusUi, ComparisonUi}}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/
     └─ androidTest/.../data/local/   on-device Room + migration tests

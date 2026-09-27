@@ -15,7 +15,7 @@ Rule: build one small piece → run on the Android 13 phone → test → show th
 | 6 | Distance engine (DistanceConfig) | Unit tests pass, distance card shows on the phone | ✅ 2026-09-27 |
 | 7 | Rocket engine (fuel, thresholds, milestone protection, exactly-once, journey start) | Unit tests pass, rocket card on the phone | ✅ 2026-09-27 |
 | 8 | Dashboard (single DashboardUiState) + StreakCalculator (pulled from 9) | Renders real data | ✅ 2026-09-27 |
-| 9 | History screen: month calendar grid + current/best streak (calculator already done in 8) | Month grid and streak counts correct | ⏳ |
+| 9 | History screen: month calendar grid + current/best streak (calculator already done in 8) + day detail | Month grid and streak counts correct | 🔄 code done, phone check pending |
 | 10 | WorkManager DailyUsageWorker + reconciliation on app open | Missed days filled, no duplicates | ⏳ |
 | 11 | Settings (apps, limit, reset journey with confirmation, privacy) | Reset keeps history | ⏳ |
 | 12 | 7–14 day real-device validation (reboot, missed day, 23:59→00:01, uninstall/reinstall) | Acceptance checklist in spec §87 fully ticked | ⏳ |

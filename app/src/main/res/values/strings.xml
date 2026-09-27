@@ -29,6 +29,20 @@
     <string name="home_usage_error">Couldn’t read usage: %1$s</string>
     <string name="action_refresh">Refresh</string>
     <string name="action_more">More options</string>
+    <string name="action_back">Back</string>
+
+    <!-- History -->
+    <string name="history_title">History</string>
+    <string name="history_open">See full history</string>
+    <string name="history_current_streak">current green streak</string>
+    <string name="history_best_streak">best green streak</string>
+    <string name="history_previous_month">Previous month</string>
+    <string name="history_next_month">Next month</string>
+    <string name="history_green_count">%1$d green</string>
+    <string name="history_yellow_count">%1$d yellow</string>
+    <string name="history_red_count">%1$d red</string>
+    <string name="history_distance">📏 %1$s estimated</string>
+    <string name="history_no_data">No usage data for this day. Android keeps about a week of history, and days before you installed the app may be missing.</string>
     <string name="streak_none">No green streak right now. Stay under your limit today to start one.</string>
     <string name="rocket_fuel_label">⛽ %1$d fuel</string>
     <string name="home_change_limit">Change daily limit</string>

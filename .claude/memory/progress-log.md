@@ -231,3 +231,21 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
   - Test gotcha: to keep a `WhileSubscribed` stateIn alive in runTest, use `backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { flow.collect {} }`. `launchIn(backgroundScope)` never ran.
 - Installed on the phone with no crash; the visual check is pending (the phone was locked).
 - **Device check passed (2026-09-27):** all dashboard checks OK. **Phase 8 ✅.** The user added a requirement: the journey UI must be a **real 3D solar system** (Sun and all planets, 360° rotation), recorded as roadmap Phase 12b.
+
+## 2026-09-27: Phase 9, History screen (session 2, continued)
+
+- `DayAppMinutes` model and `HistoryRepository.getAppMinutes(date)` (reads daily_app_usage).
+- `ui/history/MonthCalendar.build(month, statusByDate, today)`: a pure grid with **weeks starting Monday**; `CalendarCell(date?, status, hasRecord, isToday, isFuture)` with padding cells.
+- `ui/history/HistoryViewModel`:
+  - Combines observeRecentDays(400), the shown month, the selected date and the loaded detail.
+  - `HistoryUiState` has weeks, current/best streak (StreakCalculator), the month's green/yellow/red counts, canGoPrevious (bounded by the earliest record's month) and canGoNext (bounded by the current month), and selectedDate plus `DayDetail(record, apps with names)`.
+  - App names come from the saved selections, which include disabled apps. Today is selected on open.
+- `ui/history/HistoryScreen`:
+  - A TopAppBar with back.
+  - A streak card (🔥 current / 🏆 best).
+  - A calendar card with ‹ Month Year › navigation, M–S headers, and day circles filled with the status colour. The selected day is outlined, today is ringed in primary, days with no record get a grey ring, and future days are faded and not clickable.
+  - A legend with counts.
+  - A day detail card: date, status label, minutes · judged limit, distance, fuel badge, and per-app minutes. There's a "No usage data" card for empty days.
+- Route `Routes.HISTORY = "history"`. The dashboard opens it via the ⋮ menu "History", a tap on the streak/week card, and "See full history ›". `DashboardCard` now takes an optional onClick (Card(onClick)).
+- Tests: **123 JVM** (new: MonthCalendar 3, HistoryViewModel 6) and **16 on-device**. All pass.
+- Installed with no crash; the phone check is pending.

@@ -2,6 +2,7 @@ package com.achyutpal.scrolljourney.fakes
 
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
+import com.achyutpal.scrolljourney.domain.model.DayAppMinutes
 import com.achyutpal.scrolljourney.domain.model.DayStatus
 import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
 import kotlinx.coroutines.flow.Flow
@@ -44,6 +45,9 @@ class FakeHistoryRepository(initial: List<DailyRecord> = emptyList()) : HistoryR
         days.value = days.value + (date to day.copy(fuelApplied = true, fuelDelta = fuelDelta))
         return true
     }
+
+    override suspend fun getAppMinutes(date: LocalDate): List<DayAppMinutes> =
+        appRows[date].orEmpty().map { DayAppMinutes(it.packageName, it.minutes) }.sortedByDescending { it.minutes }
 
     override suspend fun getRange(start: LocalDate, end: LocalDate) =
         days.value.values.filter { it.date in start..end }.sortedBy { it.date }

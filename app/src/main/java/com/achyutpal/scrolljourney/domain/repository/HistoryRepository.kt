@@ -2,6 +2,7 @@ package com.achyutpal.scrolljourney.domain.repository
 
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
+import com.achyutpal.scrolljourney.domain.model.DayAppMinutes
 import com.achyutpal.scrolljourney.domain.model.DayStatus
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -18,6 +19,9 @@ interface HistoryRepository {
 
     /** Fills in values derived from a day's minutes (status, judged limit, distance) without touching the minutes. */
     suspend fun updateEvaluation(date: LocalDate, status: DayStatus, limitMinutes: Int, distance: Long)
+
+    /** Saved per-app minutes for one day, most used first. */
+    suspend fun getAppMinutes(date: LocalDate): List<DayAppMinutes>
 
     /** Days in [start, end] inclusive, oldest first. */
     suspend fun getRange(start: LocalDate, end: LocalDate): List<DailyRecord>
