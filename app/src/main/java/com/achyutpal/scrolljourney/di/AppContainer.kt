@@ -6,6 +6,7 @@ import com.achyutpal.scrolljourney.data.apps.AndroidAppIconSource
 import com.achyutpal.scrolljourney.data.apps.AndroidAppRepository
 import com.achyutpal.scrolljourney.data.apps.AppIconSource
 import com.achyutpal.scrolljourney.data.history.RoomHistoryRepository
+import com.achyutpal.scrolljourney.data.journey.RoomJourneyRepository
 import com.achyutpal.scrolljourney.data.local.ScrollJourneyDatabase
 import com.achyutpal.scrolljourney.data.settings.RoomSettingsRepository
 import com.achyutpal.scrolljourney.data.usage.AndroidUsageAccessRepository
@@ -13,9 +14,11 @@ import com.achyutpal.scrolljourney.data.usage.AndroidUsageDataSource
 import com.achyutpal.scrolljourney.data.usage.AndroidUsageRepository
 import com.achyutpal.scrolljourney.domain.repository.AppRepository
 import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
+import com.achyutpal.scrolljourney.domain.repository.JourneyRepository
 import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageRepository
+import com.achyutpal.scrolljourney.domain.usecase.ApplyJourneyFuelUseCase
 import com.achyutpal.scrolljourney.domain.usecase.SyncUsageHistoryUseCase
 
 /**
@@ -59,13 +62,18 @@ class AppContainer(context: Context) {
         RoomSettingsRepository(database.userSettingsDao())
     }
 
+    val journeyRepository: JourneyRepository by lazy {
+        RoomJourneyRepository(database)
+    }
+
     val syncUsageHistoryUseCase: SyncUsageHistoryUseCase by lazy {
         SyncUsageHistoryUseCase(
-            usageAccessRepository,
-            appRepository,
-            usageRepository,
-            historyRepository,
-            settingsRepository,
+            usageAccessRepository = usageAccessRepository,
+            appRepository = appRepository,
+            usageRepository = usageRepository,
+            historyRepository = historyRepository,
+            settingsRepository = settingsRepository,
+            applyJourneyFuel = ApplyJourneyFuelUseCase(journeyRepository, settingsRepository),
         )
     }
 }

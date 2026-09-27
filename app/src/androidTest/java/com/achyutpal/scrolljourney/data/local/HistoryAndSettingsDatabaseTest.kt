@@ -4,11 +4,13 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.achyutpal.scrolljourney.data.history.RoomHistoryRepository
+import com.achyutpal.scrolljourney.data.journey.RoomJourneyRepository
 import com.achyutpal.scrolljourney.data.settings.RoomSettingsRepository
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DayStatus
 import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.RocketState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -129,9 +131,39 @@ class HistoryAndSettingsDatabaseTest {
     }
 
     @Test
-    fun onboardingFlagPersistsAndIsNotResetByLaterReads() = runTest {
-        settings.setOnboardingComplete()
+    fun onboardingFlagPersistsAndStartsTheJourneyOnce() = runTest {
+        settings.setOnboardingComplete(journeyStart = day)
         assertTrue(settings.getSettings().onboardingComplete)
         assertTrue(settings.observeSettings().first().onboardingComplete)
+        assertEquals(day, settings.getSettings().journeyStartDate)
+
+        settings.ensureJourneyStarted(day.plusDays(5)) // must not move an existing start
+        assertEquals(day, settings.getSettings().journeyStartDate)
+    }
+
+    @Test
+    fun fuelIsAppliedExactlyOnceAndRocketSavedInSameTransaction() = runTest {
+        val journey = RoomJourneyRepository(db)
+        settings.ensureJourneyStarted(day)
+        history.saveDay(
+            DailyRecord(day, 20, status = DayStatus.GREEN, limitMinutes = 60, distance = 2_000, finalized = true),
+            emptyList(),
+        )
+        history.saveDay(DailyRecord(day.plusDays(1), 5, status = DayStatus.GREEN, finalized = false), emptyList())
+
+        val awaiting = journey.daysAwaitingFuel(from = day)
+        assertEquals(listOf(day), awaiting.map { it.date }) // unfinalized day excluded
+
+        val update = { r: RocketState -> r.copy(currentFuel = r.currentFuel + 1, lifetimeFuel = r.lifetimeFuel + 1) }
+        assertTrue(journey.applyDay(awaiting.single(), fuelDelta = 1, update = update))
+        assertFalse(journey.applyDay(awaiting.single(), fuelDelta = 1, update = update)) // second time: no-op
+
+        val saved = settings.getSettings()
+        assertEquals(1, saved.currentFuel)
+        assertEquals(1, saved.lifetimeFuel)
+        assertEquals(2_000L, saved.journeyDistance)
+        assertTrue(history.getDay(day)!!.fuelApplied)
+        assertEquals(1, history.getDay(day)!!.fuelDelta)
+        assertTrue(journey.daysAwaitingFuel(from = day).isEmpty())
     }
 }

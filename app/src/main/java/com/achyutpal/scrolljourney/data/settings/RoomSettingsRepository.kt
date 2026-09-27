@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import java.time.LocalDate
 
 /** The settings row is created lazily with defaults the first time anyone asks for it. */
 class RoomSettingsRepository(
@@ -27,9 +28,14 @@ class RoomSettingsRepository(
             .filterNotNull()
             .map { it.toDomain() }
 
-    override suspend fun setOnboardingComplete() {
+    override suspend fun setOnboardingComplete(journeyStart: LocalDate) {
         ensureRow()
-        dao.setOnboardingComplete()
+        dao.setOnboardingComplete(journeyStart.toString())
+    }
+
+    override suspend fun ensureJourneyStarted(journeyStart: LocalDate) {
+        ensureRow()
+        dao.ensureJourneyStarted(journeyStart.toString())
     }
 
     override suspend fun setDailyLimit(minutes: Int) {

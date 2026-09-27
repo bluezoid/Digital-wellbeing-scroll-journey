@@ -12,6 +12,9 @@ import com.achyutpal.scrolljourney.domain.calculator.DistanceComparisons
 import com.achyutpal.scrolljourney.domain.calculator.DistanceConfig
 import com.achyutpal.scrolljourney.domain.calculator.Landmark
 import com.achyutpal.scrolljourney.domain.model.DayStatus
+import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.RocketState
+import com.achyutpal.scrolljourney.domain.model.UserSettings
 import com.achyutpal.scrolljourney.ui.common.formatDistance
 import com.achyutpal.scrolljourney.ui.common.formatTimes
 import com.achyutpal.scrolljourney.ui.theme.color
@@ -70,6 +73,7 @@ fun HomePlaceholderScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val recentDays by viewModel.recentDays.collectAsStateWithLifecycle()
+    val settings by viewModel.settings.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Re-read usage whenever the user comes back (e.g. after scrolling Instagram, or from Settings).
@@ -81,6 +85,7 @@ fun HomePlaceholderScreen(
     HomePlaceholderContent(
         state = state,
         recentDays = recentDays,
+        settings = settings,
         onRefresh = viewModel::refresh,
         onOpenSettings = { context.openUsageAccessSettings() },
         onChangeApps = onChangeApps,
@@ -92,6 +97,7 @@ fun HomePlaceholderScreen(
 private fun HomePlaceholderContent(
     state: HomeUiState,
     recentDays: List<DailyRecord>,
+    settings: UserSettings?,
     onRefresh: () -> Unit,
     onOpenSettings: () -> Unit,
     onChangeApps: () -> Unit,
@@ -139,6 +145,11 @@ private fun HomePlaceholderContent(
                     Spacer(Modifier.height(16.dp))
                     DistanceCard(result.distanceCentimetres)
                 }
+            }
+
+            settings?.let {
+                Spacer(Modifier.height(16.dp))
+                RocketCard(it.rocket, it.journeyStartDate)
             }
 
             if (recentDays.isNotEmpty()) {
@@ -225,6 +236,102 @@ private fun UsageCard(summary: DailyUsageSummary, limitMinutes: Int, status: Day
             }
         }
     }
+}
+
+@Composable
+private fun RocketCard(rocket: RocketState, journeyStart: LocalDate?) {
+    val dateFormat = remember { DateTimeFormatter.ofPattern("d MMM") }
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp)) {
+            Text(
+                text = stringResource(R.string.rocket_title),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = if (rocket.highestReachedPlanet == Planet.EARTH) {
+                    stringResource(R.string.rocket_at_earth)
+                } else {
+                    stringResource(
+                        R.string.rocket_reached,
+                        rocket.highestReachedPlanet.emoji(),
+                        stringResource(rocket.highestReachedPlanet.nameRes()),
+                    )
+                },
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(12.dp))
+
+            val next = rocket.nextPlanet
+            if (next == null) {
+                Text(stringResource(R.string.rocket_pluto_done), color = MaterialTheme.colorScheme.tertiary)
+            } else {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(rocket.highestReachedPlanet.emoji(), style = MaterialTheme.typography.titleLarge)
+                    Text("🚀", style = MaterialTheme.typography.titleLarge)
+                    Text(next.emoji(), style = MaterialTheme.typography.titleLarge)
+                }
+                Spacer(Modifier.height(4.dp))
+                LinearProgressIndicator(
+                    progress = { rocket.legProgress },
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth().height(8.dp),
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(
+                        R.string.rocket_fuel_to_next,
+                        rocket.currentFuel,
+                        next.fuelRequired,
+                        stringResource(next.nameRes()),
+                    ),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = journeyStart?.let { stringResource(R.string.rocket_started, it.format(dateFormat)) }
+                    ?: stringResource(R.string.rocket_not_started),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(R.string.rocket_rules),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+private fun Planet.emoji(): String = when (this) {
+    Planet.EARTH -> "🌍"
+    Planet.MOON -> "🌙"
+    Planet.MARS -> "🔴"
+    Planet.JUPITER -> "🟠"
+    Planet.SATURN -> "🪐"
+    Planet.URANUS -> "🔵"
+    Planet.NEPTUNE -> "🌀"
+    Planet.PLUTO -> "⚪"
+}
+
+private fun Planet.nameRes(): Int = when (this) {
+    Planet.EARTH -> R.string.planet_earth
+    Planet.MOON -> R.string.planet_moon
+    Planet.MARS -> R.string.planet_mars
+    Planet.JUPITER -> R.string.planet_jupiter
+    Planet.SATURN -> R.string.planet_saturn
+    Planet.URANUS -> R.string.planet_uranus
+    Planet.NEPTUNE -> R.string.planet_neptune
+    Planet.PLUTO -> R.string.planet_pluto
 }
 
 @Composable
@@ -356,16 +463,31 @@ private fun RecentDaysCard(days: List<DailyRecord>) {
                             )
                         }
                     }
-                    Text(
-                        text = formatMinutes(day.totalMinutes),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.SemiBold,
-                    )
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = formatMinutes(day.totalMinutes),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        if (day.fuelApplied) {
+                            Text(
+                                text = stringResource(R.string.home_recent_fuel, formatFuel(day.fuelDelta)),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = day.status?.color() ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+private fun formatFuel(delta: Int): String = when {
+    delta > 0 -> "+$delta"
+    delta < 0 -> "−${-delta}"
+    else -> "0"
 }
 
 @Composable
@@ -399,6 +521,8 @@ private fun AccessDeniedCard(onOpenSettings: () -> Unit) {
 private fun HomePreview() {
     ScrollJourneyTheme(darkTheme = true) {
         HomePlaceholderContent(
+            settings = UserSettings(currentFuel = 5, lifetimeFuel = 6, highestReachedPlanet = Planet.MOON,
+                journeyStartDate = LocalDate.of(2026, 9, 27)),
             recentDays = listOf(
                 DailyRecord(LocalDate.of(2026, 9, 27), 49, status = DayStatus.GREEN, limitMinutes = 60),
                 DailyRecord(LocalDate.of(2026, 9, 26), 72, status = DayStatus.YELLOW, limitMinutes = 60, finalized = true),

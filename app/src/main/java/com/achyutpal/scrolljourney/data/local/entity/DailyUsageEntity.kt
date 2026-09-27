@@ -1,5 +1,6 @@
 package com.achyutpal.scrolljourney.data.local.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
@@ -17,6 +18,8 @@ data class DailyUsageEntity(
     val fuelDelta: Int,
     val distance: Long,
     val finalized: Boolean,
+    /** Added in DB v4. The default lets Room add the NOT NULL column to existing rows. */
+    @ColumnInfo(defaultValue = "0") val fuelApplied: Boolean,
 )
 
 fun DailyUsageEntity.toDomain() = DailyRecord(
@@ -27,6 +30,7 @@ fun DailyUsageEntity.toDomain() = DailyRecord(
     fuelDelta = fuelDelta,
     distance = distance,
     finalized = finalized,
+    fuelApplied = fuelApplied,
 )
 
 fun DailyRecord.toEntity() = DailyUsageEntity(
@@ -37,4 +41,5 @@ fun DailyRecord.toEntity() = DailyUsageEntity(
     fuelDelta = fuelDelta,
     distance = distance,
     finalized = finalized,
+    fuelApplied = fuelApplied,
 )

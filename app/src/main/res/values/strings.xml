@@ -37,6 +37,26 @@
     <string name="home_recent_title">Last 7 days</string>
     <string name="home_recent_distance">≈ %1$s estimated scroll distance</string>
 
+    <string name="home_recent_fuel">%1$s fuel</string>
+
+    <!-- Rocket journey -->
+    <string name="rocket_title">Rocket journey</string>
+    <string name="rocket_reached">%1$s %2$s reached</string>
+    <string name="rocket_fuel_to_next">Fuel %1$d / %2$d · next stop: %3$s</string>
+    <string name="rocket_at_earth">🌍 On Earth, ready for launch</string>
+    <string name="rocket_pluto_done">🎉 You made it all the way to Pluto!</string>
+    <string name="rocket_started">Journey started %1$s. Each finished day counts from the next morning.</string>
+    <string name="rocket_not_started">Your journey starts once onboarding is complete.</string>
+    <string name="rocket_rules">Green day +1 fuel · yellow 0 · red −1. You never lose a planet you have reached.</string>
+    <string name="planet_earth">Earth</string>
+    <string name="planet_moon">Moon</string>
+    <string name="planet_mars">Mars</string>
+    <string name="planet_jupiter">Jupiter</string>
+    <string name="planet_saturn">Saturn</string>
+    <string name="planet_uranus">Uranus</string>
+    <string name="planet_neptune">Neptune</string>
+    <string name="planet_pluto">Pluto</string>
+
     <!-- Estimated scroll distance -->
     <string name="distance_title">Estimated scroll distance today</string>
     <string name="distance_times">≈ %1$s× the height of %2$s</string>

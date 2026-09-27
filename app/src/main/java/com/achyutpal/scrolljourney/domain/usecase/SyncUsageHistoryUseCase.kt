@@ -28,7 +28,8 @@ import java.time.ZoneId
  * - Android still has events → save it, finalized, with its day status and estimated distance
  * - no events, but we saved it earlier (e.g. as "today") → freeze what we have
  * - no events and nothing saved → skip (unknown ≠ 0 minutes)
- * Then today (midnight → now) is recalculated and saved, not finalized, with its status so far.
+ * Then finished days are fed to the rocket (once each), and today (midnight → now) is
+ * recalculated and saved, not finalized, with its status so far.
  *
  * Only the currently enabled apps and the current daily limit are used, for past days too.
  */
@@ -38,6 +39,7 @@ class SyncUsageHistoryUseCase(
     private val usageRepository: UsageRepository,
     private val historyRepository: HistoryRepository,
     private val settingsRepository: SettingsRepository,
+    private val applyJourneyFuel: ApplyJourneyFuelUseCase,
     private val distanceCalculator: DistanceCalculator = DistanceCalculator(),
     private val now: () -> Instant = Instant::now,
     private val zone: () -> ZoneId = ZoneId::systemDefault,
@@ -56,6 +58,10 @@ class SyncUsageHistoryUseCase(
             for (daysAgo in BACKFILL_DAYS downTo 1) {
                 syncPastDay(today.minusDays(daysAgo.toLong()), tracked, limit, zoneId)
             }
+
+            // Users who finished onboarding before the rocket existed start their journey today.
+            settingsRepository.ensureJourneyStarted(today)
+            applyJourneyFuel()
 
             val todayUsage = usageRepository.getForegroundUsage(
                 startMillis = today.startMillis(zoneId),

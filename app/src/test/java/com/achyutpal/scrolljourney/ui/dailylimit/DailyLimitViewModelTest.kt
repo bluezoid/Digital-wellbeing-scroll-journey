@@ -13,6 +13,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DailyLimitViewModelTest {
@@ -42,13 +43,14 @@ class DailyLimitViewModelTest {
     @Test
     fun `saving in onboarding stores the limit and completes onboarding`() {
         val settings = FakeSettingsRepository()
-        val vm = DailyLimitViewModel(settings, isOnboarding = true)
+        val vm = DailyLimitViewModel(settings, isOnboarding = true, today = { LocalDate.of(2026, 9, 27) })
         vm.onLimitChange(90)
         vm.onSave()
 
         assertTrue(vm.uiState.value.isDone)
         assertEquals(90, settings.state.value.dailyLimitMinutes)
         assertTrue(settings.state.value.onboardingComplete)
+        assertEquals(LocalDate.of(2026, 9, 27), settings.state.value.journeyStartDate)
     }
 
     @Test
@@ -60,5 +62,6 @@ class DailyLimitViewModelTest {
 
         assertEquals(30, settings.state.value.dailyLimitMinutes)
         assertFalse(settings.state.value.onboardingComplete)
+        assertEquals(null, settings.state.value.journeyStartDate)
     }
 }

@@ -7,7 +7,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.achyutpal.scrolljourney.ScrollJourneyApp
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
+import com.achyutpal.scrolljourney.domain.model.UserSettings
 import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
+import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import com.achyutpal.scrolljourney.domain.usecase.SyncUsageHistoryUseCase
 import com.achyutpal.scrolljourney.domain.usecase.TodayUsageResult
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +33,7 @@ data class HomeUiState(
 class HomePlaceholderViewModel(
     private val syncUsageHistory: SyncUsageHistoryUseCase,
     historyRepository: HistoryRepository,
+    settingsRepository: SettingsRepository,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
 
@@ -40,6 +43,10 @@ class HomePlaceholderViewModel(
     /** Re-emits automatically whenever a sync writes to the database. */
     val recentDays: StateFlow<List<DailyRecord>> = historyRepository.observeRecentDays(RECENT_DAYS)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Rocket + journey start, straight from the settings row (updates when fuel is applied). */
+    val settings: StateFlow<UserSettings?> = settingsRepository.observeSettings()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun refresh() {
         _uiState.update { it.copy(isLoading = true) }
@@ -55,7 +62,11 @@ class HomePlaceholderViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val container = (this[APPLICATION_KEY] as ScrollJourneyApp).container
-                HomePlaceholderViewModel(container.syncUsageHistoryUseCase, container.historyRepository)
+                HomePlaceholderViewModel(
+                    container.syncUsageHistoryUseCase,
+                    container.historyRepository,
+                    container.settingsRepository,
+                )
             }
         }
     }

@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 6 (estimated scroll distance). The code is done; 81 unit + 14 on-device tests pass. **Waiting on the user's phone check.**
-- **Last done (2026-09-27):** Phase 5 ✅. Built DistanceConfig (100 cm/min), DistanceCalculator, landmark comparisons, distance saved per day (cm) plus a backfill for old days, and a distance card and 7-day total on home.
-- **Waiting on:** the user to check the distance card and comparison on the phone.
-- **Next step:** Phase 7, the rocket engine (fuel +1/0/−1 applied once per finalized day, thresholds Moon 3 … Pluto 60, milestone protection).
+- **Phase:** 7 (rocket engine). The code is done; 100 unit + 16 on-device tests pass; DB v4 migrated on the phone. **Waiting on the user's phone check.**
+- **Last done (2026-09-27):** Phase 6 ✅ (1 m/min final). Planet thresholds, RocketProgressCalculator, exactly-once fuel application in a transaction, journey start date (the onboarding day, or "today" for existing users), a rocket card and fuel badges on home.
+- **Waiting on:** the user to check the rocket card (it should show Earth, journey started 27 Sep). Real fuel first appears on 28 Sep when 27 Sep is finalized.
+- **Next step:** Phase 8, the real Dashboard (single DashboardUiState; replaces HomePlaceholderScreen; rocket visuals).
 - **Never run `connectedAndroidTest`** (it uninstalls the app). See progress-log for the manual on-device test commands, and the schema-bump gotcha.
 
 ## Memory index: read on demand
@@ -53,14 +53,14 @@ navigate_scrolling/
     │   ├─ MainActivity.kt       picks the start route, hosts navigation
     │   ├─ di/AppContainer.kt    manual DI
     │   ├─ domain/model/{UsageAccessState, InstalledApp, SelectedApp}.kt
-    │   ├─ domain/calculator/{AppSelectionRules, LimitEvaluator, DailyLimitRules, DistanceConfig, DistanceCalculator, DistanceComparisons}.kt
+    │   ├─ domain/calculator/{AppSelectionRules, LimitEvaluator, DailyLimitRules, DistanceConfig, DistanceCalculator, DistanceComparisons, RocketProgressCalculator}.kt
     │   ├─ domain/repository/{UsageAccessRepository, AppRepository}.kt
     │   ├─ domain/model/{UsageEvent, DailyUsageSummary}.kt, domain/calculator/UsageCalculator.kt
-    │   ├─ domain/usecase/{SyncUsageHistoryUseCase, TodayUsageResult}.kt
-    │   ├─ domain/repository/{Usage,History,Settings}Repository.kt, domain/model/{DayStatus,Planet,UserSettings,DailyRecord,ForegroundUsage}.kt
+    │   ├─ domain/usecase/{SyncUsageHistoryUseCase, ApplyJourneyFuelUseCase, TodayUsageResult}.kt
+    │   ├─ domain/repository/{Usage,History,Settings,Journey}Repository.kt, domain/model/{DayStatus,Planet,RocketState,UserSettings,DailyRecord,ForegroundUsage}.kt
     │   ├─ data/usage/{AndroidUsageAccessRepository, UsageDataSource, AndroidUsageRepository}.kt
-    │   ├─ data/local/ScrollJourneyDatabase.kt (v3)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
-    │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt
+    │   ├─ data/local/ScrollJourneyDatabase.kt (v4)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
+    │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt, data/journey/RoomJourneyRepository.kt
     │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
     │   ├─ util/UsageAccessSettings.kt
     │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, home

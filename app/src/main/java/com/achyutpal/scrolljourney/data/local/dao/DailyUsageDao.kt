@@ -29,6 +29,13 @@ interface DailyUsageDao {
     @Query("SELECT * FROM daily_usage WHERE date BETWEEN :start AND :end ORDER BY date ASC")
     suspend fun getRange(start: String, end: String): List<DailyUsageEntity>
 
+    @Query("SELECT * FROM daily_usage WHERE finalized = 1 AND fuelApplied = 0 AND date >= :from ORDER BY date ASC")
+    suspend fun getAwaitingFuel(from: String): List<DailyUsageEntity>
+
+    /** Returns 1 if this call applied the fuel, 0 if it had already been applied: the "exactly once" guard. */
+    @Query("UPDATE daily_usage SET fuelApplied = 1, fuelDelta = :fuelDelta WHERE date = :date AND fuelApplied = 0")
+    suspend fun markFuelApplied(date: String, fuelDelta: Int): Int
+
     @Query("SELECT * FROM daily_usage ORDER BY date DESC LIMIT :limit")
     fun observeRecent(limit: Int): Flow<List<DailyUsageEntity>>
 }

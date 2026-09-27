@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 data class DailyLimitUiState(
     val isLoading: Boolean = true,
@@ -31,6 +32,7 @@ data class DailyLimitUiState(
 class DailyLimitViewModel(
     private val settingsRepository: SettingsRepository,
     private val isOnboarding: Boolean,
+    private val today: () -> LocalDate = LocalDate::now,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DailyLimitUiState())
@@ -53,7 +55,8 @@ class DailyLimitViewModel(
         _uiState.update { it.copy(isSaving = true) }
         viewModelScope.launch {
             settingsRepository.setDailyLimit(state.limitMinutes)
-            if (isOnboarding) settingsRepository.setOnboardingComplete()
+            // Finishing onboarding starts the rocket journey: today is the first day that can earn fuel.
+            if (isOnboarding) settingsRepository.setOnboardingComplete(journeyStart = today())
             _uiState.update { it.copy(isSaving = false, isDone = true) }
         }
     }

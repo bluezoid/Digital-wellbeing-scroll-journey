@@ -91,6 +91,35 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun migrate3To4_addsFuelFlagAndJourneyStartWithoutTouchingData() {
+        helper.createDatabase(TEST_DB, 3).apply {
+            execSQL(
+                "INSERT INTO daily_usage (date, totalMinutes, status, limitMinutes, fuelDelta, distance, finalized) " +
+                    "VALUES ('2026-09-25', 44, 'GREEN', 60, 0, 4400, 1)",
+            )
+            execSQL(
+                "INSERT INTO user_settings (id, dailyLimitMinutes, onboardingComplete, currentFuel, lifetimeFuel, " +
+                    "highestReachedPlanet, journeyDistance) VALUES (1, 120, 1, 0, 0, 'EARTH', 0)",
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(TEST_DB, 4, true)
+
+        db.query("SELECT totalMinutes, distance, fuelApplied FROM daily_usage").use {
+            it.moveToFirst()
+            assertEquals(44, it.getInt(0))
+            assertEquals(4400, it.getInt(1))
+            assertEquals(0, it.getInt(2))
+        }
+        db.query("SELECT dailyLimitMinutes, journeyStartDate FROM user_settings").use {
+            it.moveToFirst()
+            assertEquals(120, it.getInt(0))
+            assertTrue(it.isNull(1))
+        }
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }

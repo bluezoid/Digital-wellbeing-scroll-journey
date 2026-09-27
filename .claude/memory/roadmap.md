@@ -13,7 +13,7 @@ Rule: build one small piece → run on the Android 13 phone → test → show th
 | 4 | Room + history (add the other 3 entities via DB v2 migration, upsert, backfill, onboardingComplete flag) | Survives restart and reboot | ✅ 2026-09-27 (7 days backfilled, 20–27 Sep, correct per selected apps) |
 | 5 | Limit / day-status engine (integer maths) + Daily Limit onboarding step + judged limit per day (DB v3) | Unit tests pass, colours correct on the phone | ✅ 2026-09-27 |
 | 6 | Distance engine (DistanceConfig) | Unit tests pass, distance card shows on the phone | ✅ 2026-09-27 |
-| 7 | Rocket engine (fuel, thresholds, milestone protection) | Unit tests pass | ⏳ |
+| 7 | Rocket engine (fuel, thresholds, milestone protection, exactly-once, journey start) | Unit tests pass, rocket card on the phone | 🔄 code done, phone check pending |
 | 8 | Dashboard (single DashboardUiState) | Renders real data | ⏳ |
 | 9 | History calendar + streaks | Month grid and streak counts correct | ⏳ |
 | 10 | WorkManager DailyUsageWorker + reconciliation on app open | Missed days filled, no duplicates | ⏳ |

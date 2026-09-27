@@ -4,10 +4,12 @@ import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DayStatus
 import com.achyutpal.scrolljourney.domain.model.UserSettings
 import com.achyutpal.scrolljourney.domain.model.ForegroundUsage
+import com.achyutpal.scrolljourney.domain.model.Planet
 import com.achyutpal.scrolljourney.domain.model.SelectedApp
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.fakes.FakeAppRepository
 import com.achyutpal.scrolljourney.fakes.FakeHistoryRepository
+import com.achyutpal.scrolljourney.fakes.FakeJourneyRepository
 import com.achyutpal.scrolljourney.fakes.FakeSettingsRepository
 import com.achyutpal.scrolljourney.fakes.FakeUsageAccessRepository
 import com.achyutpal.scrolljourney.fakes.FakeUsageRepository
@@ -54,6 +56,7 @@ class SyncUsageHistoryUseCaseTest {
         usageRepository = usage,
         historyRepository = history,
         settingsRepository = settings,
+        applyJourneyFuel = ApplyJourneyFuelUseCase(FakeJourneyRepository(history, settings), settings),
         now = { now },
         zone = { zone },
     )
@@ -236,6 +239,30 @@ class SyncUsageHistoryUseCaseTest {
 
         assertEquals(zeroDay, history.records[yesterday])
         assertEquals(saves + 7, history.saveCount) // 6 other past days + today, nothing for yesterday
+    }
+
+    @Test
+    fun `journey starts today for users without a start date, so backfilled days give no fuel`() = runTest {
+        useCase()()
+
+        assertEquals(today, settings.state.value.journeyStartDate)
+        assertEquals(0, settings.state.value.currentFuel)
+        assertTrue(history.records.values.none { it.fuelApplied })
+    }
+
+    @Test
+    fun `finalized days since the journey start fuel the rocket once, today never`() = runTest {
+        settings.ensureJourneyStarted(today.minusDays(3))
+
+        useCase()()
+        useCase()() // second run must not add fuel again
+
+        // 3 past days since the start, each 30 min against a 60 min limit → green → +1
+        assertEquals(3, settings.state.value.currentFuel)
+        assertEquals(Planet.MOON, settings.state.value.highestReachedPlanet)
+        assertFalse(history.records.getValue(today).fuelApplied)
+        assertEquals(1, history.records.getValue(today.minusDays(1)).fuelDelta)
+        assertFalse(history.records.getValue(today.minusDays(4)).fuelApplied)
     }
 
     @Test

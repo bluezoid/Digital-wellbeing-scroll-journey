@@ -37,6 +37,14 @@ class FakeHistoryRepository(initial: List<DailyRecord> = emptyList()) : HistoryR
         days.value = days.value + (date to day.copy(status = status, limitMinutes = limitMinutes, distance = distance))
     }
 
+    /** Test hook mirroring the DAO's conditional update. */
+    fun markFuelApplied(date: LocalDate, fuelDelta: Int): Boolean {
+        val day = days.value[date] ?: return false
+        if (day.fuelApplied) return false
+        days.value = days.value + (date to day.copy(fuelApplied = true, fuelDelta = fuelDelta))
+        return true
+    }
+
     override suspend fun getRange(start: LocalDate, end: LocalDate) =
         days.value.values.filter { it.date in start..end }.sortedBy { it.date }
 

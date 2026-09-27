@@ -187,3 +187,25 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Phone DB before the first sync of this build: distances 0 (the phone was locked). The user's limit is now 120 (they changed it), so today is YELLOW with 137 m.
 - Pending: the user checks the distance card and the 7-day total, and past days' distances get backfilled on the first open.
 - **Device check passed (2026-09-27, screenshots):** today 2h 17m → 137 m ≈ 1.9× Qutub Minar; 7-day total 488 m (matches the sum); today YELLOW against the 2h limit; past days keep 'limit 1h 00m'. Tracked apps on the phone: Chrome, Instagram, Brave, Facebook, YouTube (browsers were the top usage today). **Phase 6 ✅.** The user asked for advice on the 1 m/min constant before Phase 7.
+
+## 2026-09-27: Phase 7, rocket engine (session 2, continued)
+
+- The user confirmed the distance constant: **1 m/min is final for the MVP.**
+- Domain:
+  - `Planet` enum now has `fuelRequired` (Earth 0, Moon 3, Mars 7, Jupiter 14, Saturn 21, Uranus 30, Neptune 45, Pluto 60), `next`, and `forFuel(fuel)`.
+  - `RocketState(currentFuel, lifetimeFuel, highestReachedPlanet)` with nextPlanet, fuelToNext, and legProgress (from the reached planet's threshold to the next one; 0 if fuel dropped below the milestone).
+  - `RocketProgressCalculator`: fuelDelta G +1 / Y 0 / R −1. `apply()` gives fuel = max(0, fuel + delta); lifetimeFuel += max(delta, 0); highest = max(highest, forFuel(fuel)), so milestones are never lost.
+  - `UserSettings.journeyStartDate` and `.rocket`; `DailyRecord.fuelApplied`.
+  - `JourneyRepository` (daysAwaitingFuel, applyDay) and `ApplyJourneyFuelUseCase`: finalized days on/after journeyStartDate with fuelApplied = 0, oldest first.
+  - `SettingsRepository.setOnboardingComplete(journeyStart)` and `ensureJourneyStarted` (both COALESCE, so an existing start is never moved).
+- **Journey start rule:** the journey starts the day onboarding completes (the DailyLimit save in onboarding). For users onboarded before Phase 7, the sync sets it to *today* on the next run. **Backfilled/earlier days never give fuel. Today only gives fuel once it's finalized (the next day).**
+- Data:
+  - **DB v4** via `AutoMigration(3→4)` with no spec: `daily_usage.fuelApplied` (NOT NULL, default 0) and `user_settings.journeyStartDate` (TEXT, nullable).
+  - `RoomJourneyRepository.applyDay` runs in **one transaction**: the conditional `UPDATE … SET fuelApplied = 1 WHERE date = ? AND fuelApplied = 0` (returns rows affected), then the rocket state is saved and the day's distance is added to journeyDistance. It's a no-op if already applied, which gives exactly-once even under concurrent syncs.
+- Sync: after finalizing past days, it calls `ensureJourneyStarted(today)` and then `applyJourneyFuel()`.
+- UI:
+  - Home has a new "Rocket journey" card: "🌍 On Earth, ready for launch" or "🌙 Moon reached", a 🌍 🚀 🌙 row with a leg progress bar, "Fuel X / Y · next stop: Z", the journey start date, and the rules line.
+  - History rows show a "+1 / 0 / −1 fuel" badge for fuel-applied days.
+- Tests: **100 JVM** (new: RocketProgressCalculator 10 [spec §38, §40, §58–61], ApplyJourneyFuel 7, Sync +2, DailyLimitVM journey start) and **16 on-device** (+applyDay exactly once in a transaction, journey start COALESCE, MigrationTest 3→4). All pass.
+- Phone DB after installing: version 4, settings (limit 120, onboarded, fuel 0, EARTH, journeyStartDate NULL until the first sync), and no fuel applied to backfilled days.
+- Expected on the device: the journey starts 27 Sep. Today (137 min against a 120 limit) is YELLOW so far, so it would give 0 fuel when finalized on 28 Sep unless the status changes.
