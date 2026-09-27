@@ -265,3 +265,15 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - realme/ColorOS ("OplusHansManager") freezes background apps when the screen is off. Periodic work may be delayed; the sync on app open is the primary path, the worker is the backup. Consider guiding users to allow background activity (Settings).
 - Tests: **127 JVM** (+DailySyncPolicy 4) and **17 on-device** (+DailyUsageWorkerTest). All pass.
 - Still to observe in real life: after 00:30 tonight, `adb logcat -s DailyUsageWorker:D` (or the next day's history) should show the 27 Sep finalization and a fuel badge without opening the app first.
+- **UI fixes from the user's 20-screenshot review (2026-09-27, 23:10):** all data was verified correct (colours, per-app sums, streak 0/3, distance). Fixed:
+  1. **Back arrow** on the App picker and Daily limit when opened from the dashboard (`onBack` param, shared `ui/common/BackTopBar`; null during onboarding).
+  2. The comparison "≈ 1× the height of…" now reads "≈ the height of…" (`distance_about_one`).
+  3. The limit preset chips use `formatMinutesCompact` (30m / 1h / 1h 30m / 2h, maxLines 1); "2h 00m" had wrapped.
+  128 JVM tests pass. Installed.
+- **End of session 2 (2026-09-27 ~23:15).** The user is stopping for the day.
+
+### Resume checklist for next session (2026-09-28)
+1. Ask the user to open the app in the morning (the phone can be connected). Check: 27 Sep is finalized (not "live"), YELLOW against the 2h limit, with a "0 fuel" badge; the rocket is still at 0 fuel/Earth. Optionally `adb logcat -d -s DailyUsageWorker:D` for the 00:30 worker run (it may be delayed by ColorOS).
+2. Ask the user to confirm the three UI fixes (back arrows, pyramid wording, chips).
+3. Then **Phase 11 Settings**: change apps, change limit, **reset journey** (confirmation dialog; fuel = 0, highest = EARTH, journeyDistance = 0, journeyStartDate = today, history kept, clear fuelApplied? NO: keep fuel history, just restart the rocket from today), privacy text, and a battery/background hint for OEMs like realme. Move the ⋮ menu items into Settings.
+4. After that: present the **3D solar system plan (12b)** to the user before coding, then Phase 12 validation.

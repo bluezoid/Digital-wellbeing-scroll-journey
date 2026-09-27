@@ -10,10 +10,11 @@ import com.achyutpal.scrolljourney.domain.calculator.Landmark
 @Composable
 fun comparisonText(comparison: Comparison): String {
     val name = stringResource(comparison.landmark.nameRes())
-    return if (comparison.times < 1) {
-        stringResource(R.string.distance_fraction_of, formatTimes(comparison.times * 100), name)
-    } else {
-        stringResource(R.string.distance_times, formatTimes(comparison.times), name)
+    val times = formatTimes(comparison.times)
+    return when {
+        comparison.times < 1 -> stringResource(R.string.distance_fraction_of, formatTimes(comparison.times * 100), name)
+        times == "1" -> stringResource(R.string.distance_about_one, name) // "≈ 1×" reads oddly
+        else -> stringResource(R.string.distance_times, times, name)
     }
 }
 

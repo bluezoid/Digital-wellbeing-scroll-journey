@@ -38,7 +38,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.achyutpal.scrolljourney.R
 import com.achyutpal.scrolljourney.domain.calculator.DailyLimitRules
 import com.achyutpal.scrolljourney.domain.calculator.LimitEvaluator
+import com.achyutpal.scrolljourney.ui.common.BackTopBar
 import com.achyutpal.scrolljourney.ui.common.formatMinutes
+import com.achyutpal.scrolljourney.ui.common.formatMinutesCompact
 import com.achyutpal.scrolljourney.ui.theme.ScrollJourneyTheme
 import com.achyutpal.scrolljourney.ui.theme.StatusGreen
 import com.achyutpal.scrolljourney.ui.theme.StatusRed
@@ -51,6 +53,7 @@ private val presets = listOf(30, 60, 90, 120)
 fun DailyLimitScreen(
     isOnboarding: Boolean,
     onDone: () -> Unit,
+    onBack: (() -> Unit)? = null,
     viewModel: DailyLimitViewModel = viewModel(factory = DailyLimitViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -62,6 +65,7 @@ fun DailyLimitScreen(
     DailyLimitContent(
         state = state,
         isOnboarding = isOnboarding,
+        onBack = onBack,
         onLimitChange = viewModel::onLimitChange,
         onSave = viewModel::onSave,
     )
@@ -71,11 +75,13 @@ fun DailyLimitScreen(
 private fun DailyLimitContent(
     state: DailyLimitUiState,
     isOnboarding: Boolean,
+    onBack: (() -> Unit)?,
     onLimitChange: (Int) -> Unit,
     onSave: () -> Unit,
 ) {
     val limit = state.limitMinutes
     Scaffold(
+        topBar = { onBack?.let { BackTopBar(it) } },
         bottomBar = {
             Button(
                 onClick = onSave,
@@ -96,7 +102,7 @@ private fun DailyLimitContent(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
         ) {
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(if (onBack == null) 24.dp else 0.dp))
             Text(
                 text = stringResource(R.string.limit_title),
                 style = MaterialTheme.typography.headlineMedium,
@@ -146,7 +152,7 @@ private fun DailyLimitContent(
                     FilterChip(
                         selected = limit == preset,
                         onClick = { onLimitChange(preset) },
-                        label = { Text(formatMinutes(preset)) },
+                        label = { Text(formatMinutesCompact(preset), maxLines = 1) },
                     )
                 }
             }
@@ -184,6 +190,7 @@ private fun DailyLimitPreview() {
         DailyLimitContent(
             state = DailyLimitUiState(isLoading = false, limitMinutes = 60),
             isOnboarding = true,
+            onBack = null,
             onLimitChange = {},
             onSave = {},
         )

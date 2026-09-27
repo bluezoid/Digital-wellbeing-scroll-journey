@@ -66,6 +66,7 @@ fun AppNavHost(startDestination: String) {
                         navController.popBackStack()
                     }
                 },
+                onBack = if (onboarding) null else { { navController.popBackStack() } },
             )
         }
         composable(Routes.DAILY_LIMIT, arguments = onboardingArgument) { entry ->
@@ -79,6 +80,7 @@ fun AppNavHost(startDestination: String) {
                         navController.popBackStack()
                     }
                 },
+                onBack = if (onboarding) null else { { navController.popBackStack() } },
             )
         }
         composable(Routes.DASHBOARD) {

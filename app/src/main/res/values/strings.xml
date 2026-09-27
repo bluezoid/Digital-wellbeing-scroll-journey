@@ -77,6 +77,7 @@
     <!-- Estimated scroll distance -->
     <string name="distance_title">Estimated scroll distance today</string>
     <string name="distance_times">≈ %1$s× the height of %2$s</string>
+    <string name="distance_about_one">≈ the height of %1$s</string>
     <string name="distance_fraction_of">≈ %1$s%% of the height of %2$s</string>
     <string name="distance_footnote">An estimate from your screen time (about %1$s of feed per minute), not a measurement of real scrolling.</string>
     <string name="landmark_qutub_minar">the Qutub Minar</string>

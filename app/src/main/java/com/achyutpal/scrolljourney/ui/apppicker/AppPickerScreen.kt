@@ -39,12 +39,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.achyutpal.scrolljourney.R
+import com.achyutpal.scrolljourney.ui.common.BackTopBar
 import com.achyutpal.scrolljourney.ui.theme.ScrollJourneyTheme
 
 /** Lets the user tick which installed apps count toward the daily limit. */
 @Composable
 fun AppPickerScreen(
     onDone: () -> Unit,
+    onBack: (() -> Unit)? = null,
     viewModel: AppPickerViewModel = viewModel(factory = AppPickerViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -55,6 +57,7 @@ fun AppPickerScreen(
 
     AppPickerContent(
         state = state,
+        onBack = onBack,
         onToggle = viewModel::onToggle,
         onQueryChange = viewModel::onQueryChange,
         onSave = viewModel::onSave,
@@ -65,12 +68,14 @@ fun AppPickerScreen(
 @Composable
 private fun AppPickerContent(
     state: AppPickerUiState,
+    onBack: (() -> Unit)?,
     onToggle: (String) -> Unit,
     onQueryChange: (String) -> Unit,
     onSave: () -> Unit,
     loadIcon: suspend (String) -> ImageBitmap?,
 ) {
     Scaffold(
+        topBar = { onBack?.let { BackTopBar(it) } },
         bottomBar = {
             Button(
                 onClick = onSave,
@@ -90,7 +95,7 @@ private fun AppPickerContent(
                 .padding(innerPadding)
                 .padding(horizontal = 24.dp),
         ) {
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(if (onBack == null) 24.dp else 0.dp))
             Text(
                 text = stringResource(R.string.app_picker_title),
                 style = MaterialTheme.typography.headlineMedium,
@@ -175,6 +180,7 @@ private fun AppRowItem(
 private fun AppPickerPreview() {
     ScrollJourneyTheme(darkTheme = true) {
         AppPickerContent(
+            onBack = null,
             state = AppPickerUiState(
                 isLoading = false,
                 rows = listOf(

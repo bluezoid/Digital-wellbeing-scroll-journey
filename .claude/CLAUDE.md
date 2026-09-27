@@ -18,10 +18,9 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 10 (WorkManager). The code is done; 127 unit + 17 on-device tests pass; the job is scheduled on the phone (next run about 00:30) and the worker is verified via an on-device test. **Waiting on the user's check tomorrow.**
-- **Last done (2026-09-27):** Phase 9 ✅. DailyUsageWorker (same idempotent sync), DailySyncScheduler (24 h periodic, first run 00:30, KEEP, battery-not-low), DailySyncPolicy.
-- **Waiting on:** the user to confirm tomorrow that 27 Sep got finalized and fuelled (badge on history) even before they interact much.
-- **Next step:** Phase 11, the Settings screen (apps, limit, reset journey with confirmation, privacy). Then plan 12b (3D solar system) with the user, then 12 validation.
+- **Phase:** 10 (WorkManager). The code is done and verified via an on-device test; the overnight run is still to observe. UI polish from the user's review is done (back arrows, chips, comparison wording). 128 unit + 17 on-device tests pass.
+- **Last done (2026-09-27, end of session 2):** Phases 0–9 ✅ verified on the realme; Phase 10 code done.
+- **Next session: start with the "Resume checklist for next session" at the bottom of memory/progress-log.md** (morning check of 27 Sep finalization + worker, then Phase 11 Settings, then the 3D plan 12b).
 - **Never run `connectedAndroidTest`** (it uninstalls the app). See progress-log for the manual on-device test commands, and the schema-bump gotcha.
 
 ## Memory index: read on demand
