@@ -1,6 +1,11 @@
 # MVP features
 
-**Status:** PROPOSED on 2026-09-27. **Waiting for user approval.** When approved, change this line to "APPROVED <date>" and note any edits.
+**Status:** APPROVED on 2026-09-27, via the user's full technical spec. **`spec.md` is now authoritative** for rules, data model, and tests. This file is the original feature summary.
+Changes the spec made to the list below:
+- Settings are stored in Room, not DataStore.
+- The rocket state is currentFuel + lifetimeFuel + highestReachedPlanet.
+- UI copy says "estimated" distance.
+- Pluto is described as "60 fuel points," not "6 months."
 
 ## In scope (10 features)
 

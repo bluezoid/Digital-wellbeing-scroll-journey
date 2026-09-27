@@ -18,15 +18,16 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 0, planning. No app code exists yet.
-- **Last done (2026-09-27):** Picked the product direction (screen time instead of scroll counting), picked the tech stack, and proposed the MVP feature list. Created this memory system.
-- **Waiting on:** the user's approval of the MVP feature list (`memory/mvp-features.md`) and of the rocket and streak defaults.
-- **Next step once approved:** Phase 1. Create the Android Studio project (Empty Activity, Compose), then build the usage-access permission screen and today's per-app minutes list. Check the numbers against Android's Digital Wellbeing.
+- **Phase:** 1 (onboarding + Usage Access). The code is done and builds; **waiting on the physical-phone test**.
+- **Last done (2026-09-27):** Adopted the user's technical spec (`memory/spec.md`, authoritative). Built Phase 0 (project setup) and Phase 1 (intro pages, Usage Access screen with auto-detect on resume, temporary home with revoked warning). 4 unit tests pass.
+- **Waiting on:** the user to connect their Android 13 phone (USB debugging), run `./gradlew installDebug`, and report the results of the Phase 1 checks (see the last entry in progress-log.md).
+- **Next step:** Phase 2, the app picker (PackageManager + `<queries>` for launcher apps, pre-select installed social apps). No Room yet; the selection is stored once Room lands in Phase 4 (or decide with the user).
 
 ## Memory index: read on demand
 
 | File | Read when |
 |---|---|
+| `memory/spec.md` | **Authoritative MVP spec**: rules, data model, architecture, tests. Read before building any feature |
 | `memory/product.md` | You need the idea, target user, positioning, or the history of the pivot |
 | `memory/mvp-features.md` | Building or discussing any feature or scope |
 | `memory/tech-stack.md` | Setting up the project, adding libraries, deciding on structure |
@@ -39,7 +40,24 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ```text
 navigate_scrolling/
- ├─ .claude/            project memory (this folder)
- ├─ README.md           original research. The scroll-counting part is superseded; see memory/decisions.md
- └─ idea.txt            empty, the user's scratch file
+ ├─ .claude/                     project memory (this folder)
+ ├─ README.md                    original research; the scroll-counting part is superseded
+ ├─ idea.txt                     the user's scratch file
+ ├─ settings.gradle.kts, build.gradle.kts, gradle.properties, gradle/libs.versions.toml, gradlew
+ └─ app/src/
+    ├─ main/AndroidManifest.xml  PACKAGE_USAGE_STATS declared
+    ├─ main/res/                 strings, themes, colors, adaptive rocket icon
+    ├─ main/java/com/achyutpal/scrolljourney/
+    │   ├─ ScrollJourneyApp.kt   Application → AppContainer
+    │   ├─ MainActivity.kt       picks the start route, hosts navigation
+    │   ├─ di/AppContainer.kt    manual DI
+    │   ├─ domain/model/UsageAccessState.kt
+    │   ├─ domain/repository/UsageAccessRepository.kt
+    │   ├─ data/usage/AndroidUsageAccessRepository.kt
+    │   ├─ util/UsageAccessSettings.kt
+    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, home
+    │   └─ ui/{theme, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel, home/HomePlaceholderScreen}
+    └─ test/.../ui/permission/UsageAccessViewModelTest.kt
 ```
+
+Build commands are in `memory/tech-stack.md`.

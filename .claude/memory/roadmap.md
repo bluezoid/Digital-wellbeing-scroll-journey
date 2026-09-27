@@ -1,15 +1,22 @@
 # Roadmap and phases
 
-Mark phases ✅ done, 🔄 in progress, or ⏳ not started. The current phase is also shown in `.claude/CLAUDE.md`.
+These follow the user's spec build order (`spec.md`). Mark phases ✅ done, 🔄 in progress, or ⏳ not started. The current phase is also shown in `.claude/CLAUDE.md`.
+Rule: build one small piece → run on the Android 13 phone → test → show the user → review → move on. Never build the whole app at once.
 
-| Phase | Goal | Features | Done when | Status |
-|---|---|---|---|---|
-| 0 | Research and planning | none | Direction, stack and MVP list approved | 🔄 (awaiting MVP approval) |
-| 1 | **Feasibility spike**: project setup, usage permission, today's minutes list | F1 (basic), F4 | Minutes match Digital Wellbeing on a real phone; scroll-speed constant measured | ⏳ |
-| 2 | App picker and limit, stored in DataStore | F2, F3 | Selections survive restart | ⏳ |
-| 3 | Room history, backfill, daily WorkManager snapshot | F5 | History persists across days without opening the app | ⏳ |
-| 4 | Domain layer: streak, rocket, distance (pure Kotlin + unit tests) | F7, F8, F9 logic | All domain tests pass | ⏳ |
-| 5 | Dashboard UI: totals, breakdown, distance, rocket track, calendar | F6, F7, F8 UI | Full home screen works on real data | ⏳ |
-| 6 | Onboarding polish, settings, empty and error states | F1 (full), F10 | A fresh install goes smoothly from start to dashboard | ⏳ |
-| 7 | MVP test on the user's own phone for 1–2 weeks, then fixes | none | "Definition of MVP done" is met | ⏳ |
-| Later | Notifications, widget, XP/badges, share cards, subscription, optional accessibility precise mode | none | none | ⏳ |
+| Phase | Goal | Done when | Status |
+|---|---|---|---|
+| Planning | Direction, stack, MVP list, spec | Spec approved | ✅ 2026-09-27 |
+| 0 | Project setup: Gradle, package, theme, navigation, unit tests | Builds, tests pass | ✅ 2026-09-27 |
+| 1 | Onboarding (Intro 1, Intro 2) + Usage Access explanation → Settings → auto-detect on return; revoked warning | Round trip verified **on the physical phone** | 🔄 code done, device test pending |
+| 2 | App picker (PackageManager, `<queries>`, default social apps pre-selected) | Correct list on Android 13 | ⏳ |
+| 3 | UsageStats integration (`UsageDataSource`, `queryEvents`, per-app minutes today) | Matches Digital Wellbeing within about ±1 min | ⏳ |
+| 4 | Room + history (4 entities, upsert, backfill, onboardingComplete flag) | Survives restart and reboot | ⏳ |
+| 5 | Limit / day-status engine (integer maths) | Unit tests pass | ⏳ |
+| 6 | Distance engine (DistanceConfig) | Unit tests pass | ⏳ |
+| 7 | Rocket engine (fuel, thresholds, milestone protection) | Unit tests pass | ⏳ |
+| 8 | Dashboard (single DashboardUiState) | Renders real data | ⏳ |
+| 9 | History calendar + streaks | Month grid and streak counts correct | ⏳ |
+| 10 | WorkManager DailyUsageWorker + reconciliation on app open | Missed days filled, no duplicates | ⏳ |
+| 11 | Settings (apps, limit, reset journey with confirmation, privacy) | Reset keeps history | ⏳ |
+| 12 | 7–14 day real-device validation (reboot, missed day, 23:59→00:01, uninstall/reinstall) | Acceptance checklist in spec §87 fully ticked | ⏳ |
+| Later | Notifications, widget, XP/badges, share cards, subscription, optional accessibility precise mode | none | ⏳ |

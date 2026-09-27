@@ -26,6 +26,37 @@
 | Build | Android Studio, Gradle Kotlin DSL, version catalog (`libs.versions.toml`) |
 | minSdk | 26 (Android 8.0) |
 
+**Update 2026-09-27:** preferences go in a Room `UserSettingsEntity` (per the spec), not DataStore. See spec.md for the full package layout.
+
+## Actual build setup (Phase 0, 2026-09-27)
+
+Pinned to what builds offline-friendly on this machine. Android Studio will suggest upgrades; that's fine, but upgrade deliberately.
+
+| Item | Version |
+|---|---|
+| Gradle wrapper | 8.10.2 |
+| AGP | 8.7.2 |
+| Kotlin + Compose compiler plugin | 2.1.0 |
+| compileSdk / targetSdk / minSdk | 34 / 34 / 26 |
+| Compose BOM | 2024.09.00 (material3 1.3) |
+| activity-compose | 1.9.2 |
+| lifecycle (runtime-compose, viewmodel-compose) | 2.8.6 |
+| navigation-compose | 2.8.0 (string routes, not type-safe) |
+| core-ktx | 1.13.1 |
+| JUnit | 4.13.2 |
+| JDK | 17 (Corretto) |
+| SDK | `~/Android/Sdk` (platforms 34, 36) |
+
+- Versions live in `gradle/libs.versions.toml`.
+- **Before a Play Store release**, raise targetSdk to Play's current requirement (lint `OldTargetApi` flags it). This needs a newer AGP and compileSdk 35/36.
+
+Commands (run from the repo root):
+- `./gradlew assembleDebug`: APK at `app/build/outputs/apk/debug/app-debug.apk`
+- `./gradlew testDebugUnitTest`: JVM unit tests
+- `./gradlew lintDebug`
+- `./gradlew installDebug`: install on the connected phone (check `adb devices` first)
+- If resources get renamed and the build says "resource not found," run `./gradlew clean` (stale incremental cache).
+
 ## Planned package structure
 
 ```text

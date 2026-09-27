@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Scroll Journey</string>
+
+    <!-- Onboarding: intro pages -->
+    <string name="intro1_title">Where will your scrolling take you?</string>
+    <string name="intro1_body">Pick the social apps that eat your day and set a daily limit. Every day you stay under it fuels a rocket on its way from Earth to Pluto.</string>
+    <string name="intro2_title">Everything stays on your phone</string>
+    <string name="intro2_body">No account, no server, no location. Scroll Journey only reads how many minutes you spend in the apps you choose.</string>
+    <string name="action_next">Next</string>
+    <string name="action_continue">Continue</string>
+
+    <!-- Onboarding: usage access -->
+    <string name="usage_access_title">Allow Usage Access</string>
+    <string name="usage_access_body">To count your minutes in each app, Android needs you to switch on Usage Access for Scroll Journey. It only tells us how long apps were open, never what you did inside them.</string>
+    <string name="usage_access_step1">1. Tap “Open settings”</string>
+    <string name="usage_access_step2">2. Find Scroll Journey in the list</string>
+    <string name="usage_access_step3">3. Turn on “Permit usage access”</string>
+    <string name="usage_access_step4">4. Come back. We’ll detect it automatically</string>
+    <string name="usage_access_not_yet">Usage Access is still off.</string>
+    <string name="action_open_settings">Open settings</string>
+
+    <!-- Post-onboarding placeholder -->
+    <string name="home_granted_title">Usage Access is on</string>
+    <string name="home_granted_body">Scroll Journey can now read how long your apps are used. Next up: choosing which apps to track.</string>
+    <string name="home_revoked_title">Usage Access is disabled</string>
+    <string name="home_revoked_body">Enable it to continue tracking your selected apps.</string>
+    <string name="home_checking">Checking Usage Access…</string>
+</resources>

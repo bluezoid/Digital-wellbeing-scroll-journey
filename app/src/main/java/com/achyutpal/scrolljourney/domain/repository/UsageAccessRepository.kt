@@ -1,0 +1,13 @@
+package com.achyutpal.scrolljourney.domain.repository
+
+import com.achyutpal.scrolljourney.domain.model.UsageAccessState
+
+/**
+ * Answers "is Usage Access switched on right now?".
+ *
+ * An interface (not the Android class directly) so ViewModels can be unit-tested
+ * with a fake, without a phone or the Android framework.
+ */
+interface UsageAccessRepository {
+    fun checkUsageAccess(): UsageAccessState
+}

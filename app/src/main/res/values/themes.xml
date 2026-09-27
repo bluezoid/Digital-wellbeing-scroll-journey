@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Window theme only (status bar, splash background). All in-app styling is done in Compose: ui/theme/Theme.kt -->
+    <style name="Theme.ScrollJourney" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/space_navy</item>
+    </style>
+</resources>
