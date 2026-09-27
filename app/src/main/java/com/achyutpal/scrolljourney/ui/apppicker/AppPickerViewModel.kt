@@ -12,6 +12,7 @@ import com.achyutpal.scrolljourney.domain.calculator.AppSelectionRules
 import com.achyutpal.scrolljourney.domain.model.InstalledApp
 import com.achyutpal.scrolljourney.domain.model.SelectedApp
 import com.achyutpal.scrolljourney.domain.repository.AppRepository
+import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,6 +40,7 @@ data class AppPickerUiState(
 
 class AppPickerViewModel(
     private val appRepository: AppRepository,
+    private val settingsRepository: SettingsRepository,
     private val iconSource: AppIconSource,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
@@ -83,6 +85,8 @@ class AppPickerViewModel(
             val selected = state.rows.filter { it.selected }.map { it.packageName }.toSet()
             val records = AppSelectionRules.buildSelectionRecords(installed, saved, selected, clock())
             appRepository.saveSelections(records)
+            // Choosing apps is the last onboarding step for now (the daily-limit step comes in Phase 5).
+            settingsRepository.setOnboardingComplete()
             _uiState.update { it.copy(isSaving = false, isDone = true) }
         }
     }
@@ -93,7 +97,7 @@ class AppPickerViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val container = (this[APPLICATION_KEY] as ScrollJourneyApp).container
-                AppPickerViewModel(container.appRepository, container.appIconSource)
+                AppPickerViewModel(container.appRepository, container.settingsRepository, container.appIconSource)
             }
         }
     }

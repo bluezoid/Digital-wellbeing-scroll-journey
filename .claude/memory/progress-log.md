@@ -101,3 +101,28 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Installed on the phone; the **device comparison with Digital Wellbeing is pending** (the phone was locked).
 - Debug: `adb logcat -s UsageTracking:D` shows the event count and per-package milliseconds on each refresh.
 - **Device check passed (2026-09-27):** Scroll Journey's minutes matched Digital Wellbeing **exactly** for all selected apps (Instagram, YouTube, Facebook) on the realme. The queryEvents approach and rounding down are confirmed. **Phase 3 ✅.**
+
+## 2026-09-27: Phase 4, Room history built (session 2, continued)
+
+- **DB v2** via `AutoMigration(1→2, spec = Migration1To2)`. New tables:
+  - `daily_usage`: date "YYYY-MM-DD" (PK), totalMinutes, status DayStatus? (null until Phase 5), fuelDelta, distance, **finalized**.
+  - `daily_app_usage`: **composite PK (date, packageName)**, minutes.
+  - `user_settings`: id = 1, dailyLimitMinutes 60, onboardingComplete, currentFuel, lifetimeFuel, highestReachedPlanet (Planet enum stored by name), journeyDistance. The journey columns were added now so Phase 7 needs no migration.
+  - Migration1To2.onPostMigrate inserts the settings row with onboardingComplete = EXISTS(enabled selected_apps), so existing users aren't sent back to the intro.
+- Domain:
+  - `DayStatus`, `Planet`, `UserSettings`, `DailyRecord`, and `ForegroundUsage(millisByPackage, eventCount)`. eventCount 0 means no data, which is different from 0 minutes.
+  - `UsageRepository.getForegroundUsage` replaces getForegroundMillis.
+  - `HistoryRepository` (getDay, saveDay [transaction: upsert day + replace per-app rows], markFinalized, getRange, observeRecentDays) and `SettingsRepository` (getSettings, observeSettings, setOnboardingComplete; the row is created lazily).
+  - **`SyncUsageHistoryUseCase` replaces GetTodayUsageUseCase** (deleted). For each of the last 7 days: finalized → skip; has events → save finalized; no events but saved earlier → markFinalized; no events and nothing saved → skip. Then today (midnight → now) is saved unfinalized. It returns `TodayUsageResult` (moved to its own file). Past days use the current app selection.
+- Data: `data/history/RoomHistoryRepository`, `data/settings/RoomSettingsRepository`, DAOs `DailyUsageDao`, `DailyAppUsageDao`, `UserSettingsDao`.
+- UI:
+  - StartupViewModel uses `settings.onboardingComplete` (the temporary "has apps" rule is gone).
+  - AppPickerViewModel.onSave calls setOnboardingComplete.
+  - Home syncs on resume and shows a "Last 7 days" card (Flow from Room; unfinalized days are labelled "today, live").
+- Tests:
+  - 49 JVM unit tests pass (new: Sync 14, Startup 3).
+  - **10 on-device instrumented tests pass** (HistoryAndSettingsDatabaseTest 8, MigrationTest 2). Added AndroidX test runner, ext-junit and room-testing; androidTest assets include `app/schemas`.
+- **The real v1→v2 migration was verified on the phone's actual DB** (pulled via run-as): user_version 2, 5 enabled apps kept, settings row (1, 60, onboardingComplete = 1, 0, 0, EARTH, 0).
+- **How to run on-device tests WITHOUT wiping app data:** `./gradlew assembleDebugAndroidTest`, then `adb install -r -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk`, then `adb shell am instrument -w com.achyutpal.scrolljourney.test/androidx.test.runner.AndroidJUnitRunner`, then `adb uninstall com.achyutpal.scrolljourney.test`. **Never use connectedAndroidTest**: it uninstalls the app, which loses the data and Usage Access.
+- Inspect the phone DB: `adb exec-out run-as com.achyutpal.scrolljourney cat databases/scroll_journey.db > x.db` (also -wal and -shm), then open it with sqlite3 or python.
+- Pending: the user checks the "Last 7 days" card on the phone (the phone was locked).

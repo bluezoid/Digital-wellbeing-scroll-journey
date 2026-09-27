@@ -5,14 +5,18 @@ import androidx.room.Room
 import com.achyutpal.scrolljourney.data.apps.AndroidAppIconSource
 import com.achyutpal.scrolljourney.data.apps.AndroidAppRepository
 import com.achyutpal.scrolljourney.data.apps.AppIconSource
+import com.achyutpal.scrolljourney.data.history.RoomHistoryRepository
 import com.achyutpal.scrolljourney.data.local.ScrollJourneyDatabase
+import com.achyutpal.scrolljourney.data.settings.RoomSettingsRepository
 import com.achyutpal.scrolljourney.data.usage.AndroidUsageAccessRepository
 import com.achyutpal.scrolljourney.data.usage.AndroidUsageDataSource
 import com.achyutpal.scrolljourney.data.usage.AndroidUsageRepository
 import com.achyutpal.scrolljourney.domain.repository.AppRepository
+import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
+import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageRepository
-import com.achyutpal.scrolljourney.domain.usecase.GetTodayUsageUseCase
+import com.achyutpal.scrolljourney.domain.usecase.SyncUsageHistoryUseCase
 
 /**
  * Manual dependency injection: the single place that decides which concrete class
@@ -47,7 +51,15 @@ class AppContainer(context: Context) {
         AndroidUsageRepository(AndroidUsageDataSource(appContext))
     }
 
-    val getTodayUsageUseCase: GetTodayUsageUseCase by lazy {
-        GetTodayUsageUseCase(usageAccessRepository, appRepository, usageRepository)
+    val historyRepository: HistoryRepository by lazy {
+        RoomHistoryRepository(database)
+    }
+
+    val settingsRepository: SettingsRepository by lazy {
+        RoomSettingsRepository(database.userSettingsDao())
+    }
+
+    val syncUsageHistoryUseCase: SyncUsageHistoryUseCase by lazy {
+        SyncUsageHistoryUseCase(usageAccessRepository, appRepository, usageRepository, historyRepository)
     }
 }

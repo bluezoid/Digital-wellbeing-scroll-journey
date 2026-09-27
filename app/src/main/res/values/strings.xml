@@ -28,6 +28,8 @@
     <string name="home_no_usage">No usage recorded yet today.</string>
     <string name="home_usage_error">Couldn’t read usage: %1$s</string>
     <string name="action_refresh">Refresh</string>
+    <string name="home_recent_title">Last 7 days</string>
+    <string name="home_recent_live">today, live</string>
     <string name="home_change_apps">Change apps</string>
 
     <!-- App picker -->

@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.achyutpal.scrolljourney.R
 import com.achyutpal.scrolljourney.domain.model.AppUsage
+import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DailyUsageSummary
 import com.achyutpal.scrolljourney.domain.usecase.TodayUsageResult
 import com.achyutpal.scrolljourney.ui.common.formatMinutes
@@ -39,11 +41,12 @@ import com.achyutpal.scrolljourney.ui.theme.ScrollJourneyTheme
 import com.achyutpal.scrolljourney.util.openUsageAccessSettings
 import java.text.DateFormat
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
 /**
- * TEMPORARY post-onboarding screen (Phase 3): today's minutes per tracked app,
- * refreshed on every resume. Replaced by the Dashboard in Phase 8.
+ * TEMPORARY post-onboarding screen (Phases 3–4): today's minutes per tracked app and the
+ * last 7 saved days, refreshed (and synced) on every resume. Replaced by the Dashboard in Phase 8.
  */
 @Composable
 fun HomePlaceholderScreen(
@@ -51,6 +54,7 @@ fun HomePlaceholderScreen(
     viewModel: HomePlaceholderViewModel = viewModel(factory = HomePlaceholderViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val recentDays by viewModel.recentDays.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Re-read usage whenever the user comes back (e.g. after scrolling Instagram, or from Settings).
@@ -61,6 +65,7 @@ fun HomePlaceholderScreen(
 
     HomePlaceholderContent(
         state = state,
+        recentDays = recentDays,
         onRefresh = viewModel::refresh,
         onOpenSettings = { context.openUsageAccessSettings() },
         onChangeApps = onChangeApps,
@@ -70,6 +75,7 @@ fun HomePlaceholderScreen(
 @Composable
 private fun HomePlaceholderContent(
     state: HomeUiState,
+    recentDays: List<DailyRecord>,
     onRefresh: () -> Unit,
     onOpenSettings: () -> Unit,
     onChangeApps: () -> Unit,
@@ -112,6 +118,11 @@ private fun HomePlaceholderContent(
                     color = MaterialTheme.colorScheme.error,
                 )
                 is TodayUsageResult.Success -> UsageCard(result.summary)
+            }
+
+            if (recentDays.isNotEmpty()) {
+                Spacer(Modifier.height(24.dp))
+                RecentDaysCard(recentDays)
             }
 
             Spacer(Modifier.height(24.dp))
@@ -179,6 +190,45 @@ private fun UsageCard(summary: DailyUsageSummary) {
 }
 
 @Composable
+private fun RecentDaysCard(days: List<DailyRecord>) {
+    val dateFormat = remember { DateTimeFormatter.ofPattern("EEE d MMM") }
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp)) {
+            Text(
+                text = stringResource(R.string.home_recent_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(8.dp))
+            days.forEach { day ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = day.date.format(dateFormat) +
+                            if (day.finalized) "" else " · " + stringResource(R.string.home_recent_live),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = formatMinutes(day.totalMinutes),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun AccessDeniedCard(onOpenSettings: () -> Unit) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -209,6 +259,10 @@ private fun AccessDeniedCard(onOpenSettings: () -> Unit) {
 private fun HomePreview() {
     ScrollJourneyTheme(darkTheme = true) {
         HomePlaceholderContent(
+            recentDays = listOf(
+                DailyRecord(LocalDate.of(2026, 9, 27), 49),
+                DailyRecord(LocalDate.of(2026, 9, 26), 72, finalized = true),
+            ),
             state = HomeUiState(
                 isLoading = false,
                 result = TodayUsageResult.Success(

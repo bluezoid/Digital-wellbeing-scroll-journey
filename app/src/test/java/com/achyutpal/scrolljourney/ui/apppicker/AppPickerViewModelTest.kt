@@ -3,6 +3,7 @@ package com.achyutpal.scrolljourney.ui.apppicker
 import com.achyutpal.scrolljourney.data.apps.AppIconSource
 import com.achyutpal.scrolljourney.domain.model.InstalledApp
 import com.achyutpal.scrolljourney.fakes.FakeAppRepository
+import com.achyutpal.scrolljourney.fakes.FakeSettingsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -33,7 +34,7 @@ class AppPickerViewModelTest {
 
     @Test
     fun `loads installed apps with defaults pre-selected`() {
-        val vm = AppPickerViewModel(FakeAppRepository(installed = listOf(chrome, instagram)), noIcons)
+        val vm = AppPickerViewModel(FakeAppRepository(installed = listOf(chrome, instagram)), FakeSettingsRepository(), noIcons)
         val state = vm.uiState.value
 
         assertFalse(state.isLoading)
@@ -44,7 +45,7 @@ class AppPickerViewModelTest {
 
     @Test
     fun `cannot continue with nothing selected`() {
-        val vm = AppPickerViewModel(FakeAppRepository(installed = listOf(instagram)), noIcons)
+        val vm = AppPickerViewModel(FakeAppRepository(installed = listOf(instagram)), FakeSettingsRepository(), noIcons)
         vm.onToggle(instagram.packageName)
 
         assertEquals(0, vm.uiState.value.selectedCount)
@@ -53,7 +54,7 @@ class AppPickerViewModelTest {
 
     @Test
     fun `search filters visible rows but keeps selection`() {
-        val vm = AppPickerViewModel(FakeAppRepository(installed = listOf(chrome, instagram)), noIcons)
+        val vm = AppPickerViewModel(FakeAppRepository(installed = listOf(chrome, instagram)), FakeSettingsRepository(), noIcons)
         vm.onQueryChange("chr")
 
         assertEquals(listOf("Chrome"), vm.uiState.value.visibleRows.map { it.label })
@@ -63,11 +64,13 @@ class AppPickerViewModelTest {
     @Test
     fun `save persists enabled and disabled records and signals done`() {
         val repo = FakeAppRepository(installed = listOf(chrome, instagram))
-        val vm = AppPickerViewModel(repo, noIcons, clock = { 42L })
+        val settings = FakeSettingsRepository()
+        val vm = AppPickerViewModel(repo, settings, noIcons, clock = { 42L })
         vm.onToggle(chrome.packageName)
         vm.onSave()
 
         assertTrue(vm.uiState.value.isDone)
+        assertTrue(settings.state.value.onboardingComplete)
         assertEquals(setOf(instagram.packageName, chrome.packageName), repo.savedRows.keys)
         assertTrue(repo.savedRows.getValue(chrome.packageName).enabled)
         assertEquals(42L, repo.savedRows.getValue(chrome.packageName).addedAt)
@@ -76,13 +79,13 @@ class AppPickerViewModelTest {
     @Test
     fun `reopening the picker shows the saved selection`() {
         val repo = FakeAppRepository(installed = listOf(chrome, instagram))
-        AppPickerViewModel(repo, noIcons).apply {
+        AppPickerViewModel(repo, FakeSettingsRepository(), noIcons).apply {
             onToggle(instagram.packageName) // untick default
             onToggle(chrome.packageName)
             onSave()
         }
 
-        val reopened = AppPickerViewModel(repo, noIcons).uiState.value
+        val reopened = AppPickerViewModel(repo, FakeSettingsRepository(), noIcons).uiState.value
         assertEquals(setOf(chrome.packageName), reopened.rows.filter { it.selected }.map { it.packageName }.toSet())
     }
 }

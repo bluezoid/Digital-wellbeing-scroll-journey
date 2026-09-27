@@ -18,10 +18,11 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 3 ✅ verified (minutes match Digital Wellbeing exactly). Phase 4 not started.
-- **Last done (2026-09-27):** Phases 0–3 are complete and verified on the realme Android 13 phone. 41 unit tests pass.
-- **Waiting on:** the user's approval of the Phase 4 plan (Room history: DB v2 migration, daily tables, settings/onboarding flag, backfill, reconciliation on app open).
-- **Next step:** Phase 4 once approved.
+- **Phase:** 4 (Room history). The code is done, 49 unit + 10 on-device tests pass, and the real v1→v2 migration is verified on the phone. **Waiting on the user to check the "Last 7 days" card.**
+- **Last done (2026-09-27):** DB v2 (daily_usage, daily_app_usage, user_settings), SyncUsageHistoryUseCase (backfill 7 days, finalize past days, save today), onboardingComplete flag, and the Last-7-days card on the temporary home.
+- **Waiting on:** the user to open the app and confirm the history card looks right.
+- **Next step:** Phase 5, the limit and day-status engine (integer maths) plus the Daily Limit onboarding step (15–240, default 60).
+- **Never run `connectedAndroidTest`** (it uninstalls the app). See progress-log for the manual on-device test commands.
 
 ## Memory index: read on demand
 
@@ -55,16 +56,19 @@ navigate_scrolling/
     │   ├─ domain/calculator/AppSelectionRules.kt
     │   ├─ domain/repository/{UsageAccessRepository, AppRepository}.kt
     │   ├─ domain/model/{UsageEvent, DailyUsageSummary}.kt, domain/calculator/UsageCalculator.kt
-    │   ├─ domain/usecase/GetTodayUsageUseCase.kt, domain/repository/UsageRepository.kt
+    │   ├─ domain/usecase/{SyncUsageHistoryUseCase, TodayUsageResult}.kt
+    │   ├─ domain/repository/{Usage,History,Settings}Repository.kt, domain/model/{DayStatus,Planet,UserSettings,DailyRecord,ForegroundUsage}.kt
     │   ├─ data/usage/{AndroidUsageAccessRepository, UsageDataSource, AndroidUsageRepository}.kt
-    │   ├─ data/local/{ScrollJourneyDatabase, entity/SelectedAppEntity, dao/SelectedAppDao}.kt
+    │   ├─ data/local/ScrollJourneyDatabase.kt (v2)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
+    │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt
     │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
     │   ├─ util/UsageAccessSettings.kt
     │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker, home
     │   └─ ui/{theme, startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
     │          apppicker/{AppPickerScreen, AppPickerViewModel}, home/{HomePlaceholderScreen, HomePlaceholderViewModel}}
     ├─ schemas/                  Room schema JSON per DB version (committed)
-    └─ test/.../                 fakes/, domain/calculator/, ui/apppicker/, ui/permission/ tests
+    ├─ test/.../                 JVM unit tests + fakes/
+    └─ androidTest/.../data/local/   on-device Room + migration tests
 ```
 
 Build commands are in `memory/tech-stack.md`.

@@ -1,0 +1,105 @@
+package com.achyutpal.scrolljourney.domain.usecase
+
+import com.achyutpal.scrolljourney.domain.model.AppUsage
+import com.achyutpal.scrolljourney.domain.model.DailyRecord
+import com.achyutpal.scrolljourney.domain.model.DailyUsageSummary
+import com.achyutpal.scrolljourney.domain.model.ForegroundUsage
+import com.achyutpal.scrolljourney.domain.model.SelectedApp
+import com.achyutpal.scrolljourney.domain.model.UsageAccessState
+import com.achyutpal.scrolljourney.domain.repository.AppRepository
+import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
+import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
+import com.achyutpal.scrolljourney.domain.repository.UsageRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.first
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+
+/**
+ * Brings saved history up to date with Android's usage log, then returns today's usage.
+ * Runs on every app open/resume (and later from WorkManager), so it must be idempotent.
+ *
+ * For each of the last [BACKFILL_DAYS] days (oldest first):
+ * - already finalized → skip (never recalculate a frozen day)
+ * - Android still has events → save it, finalized
+ * - no events, but we saved it earlier (e.g. as "today") → freeze what we have
+ * - no events and nothing saved → skip (unknown ≠ 0 minutes)
+ * Then today (midnight → now) is recalculated and saved, not finalized.
+ *
+ * Only the currently enabled apps are counted, for past days too.
+ */
+class SyncUsageHistoryUseCase(
+    private val usageAccessRepository: UsageAccessRepository,
+    private val appRepository: AppRepository,
+    private val usageRepository: UsageRepository,
+    private val historyRepository: HistoryRepository,
+    private val now: () -> Instant = Instant::now,
+    private val zone: () -> ZoneId = ZoneId::systemDefault,
+) {
+    suspend operator fun invoke(): TodayUsageResult {
+        if (usageAccessRepository.checkUsageAccess() != UsageAccessState.GRANTED) {
+            return TodayUsageResult.AccessDenied
+        }
+        return try {
+            val zoneId = zone()
+            val nowInstant = now()
+            val today = LocalDate.ofInstant(nowInstant, zoneId)
+            val tracked = appRepository.observeEnabledApps().first()
+
+            for (daysAgo in BACKFILL_DAYS downTo 1) {
+                syncPastDay(today.minusDays(daysAgo.toLong()), tracked, zoneId)
+            }
+
+            val todayUsage = usageRepository.getForegroundUsage(
+                startMillis = today.startMillis(zoneId),
+                endMillis = nowInstant.toEpochMilli(),
+                packages = tracked.packageNames(),
+            )
+            val summary = summarize(today, tracked, todayUsage)
+            historyRepository.saveDay(DailyRecord(today, summary.totalMinutes, finalized = false), summary.apps)
+
+            TodayUsageResult.Success(summary)
+        } catch (e: CancellationException) {
+            throw e // never swallow coroutine cancellation
+        } catch (e: SecurityException) {
+            TodayUsageResult.AccessDenied
+        } catch (e: Exception) {
+            TodayUsageResult.Failure(e.message ?: e.javaClass.simpleName)
+        }
+    }
+
+    private suspend fun syncPastDay(date: LocalDate, tracked: List<SelectedApp>, zoneId: ZoneId) {
+        val existing = historyRepository.getDay(date)
+        if (existing?.finalized == true) return
+
+        val usage = usageRepository.getForegroundUsage(
+            startMillis = date.startMillis(zoneId),
+            endMillis = date.plusDays(1).startMillis(zoneId) - 1,
+            packages = tracked.packageNames(),
+        )
+        when {
+            usage.hasData -> {
+                val summary = summarize(date, tracked, usage)
+                historyRepository.saveDay(DailyRecord(date, summary.totalMinutes, finalized = true), summary.apps)
+            }
+            existing != null -> historyRepository.markFinalized(date)
+        }
+    }
+
+    private fun summarize(date: LocalDate, tracked: List<SelectedApp>, usage: ForegroundUsage): DailyUsageSummary {
+        val apps = tracked
+            .map { AppUsage(it.packageName, it.appName, usage.millisByPackage[it.packageName] ?: 0L) }
+            .sortedWith(compareByDescending<AppUsage> { it.foregroundMillis }.thenBy { it.appName.lowercase() })
+        return DailyUsageSummary(date, apps)
+    }
+
+    private fun LocalDate.startMillis(zoneId: ZoneId) = atStartOfDay(zoneId).toInstant().toEpochMilli()
+
+    private fun List<SelectedApp>.packageNames() = map { it.packageName }.toSet()
+
+    companion object {
+        /** How many past days to backfill/finalize. Android usually keeps about a week of events. */
+        const val BACKFILL_DAYS = 7
+    }
+}
