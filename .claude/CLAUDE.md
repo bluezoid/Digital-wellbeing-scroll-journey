@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 5, finishing. The user verified everything except the colour of Fri 25 Sep, which was explained as by design; they chose option A (show the judged limit per day). DB v3 was added and migrated on the phone. 67 unit + 14 on-device tests pass.
-- **Last done (2026-09-27):** `daily_usage.limitMinutes` (DB v3); the history rows show "limit X" under each date.
-- **Waiting on:** the user to confirm the "limit 1h 00m" label shows on past days (and "limit 30m" on today), then Phase 5 is ✅.
-- **Next step:** Phase 6, the distance engine (DistanceConfig, "estimated scroll distance", a few comparisons).
+- **Phase:** 6 (estimated scroll distance). The code is done; 81 unit + 14 on-device tests pass. **Waiting on the user's phone check.**
+- **Last done (2026-09-27):** Phase 5 ✅. Built DistanceConfig (100 cm/min), DistanceCalculator, landmark comparisons, distance saved per day (cm) plus a backfill for old days, and a distance card and 7-day total on home.
+- **Waiting on:** the user to check the distance card and comparison on the phone.
+- **Next step:** Phase 7, the rocket engine (fuel +1/0/−1 applied once per finalized day, thresholds Moon 3 … Pluto 60, milestone protection).
 - **Never run `connectedAndroidTest`** (it uninstalls the app). See progress-log for the manual on-device test commands, and the schema-bump gotcha.
 
 ## Memory index: read on demand
@@ -53,7 +53,7 @@ navigate_scrolling/
     │   ├─ MainActivity.kt       picks the start route, hosts navigation
     │   ├─ di/AppContainer.kt    manual DI
     │   ├─ domain/model/{UsageAccessState, InstalledApp, SelectedApp}.kt
-    │   ├─ domain/calculator/{AppSelectionRules, LimitEvaluator, DailyLimitRules}.kt
+    │   ├─ domain/calculator/{AppSelectionRules, LimitEvaluator, DailyLimitRules, DistanceConfig, DistanceCalculator, DistanceComparisons}.kt
     │   ├─ domain/repository/{UsageAccessRepository, AppRepository}.kt
     │   ├─ domain/model/{UsageEvent, DailyUsageSummary}.kt, domain/calculator/UsageCalculator.kt
     │   ├─ domain/usecase/{SyncUsageHistoryUseCase, TodayUsageResult}.kt
@@ -66,7 +66,7 @@ navigate_scrolling/
     │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, home
     │   └─ ui/{theme, startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
     │          apppicker/{AppPickerScreen, AppPickerViewModel}, dailylimit/{DailyLimitScreen, DailyLimitViewModel},
-    │          home/{HomePlaceholderScreen, HomePlaceholderViewModel}, common/DurationFormat, theme/StatusColors}
+    │          home/{HomePlaceholderScreen, HomePlaceholderViewModel}, common/{DurationFormat, DistanceFormat}, theme/StatusColors}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/
     └─ androidTest/.../data/local/   on-device Room + migration tests

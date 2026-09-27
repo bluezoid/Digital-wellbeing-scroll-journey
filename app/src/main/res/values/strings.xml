@@ -35,6 +35,18 @@
     <string name="status_red">Red day</string>
     <string name="status_so_far">" so far"</string>
     <string name="home_recent_title">Last 7 days</string>
+    <string name="home_recent_distance">≈ %1$s estimated scroll distance</string>
+
+    <!-- Estimated scroll distance -->
+    <string name="distance_title">Estimated scroll distance today</string>
+    <string name="distance_times">≈ %1$s× the height of %2$s</string>
+    <string name="distance_fraction_of">≈ %1$s%% of the height of %2$s</string>
+    <string name="distance_footnote">An estimate from your screen time (about %1$s of feed per minute), not a measurement of real scrolling.</string>
+    <string name="landmark_qutub_minar">the Qutub Minar</string>
+    <string name="landmark_great_pyramid">the Great Pyramid of Giza</string>
+    <string name="landmark_eiffel_tower">the Eiffel Tower</string>
+    <string name="landmark_burj_khalifa">the Burj Khalifa</string>
+    <string name="landmark_mount_everest">Mount Everest</string>
     <string name="home_recent_live">today, live</string>
     <string name="home_recent_limit">limit %1$s</string>
     <string name="home_change_apps">Change apps</string>

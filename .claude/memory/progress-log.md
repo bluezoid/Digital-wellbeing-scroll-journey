@@ -164,3 +164,25 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Real v2→v3 migration verified on the phone DB: version 3, all finalized days have limitMinutes 60, today NULL until the next sync, and the user's limit of 30 is kept.
 - Tests: 67 JVM + **14 on-device** (new MigrationTest migrate2To3) all pass.
 - **Gotcha:** after a schema version bump, run `./gradlew assembleDebugAndroidTest` again *after* the main compile has exported the new `N.json`. Otherwise the test APK lacks the schema asset and the MigrationTest fails with FileNotFoundException. Check with `unzip -l app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk | grep json`.
+- **Device check passed (2026-09-27):** 'limit 1h 00m' shows on past days and 'limit 30m' on today. **Phase 5 ✅.**
+
+## 2026-09-27: Phase 6, estimated scroll distance (session 2, continued)
+
+- Constant: **`DistanceConfig.DEFAULT_CENTIMETRES_PER_MINUTE = 100` (1 m of feed per minute)**. The realme RMX3031 screen is 1080×2400 at 409 dpi, about 14.9 cm tall, so 1 m/min is about 6–7 screen-heights a minute. It's a tunable estimate, and the UI always says "estimated".
+- Domain:
+  - `DistanceConfig` (require > 0) and `DistanceCalculator.centimetres(minutes)` (Long; negative counts as 0).
+  - `DistanceComparisons.compare(cm)` → `Comparison(landmark, times)`, using the tallest landmark passed, or the smallest as a fraction.
+  - Landmarks: Qutub Minar 73 m, Great Pyramid 139 m, Eiffel Tower 330 m, Burj Khalifa 828 m, Everest 8,849 m.
+- **Distance unit in the DB (`daily_usage.distance`) is centimetres.**
+- Sync:
+  - It saves distance for today (live) and for finalized days.
+  - `HistoryRepository.updateStatus` was **renamed to `updateEvaluation(date, status, limit, distance)`**, and `markFinalized` also takes distance.
+  - Finalized days missing a status or distance (distance 0 with minutes > 0) get them once from saved minutes. An existing status and judged limit are kept.
+- `TodayUsageResult.Success` gained `distanceCentimetres`.
+- UI:
+  - Home has a new "Estimated scroll distance today" card: 📏 distance, "≈ 1.7× the height of the Eiffel Tower" (or "≈ 45% of the height of the Qutub Minar"), and a footnote built from DistanceConfig.
+  - The Last 7 days card shows "≈ X estimated scroll distance" (sum of the rows).
+  - `ui/common/DistanceFormat`: formatDistance ("137 m" / "1.3 km") and formatTimes.
+- Tests: **81 JVM** (new: DistanceCalculator 5 incl. spec §64, DistanceComparisons 4, DistanceFormat 2, Sync +3) and **14 on-device**. All pass.
+- Phone DB before the first sync of this build: distances 0 (the phone was locked). The user's limit is now 120 (they changed it), so today is YELLOW with 137 m.
+- Pending: the user checks the distance card and the 7-day total, and past days' distances get backfilled on the first open.

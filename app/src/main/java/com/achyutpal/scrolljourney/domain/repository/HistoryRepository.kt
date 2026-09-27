@@ -13,11 +13,11 @@ interface HistoryRepository {
     /** Saves a day and replaces its per-app rows, atomically. Safe to call repeatedly. */
     suspend fun saveDay(record: DailyRecord, apps: List<AppUsage>)
 
-    /** Freezes an already-saved day with its current totals (used when Android no longer has its events). */
-    suspend fun markFinalized(date: LocalDate, status: DayStatus, limitMinutes: Int)
+    /** Freezes an already-saved day with its current minutes (used when Android no longer has its events). */
+    suspend fun markFinalized(date: LocalDate, status: DayStatus, limitMinutes: Int, distance: Long)
 
-    /** Sets the status (and the limit it was judged against) without touching the day's minutes. */
-    suspend fun updateStatus(date: LocalDate, status: DayStatus, limitMinutes: Int)
+    /** Fills in values derived from a day's minutes (status, judged limit, distance) without touching the minutes. */
+    suspend fun updateEvaluation(date: LocalDate, status: DayStatus, limitMinutes: Int, distance: Long)
 
     /** Days in [start, end] inclusive, oldest first. */
     suspend fun getRange(start: LocalDate, end: LocalDate): List<DailyRecord>

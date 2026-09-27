@@ -11,8 +11,8 @@ Rule: build one small piece → run on the Android 13 phone → test → show th
 | 2 | App picker (PackageManager, `<queries>`, default social apps pre-selected) + Room brought in early with SelectedAppEntity only | Correct list on Android 13, selection survives restart | ✅ 2026-09-27 (33 launcher apps listed on the realme) |
 | 3 | UsageStats integration (`UsageDataSource`, `queryEvents`, per-app minutes today) | Matches Digital Wellbeing within about ±1 min | ✅ 2026-09-27 (exact match with Digital Wellbeing for all selected apps) |
 | 4 | Room + history (add the other 3 entities via DB v2 migration, upsert, backfill, onboardingComplete flag) | Survives restart and reboot | ✅ 2026-09-27 (7 days backfilled, 20–27 Sep, correct per selected apps) |
-| 5 | Limit / day-status engine (integer maths) + Daily Limit onboarding step | Unit tests pass, colours correct on the phone | 🔄 code done, phone check pending |
-| 6 | Distance engine (DistanceConfig) | Unit tests pass | ⏳ |
+| 5 | Limit / day-status engine (integer maths) + Daily Limit onboarding step + judged limit per day (DB v3) | Unit tests pass, colours correct on the phone | ✅ 2026-09-27 |
+| 6 | Distance engine (DistanceConfig) | Unit tests pass, distance card shows on the phone | 🔄 code done, phone check pending |
 | 7 | Rocket engine (fuel, thresholds, milestone protection) | Unit tests pass | ⏳ |
 | 8 | Dashboard (single DashboardUiState) | Renders real data | ⏳ |
 | 9 | History calendar + streaks | Month grid and streak counts correct | ⏳ |

@@ -64,7 +64,7 @@ class SyncUsageHistoryUseCaseTest {
 
         assertEquals(30, result.summary.totalMinutes) // Instagram 20 + YouTube 10; Facebook off, Chrome unselected
         assertEquals(listOf("Instagram", "YouTube"), result.summary.apps.map { it.appName })
-        assertEquals(DailyRecord(today, 30, status = DayStatus.GREEN, limitMinutes = 60, finalized = false), history.records[today])
+        assertEquals(DailyRecord(today, 30, status = DayStatus.GREEN, limitMinutes = 60, distance = 3_000, finalized = false), history.records[today])
         assertEquals(listOf(20, 10), history.appRows.getValue(today).map { it.minutes })
     }
 
@@ -80,7 +80,7 @@ class SyncUsageHistoryUseCaseTest {
 
         val pastDays = (1..7).map { today.minusDays(it.toLong()) }
         pastDays.forEach { day ->
-            assertEquals(DailyRecord(day, 30, status = DayStatus.GREEN, limitMinutes = 60, finalized = true), history.records[day])
+            assertEquals(DailyRecord(day, 30, status = DayStatus.GREEN, limitMinutes = 60, distance = 3_000, finalized = true), history.records[day])
         }
         assertNull(history.records[today.minusDays(8)])
     }
@@ -123,7 +123,7 @@ class SyncUsageHistoryUseCaseTest {
 
         useCase()()
 
-        assertEquals(DailyRecord(yesterday, 30, status = DayStatus.GREEN, limitMinutes = 60, finalized = true), history.records[yesterday])
+        assertEquals(DailyRecord(yesterday, 30, status = DayStatus.GREEN, limitMinutes = 60, distance = 3_000, finalized = true), history.records[yesterday])
     }
 
     @Test
@@ -137,7 +137,7 @@ class SyncUsageHistoryUseCaseTest {
 
         useCase()()
 
-        assertEquals(DailyRecord(old, 44, status = DayStatus.GREEN, limitMinutes = 60, finalized = true), history.records[old])
+        assertEquals(DailyRecord(old, 44, status = DayStatus.GREEN, limitMinutes = 60, distance = 4_400, finalized = true), history.records[old])
     }
 
     @Test
@@ -183,7 +183,7 @@ class SyncUsageHistoryUseCaseTest {
 
         useCase()()
 
-        assertEquals(DailyRecord(yesterday, 90, status = DayStatus.RED, limitMinutes = 60, finalized = true), history.records[yesterday])
+        assertEquals(DailyRecord(yesterday, 90, status = DayStatus.RED, limitMinutes = 60, distance = 9_000, finalized = true), history.records[yesterday])
         assertFalse(usage.calls.any { it.first == startOf(yesterday) })
     }
 
@@ -199,6 +199,43 @@ class SyncUsageHistoryUseCaseTest {
         val live = history.records.getValue(today)
         assertEquals(DayStatus.RED, live.status) // today is live, re-evaluated
         assertEquals(15, live.limitMinutes)
+    }
+
+    @Test
+    fun `today's estimated distance is returned`() = runTest {
+        val result = useCase()() as TodayUsageResult.Success
+        assertEquals(3_000L, result.distanceCentimetres) // 30 min × 1 m/min
+    }
+
+    @Test
+    fun `coloured day without distance gets distance but keeps status and judged limit`() = runTest {
+        val yesterday = today.minusDays(1)
+        history.saveDay(
+            DailyRecord(yesterday, 44, status = DayStatus.GREEN, limitMinutes = 60, distance = 0, finalized = true),
+            emptyList(),
+        )
+        settings.setDailyLimit(30)
+
+        useCase()()
+
+        assertEquals(
+            DailyRecord(yesterday, 44, status = DayStatus.GREEN, limitMinutes = 60, distance = 4_400, finalized = true),
+            history.records[yesterday],
+        )
+        assertFalse(usage.calls.any { it.first == startOf(yesterday) })
+    }
+
+    @Test
+    fun `finalized zero-minute day is left alone`() = runTest {
+        val yesterday = today.minusDays(1)
+        val zeroDay = DailyRecord(yesterday, 0, status = DayStatus.GREEN, limitMinutes = 60, distance = 0, finalized = true)
+        history.saveDay(zeroDay, emptyList())
+        val saves = history.saveCount
+
+        useCase()()
+
+        assertEquals(zeroDay, history.records[yesterday])
+        assertEquals(saves + 7, history.saveCount) // 6 other past days + today, nothing for yesterday
     }
 
     @Test

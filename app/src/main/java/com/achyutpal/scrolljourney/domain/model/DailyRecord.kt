@@ -11,7 +11,8 @@ import java.time.LocalDate
  *
  * [status] is judged against [limitMinutes], the daily limit in force when the day was
  * evaluated. It's stored so a past colour can be explained even after the user changes
- * their limit. [fuelDelta] and [distance] arrive with the rocket and distance engines.
+ * their limit. [distance] is the estimated scroll distance in centimetres.
+ * [fuelDelta] arrives with the rocket engine.
  */
 data class DailyRecord(
     val date: LocalDate,

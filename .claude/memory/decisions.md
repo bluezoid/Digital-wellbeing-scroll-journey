@@ -4,6 +4,8 @@ Newest first. Don't re-open a settled decision unless the user asks. Record reve
 
 | Date | Decision | Why | Status |
 |---|---|---|---|
+| 2026-09-27 | Scroll estimate = 100 cm (1 m) of feed per minute, in `DistanceConfig` only; distance is stored in centimetres | About 6–7 screen-heights/min on the 14.9 cm realme screen; whole numbers avoid rounding drift; easy to tune | Revisit after real use |
+| 2026-09-27 | Comparisons: Qutub Minar, Great Pyramid, Eiffel Tower, Burj Khalifa, Everest; show the tallest passed (or a % of the smallest) | Spec §21 says keep it small; Qutub Minar suits the Indian user | Final |
 | 2026-09-27 | **Option A chosen by the user:** keep locked colours and store the limit each day was judged against (`daily_usage.limitMinutes`, DB v3), shown as "limit X" in history | Explains old colours after a limit change without breaking the fuel-once rule; the user rejected recolouring (B) and a one-time recolour (C) | Final |
 | 2026-09-27 | A day's status is fixed when it's finalized, using the limit at that moment; later limit changes don't recolour past days. Today is re-evaluated live | History shouldn't shift under the user; fuel (Phase 7) is applied once per finalized day | Final |
 | 2026-09-27 | Saving the daily limit (not the app picker) completes onboarding | Spec onboarding order: picker → limit → dashboard | Final |

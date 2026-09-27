@@ -7,7 +7,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Alignment
+import com.achyutpal.scrolljourney.domain.calculator.Comparison
+import com.achyutpal.scrolljourney.domain.calculator.DistanceComparisons
+import com.achyutpal.scrolljourney.domain.calculator.DistanceConfig
+import com.achyutpal.scrolljourney.domain.calculator.Landmark
 import com.achyutpal.scrolljourney.domain.model.DayStatus
+import com.achyutpal.scrolljourney.ui.common.formatDistance
+import com.achyutpal.scrolljourney.ui.common.formatTimes
 import com.achyutpal.scrolljourney.ui.theme.color
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -128,7 +134,11 @@ private fun HomePlaceholderContent(
                     text = stringResource(R.string.home_usage_error, result.message),
                     color = MaterialTheme.colorScheme.error,
                 )
-                is TodayUsageResult.Success -> UsageCard(result.summary, result.limitMinutes, result.status)
+                is TodayUsageResult.Success -> {
+                    UsageCard(result.summary, result.limitMinutes, result.status)
+                    Spacer(Modifier.height(16.dp))
+                    DistanceCard(result.distanceCentimetres)
+                }
             }
 
             if (recentDays.isNotEmpty()) {
@@ -218,6 +228,64 @@ private fun UsageCard(summary: DailyUsageSummary, limitMinutes: Int, status: Day
 }
 
 @Composable
+private fun DistanceCard(distanceCentimetres: Long) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(20.dp)) {
+            Text(
+                text = stringResource(R.string.distance_title),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "📏 " + formatDistance(distanceCentimetres),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.secondary,
+                fontWeight = FontWeight.Bold,
+            )
+            DistanceComparisons.compare(distanceCentimetres)?.let { comparison ->
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = comparisonText(comparison),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = stringResource(
+                    R.string.distance_footnote,
+                    formatDistance(DistanceConfig.DEFAULT_CENTIMETRES_PER_MINUTE),
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun comparisonText(comparison: Comparison): String {
+    val name = stringResource(comparison.landmark.nameRes())
+    return if (comparison.times < 1) {
+        stringResource(R.string.distance_fraction_of, formatTimes(comparison.times * 100), name)
+    } else {
+        stringResource(R.string.distance_times, formatTimes(comparison.times), name)
+    }
+}
+
+private fun Landmark.nameRes(): Int = when (this) {
+    Landmark.QUTUB_MINAR -> R.string.landmark_qutub_minar
+    Landmark.GREAT_PYRAMID -> R.string.landmark_great_pyramid
+    Landmark.EIFFEL_TOWER -> R.string.landmark_eiffel_tower
+    Landmark.BURJ_KHALIFA -> R.string.landmark_burj_khalifa
+    Landmark.MOUNT_EVEREST -> R.string.landmark_mount_everest
+}
+
+@Composable
 private fun StatusLabel(status: DayStatus, suffix: String = "") {
     Row(verticalAlignment = Alignment.CenterVertically) {
         StatusDot(status)
@@ -257,6 +325,11 @@ private fun RecentDaysCard(days: List<DailyRecord>) {
                 text = stringResource(R.string.home_recent_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = stringResource(R.string.home_recent_distance, formatDistance(days.sumOf { it.distance })),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(8.dp))
             days.forEach { day ->
@@ -342,6 +415,7 @@ private fun HomePreview() {
                     ),
                     limitMinutes = 60,
                     status = DayStatus.GREEN,
+                    distanceCentimetres = 4_900,
                 ),
                 updatedAtMillis = 0L,
             ),

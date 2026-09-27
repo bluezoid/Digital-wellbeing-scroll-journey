@@ -9,6 +9,8 @@ sealed interface TodayUsageResult {
         val limitMinutes: Int,
         /** Today's colour so far. It can still get worse until midnight. */
         val status: DayStatus,
+        /** Estimated scroll distance so far today, in centimetres. */
+        val distanceCentimetres: Long,
     ) : TodayUsageResult
 
     /** Usage Access is off: numbers can't be trusted, so don't show zeros. */

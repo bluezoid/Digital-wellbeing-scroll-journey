@@ -37,12 +37,12 @@ class RoomHistoryRepository(
         }
     }
 
-    override suspend fun markFinalized(date: LocalDate, status: DayStatus, limitMinutes: Int) {
-        dailyUsageDao.markFinalized(date.toString(), status, limitMinutes)
+    override suspend fun markFinalized(date: LocalDate, status: DayStatus, limitMinutes: Int, distance: Long) {
+        dailyUsageDao.markFinalized(date.toString(), status, limitMinutes, distance)
     }
 
-    override suspend fun updateStatus(date: LocalDate, status: DayStatus, limitMinutes: Int) {
-        dailyUsageDao.updateStatus(date.toString(), status, limitMinutes)
+    override suspend fun updateEvaluation(date: LocalDate, status: DayStatus, limitMinutes: Int, distance: Long) {
+        dailyUsageDao.updateEvaluation(date.toString(), status, limitMinutes, distance)
     }
 
     override suspend fun getRange(start: LocalDate, end: LocalDate): List<DailyRecord> =

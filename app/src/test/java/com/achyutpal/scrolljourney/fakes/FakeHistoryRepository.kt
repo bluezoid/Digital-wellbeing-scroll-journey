@@ -26,14 +26,15 @@ class FakeHistoryRepository(initial: List<DailyRecord> = emptyList()) : HistoryR
         appRows[record.date] = apps
     }
 
-    override suspend fun markFinalized(date: LocalDate, status: DayStatus, limitMinutes: Int) {
+    override suspend fun markFinalized(date: LocalDate, status: DayStatus, limitMinutes: Int, distance: Long) {
         val day = days.value[date] ?: return
-        days.value = days.value + (date to day.copy(finalized = true, status = status, limitMinutes = limitMinutes))
+        days.value = days.value +
+            (date to day.copy(finalized = true, status = status, limitMinutes = limitMinutes, distance = distance))
     }
 
-    override suspend fun updateStatus(date: LocalDate, status: DayStatus, limitMinutes: Int) {
+    override suspend fun updateEvaluation(date: LocalDate, status: DayStatus, limitMinutes: Int, distance: Long) {
         val day = days.value[date] ?: return
-        days.value = days.value + (date to day.copy(status = status, limitMinutes = limitMinutes))
+        days.value = days.value + (date to day.copy(status = status, limitMinutes = limitMinutes, distance = distance))
     }
 
     override suspend fun getRange(start: LocalDate, end: LocalDate) =

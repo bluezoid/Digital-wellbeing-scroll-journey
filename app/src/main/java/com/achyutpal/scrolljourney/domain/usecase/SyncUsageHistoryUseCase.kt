@@ -1,5 +1,6 @@
 package com.achyutpal.scrolljourney.domain.usecase
 
+import com.achyutpal.scrolljourney.domain.calculator.DistanceCalculator
 import com.achyutpal.scrolljourney.domain.calculator.LimitEvaluator
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
@@ -23,8 +24,8 @@ import java.time.ZoneId
  * Runs on every app open/resume (and later from WorkManager), so it must be idempotent.
  *
  * For each of the last [BACKFILL_DAYS] days (oldest first):
- * - already finalized → skip (never recalculate a frozen day); only fill in a missing status
- * - Android still has events → save it, finalized, with its day status
+ * - already finalized → skip (never recalculate a frozen day); only fill in a missing status/distance
+ * - Android still has events → save it, finalized, with its day status and estimated distance
  * - no events, but we saved it earlier (e.g. as "today") → freeze what we have
  * - no events and nothing saved → skip (unknown ≠ 0 minutes)
  * Then today (midnight → now) is recalculated and saved, not finalized, with its status so far.
@@ -37,6 +38,7 @@ class SyncUsageHistoryUseCase(
     private val usageRepository: UsageRepository,
     private val historyRepository: HistoryRepository,
     private val settingsRepository: SettingsRepository,
+    private val distanceCalculator: DistanceCalculator = DistanceCalculator(),
     private val now: () -> Instant = Instant::now,
     private val zone: () -> ZoneId = ZoneId::systemDefault,
 ) {
@@ -62,12 +64,20 @@ class SyncUsageHistoryUseCase(
             )
             val summary = summarize(today, tracked, todayUsage)
             val status = LimitEvaluator.evaluate(summary.totalMinutes, limit)
+            val distance = distanceCalculator.centimetres(summary.totalMinutes)
             historyRepository.saveDay(
-                DailyRecord(today, summary.totalMinutes, status = status, limitMinutes = limit, finalized = false),
+                DailyRecord(
+                    date = today,
+                    totalMinutes = summary.totalMinutes,
+                    status = status,
+                    limitMinutes = limit,
+                    distance = distance,
+                    finalized = false,
+                ),
                 summary.apps,
             )
 
-            TodayUsageResult.Success(summary, limit, status)
+            TodayUsageResult.Success(summary, limit, status, distance)
         } catch (e: CancellationException) {
             throw e // never swallow coroutine cancellation
         } catch (e: SecurityException) {
@@ -80,9 +90,17 @@ class SyncUsageHistoryUseCase(
     private suspend fun syncPastDay(date: LocalDate, tracked: List<SelectedApp>, limit: Int, zoneId: ZoneId) {
         val existing = historyRepository.getDay(date)
         if (existing?.finalized == true) {
-            // Days frozen before the status engine existed (Phase 4) get their colour once, from saved minutes.
-            if (existing.status == null) {
-                historyRepository.updateStatus(date, LimitEvaluator.evaluate(existing.totalMinutes, limit), limit)
+            // Days frozen before the status/distance engines existed get those values once, from saved
+            // minutes. An existing status and its judged limit are kept as they are.
+            val missingStatus = existing.status == null
+            val missingDistance = existing.distance == 0L && existing.totalMinutes > 0
+            if (missingStatus || missingDistance) {
+                historyRepository.updateEvaluation(
+                    date = date,
+                    status = existing.status ?: LimitEvaluator.evaluate(existing.totalMinutes, limit),
+                    limitMinutes = if (missingStatus) limit else existing.limitMinutes ?: limit,
+                    distance = distanceCalculator.centimetres(existing.totalMinutes),
+                )
             }
             return
         }
@@ -95,14 +113,24 @@ class SyncUsageHistoryUseCase(
         when {
             usage.hasData -> {
                 val summary = summarize(date, tracked, usage)
-                val status = LimitEvaluator.evaluate(summary.totalMinutes, limit)
                 historyRepository.saveDay(
-                    DailyRecord(date, summary.totalMinutes, status = status, limitMinutes = limit, finalized = true),
+                    DailyRecord(
+                        date = date,
+                        totalMinutes = summary.totalMinutes,
+                        status = LimitEvaluator.evaluate(summary.totalMinutes, limit),
+                        limitMinutes = limit,
+                        distance = distanceCalculator.centimetres(summary.totalMinutes),
+                        finalized = true,
+                    ),
                     summary.apps,
                 )
             }
-            existing != null ->
-                historyRepository.markFinalized(date, LimitEvaluator.evaluate(existing.totalMinutes, limit), limit)
+            existing != null -> historyRepository.markFinalized(
+                date = date,
+                status = LimitEvaluator.evaluate(existing.totalMinutes, limit),
+                limitMinutes = limit,
+                distance = distanceCalculator.centimetres(existing.totalMinutes),
+            )
         }
     }
 
