@@ -186,3 +186,4 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Tests: **81 JVM** (new: DistanceCalculator 5 incl. spec §64, DistanceComparisons 4, DistanceFormat 2, Sync +3) and **14 on-device**. All pass.
 - Phone DB before the first sync of this build: distances 0 (the phone was locked). The user's limit is now 120 (they changed it), so today is YELLOW with 137 m.
 - Pending: the user checks the distance card and the 7-day total, and past days' distances get backfilled on the first open.
+- **Device check passed (2026-09-27, screenshots):** today 2h 17m → 137 m ≈ 1.9× Qutub Minar; 7-day total 488 m (matches the sum); today YELLOW against the 2h limit; past days keep 'limit 1h 00m'. Tracked apps on the phone: Chrome, Instagram, Brave, Facebook, YouTube (browsers were the top usage today). **Phase 6 ✅.** The user asked for advice on the 1 m/min constant before Phase 7.
