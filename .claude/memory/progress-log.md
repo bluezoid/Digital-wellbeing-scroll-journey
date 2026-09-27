@@ -230,3 +230,4 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Tests: **114 JVM** (new: StreakCalculator 9 [spec §36, §62, §63], DashboardViewModel 5 [spec §85, full fake stack incl. fuel → Mars]) and **16 on-device**. All pass.
   - Test gotcha: to keep a `WhileSubscribed` stateIn alive in runTest, use `backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { flow.collect {} }`. `launchIn(backgroundScope)` never ran.
 - Installed on the phone with no crash; the visual check is pending (the phone was locked).
+- **Device check passed (2026-09-27):** all dashboard checks OK. **Phase 8 ✅.** The user added a requirement: the journey UI must be a **real 3D solar system** (Sun and all planets, 360° rotation), recorded as roadmap Phase 12b.

@@ -14,9 +14,10 @@ Rule: build one small piece → run on the Android 13 phone → test → show th
 | 5 | Limit / day-status engine (integer maths) + Daily Limit onboarding step + judged limit per day (DB v3) | Unit tests pass, colours correct on the phone | ✅ 2026-09-27 |
 | 6 | Distance engine (DistanceConfig) | Unit tests pass, distance card shows on the phone | ✅ 2026-09-27 |
 | 7 | Rocket engine (fuel, thresholds, milestone protection, exactly-once, journey start) | Unit tests pass, rocket card on the phone | ✅ 2026-09-27 |
-| 8 | Dashboard (single DashboardUiState) + StreakCalculator (pulled from 9) | Renders real data | 🔄 code done, phone check pending |
+| 8 | Dashboard (single DashboardUiState) + StreakCalculator (pulled from 9) | Renders real data | ✅ 2026-09-27 |
 | 9 | History screen: month calendar grid + current/best streak (calculator already done in 8) | Month grid and streak counts correct | ⏳ |
 | 10 | WorkManager DailyUsageWorker + reconciliation on app open | Missed days filled, no duplicates | ⏳ |
 | 11 | Settings (apps, limit, reset journey with confirmation, privacy) | Reset keeps history | ⏳ |
 | 12 | 7–14 day real-device validation (reboot, missed day, 23:59→00:01, uninstall/reinstall) | Acceptance checklist in spec §87 fully ticked | ⏳ |
+| 12b | **3D solar system journey (USER REQUIREMENT, 2026-09-27)**: replace the flat rocket card with a real-time 3D scene. Sun + Earth, Moon, Mars, Jupiter, Saturn (rings), Uranus, Neptune, Pluto on orbits; the rocket placed on the route by fuel; the user can **orbit the camera 360°**, pinch-zoom and pan; reached planets highlighted. Planned approach: **SceneView for Android (Google Filament)** with glTF/GLB planet models or textured spheres (NASA/Solar System Scope public textures), an orbit camera manipulator, and the scene in a Compose `AndroidView`/SceneView composable. Keep a 2D fallback for low-end devices. Needs its own plan (models, licensing, size, performance) before coding | Scene runs smoothly on the realme, rotates 360°, rocket at the correct stop | ⏳ planned (after core phases 9–11, before or alongside 12 validation; confirm timing with the user) |
 | Later | Notifications, widget, XP/badges, share cards, subscription, optional accessibility precise mode | none | ⏳ |

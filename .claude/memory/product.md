@@ -38,6 +38,10 @@ Our differentiators:
 2. The space-journey progression.
 3. On-device only.
 
+## Visual direction (user requirement, 2026-09-27)
+
+The journey must be shown as a **pure 3D solar system**: the Sun and every planet (Earth → Pluto) visible, the user able to **rotate 360°** and zoom, and the rocket travelling between planets. The current flat Compose rocket card (Phase 8) is a stand-in. See roadmap Phase 12b.
+
 ## Future ideas (not in the MVP)
 
 - An optional "precise mode" that uses an AccessibilityService for real scroll counts (only if Play policy allows).
