@@ -44,3 +44,14 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - `assembleDebug` OK. Lint shows only "newer version available," plus targetSdk-for-Play notices.
 - **Not yet done:** install and test on the physical Android 13 phone (none was connected; `adb devices` was empty).
 - **Next:** the user connects the phone with USB debugging and runs `./gradlew installDebug`, then checks: fresh install goes to intro → usage access → Settings → toggle → back → auto "granted" screen; revoke in Settings → warning on return; relaunch keeps the right start screen. After that passes, Phase 2 (app picker).
+
+## 2026-09-27: Phase 1 verified on the physical phone (session 2, continued)
+
+- Test device: **realme, Android 13**, adb serial AEOFCYC66LSCZDLZ.
+- All Phase 1 checks passed: fresh install goes to intro; Open settings reaches the toggle; granting auto-advances to "Usage Access is on"; revoking and returning shows the "Usage Access is disabled" warning; relaunch lands on the correct screen.
+- In the first manual run the user reported the revoked warning **not** appearing. It couldn't be reproduced: the watcher log showed revokes detected within about 1 s (`appOpsMode=1 granted=false`). The most likely cause is that the toggle didn't actually change the first time. Worth rechecking during Phase 12.
+- Added a debug log in `AndroidUsageAccessRepository` (tag `UsageAccess`, shows the raw AppOps mode). Read it with `adb logcat -s UsageAccess:D`.
+- realme facts:
+  - Revoking sets the mode to `ignore` (MODE_IGNORED=1). The process isn't killed.
+  - **`adb shell appops set` is blocked** (SecurityException MANAGE_APP_OPS_MODES), so the permission must be toggled by hand in Settings for testing. (Enabling "Disable permission monitoring" in Developer options may allow it.)
+- **Next:** Phase 2, the app picker. Waiting on the user's approval of the storage approach for the selection.

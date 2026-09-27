@@ -7,7 +7,7 @@ Rule: build one small piece → run on the Android 13 phone → test → show th
 |---|---|---|---|
 | Planning | Direction, stack, MVP list, spec | Spec approved | ✅ 2026-09-27 |
 | 0 | Project setup: Gradle, package, theme, navigation, unit tests | Builds, tests pass | ✅ 2026-09-27 |
-| 1 | Onboarding (Intro 1, Intro 2) + Usage Access explanation → Settings → auto-detect on return; revoked warning | Round trip verified **on the physical phone** | 🔄 code done, device test pending |
+| 1 | Onboarding (Intro 1, Intro 2) + Usage Access explanation → Settings → auto-detect on return; revoked warning | Round trip verified **on the physical phone** | ✅ 2026-09-27 (realme, Android 13) |
 | 2 | App picker (PackageManager, `<queries>`, default social apps pre-selected) | Correct list on Android 13 | ⏳ |
 | 3 | UsageStats integration (`UsageDataSource`, `queryEvents`, per-app minutes today) | Matches Digital Wellbeing within about ±1 min | ⏳ |
 | 4 | Room + history (4 entities, upsert, backfill, onboardingComplete flag) | Survives restart and reboot | ⏳ |

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Process
+import android.util.Log
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
 
@@ -46,6 +47,11 @@ class AndroidUsageAccessRepository(
             ) == PackageManager.PERMISSION_GRANTED
             else -> false
         }
+        Log.d(TAG, "usage access check: appOpsMode=$mode granted=$granted")
         return if (granted) UsageAccessState.GRANTED else UsageAccessState.REVOKED
+    }
+
+    private companion object {
+        const val TAG = "UsageAccess"
     }
 }

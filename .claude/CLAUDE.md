@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 1 (onboarding + Usage Access). The code is done and builds; **waiting on the physical-phone test**.
-- **Last done (2026-09-27):** Adopted the user's technical spec (`memory/spec.md`, authoritative). Built Phase 0 (project setup) and Phase 1 (intro pages, Usage Access screen with auto-detect on resume, temporary home with revoked warning). 4 unit tests pass.
-- **Waiting on:** the user to connect their Android 13 phone (USB debugging), run `./gradlew installDebug`, and report the results of the Phase 1 checks (see the last entry in progress-log.md).
-- **Next step:** Phase 2, the app picker (PackageManager + `<queries>` for launcher apps, pre-select installed social apps). No Room yet; the selection is stored once Room lands in Phase 4 (or decide with the user).
+- **Phase:** 1 ✅ verified on the device (realme, Android 13). Phase 2 (app picker) not started.
+- **Last done (2026-09-27):** Phase 1 passed every device check. Added the `UsageAccess` debug log. realme blocks `adb shell appops set`, so toggle the permission by hand.
+- **Waiting on:** the user's approval to start Phase 2, including how to store the app selection (proposed: bring in Room early with only `SelectedAppEntity`).
+- **Next step:** Phase 2, the app picker (PackageManager + `<queries>` for launcher apps, pre-select installed social apps, save the selection).
 
 ## Memory index: read on demand
 
