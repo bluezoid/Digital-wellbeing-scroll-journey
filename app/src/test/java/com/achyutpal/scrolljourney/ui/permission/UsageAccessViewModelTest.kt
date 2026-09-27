@@ -1,15 +1,9 @@
 package com.achyutpal.scrolljourney.ui.permission
 
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
-import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
+import com.achyutpal.scrolljourney.fakes.FakeUsageAccessRepository
 import org.junit.Assert.assertEquals
 import org.junit.Test
-
-private class FakeUsageAccessRepository(
-    var current: UsageAccessState,
-) : UsageAccessRepository {
-    override fun checkUsageAccess() = current
-}
 
 class UsageAccessViewModelTest {
 

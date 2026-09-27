@@ -6,23 +6,45 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.achyutpal.scrolljourney.ScrollJourneyApp
-import com.achyutpal.scrolljourney.domain.model.SelectedApp
-import com.achyutpal.scrolljourney.domain.repository.AppRepository
-import kotlinx.coroutines.flow.SharingStarted
+import com.achyutpal.scrolljourney.domain.usecase.GetTodayUsageUseCase
+import com.achyutpal.scrolljourney.domain.usecase.TodayUsageResult
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-/** TEMPORARY: shows the saved selection so persistence can be checked on the phone. */
-class HomePlaceholderViewModel(appRepository: AppRepository) : ViewModel() {
+data class HomeUiState(
+    val isLoading: Boolean = true,
+    val result: TodayUsageResult? = null,
+    val updatedAtMillis: Long? = null,
+)
 
-    val trackedApps: StateFlow<List<SelectedApp>> = appRepository.observeEnabledApps()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+/**
+ * TEMPORARY (Phase 3): today's minutes per tracked app, so the numbers can be compared
+ * with Digital Wellbeing on the phone. Grows into DashboardViewModel in Phase 8.
+ */
+class HomePlaceholderViewModel(
+    private val getTodayUsage: GetTodayUsageUseCase,
+    private val clock: () -> Long = System::currentTimeMillis,
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    fun refresh() {
+        _uiState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            val result = getTodayUsage()
+            _uiState.value = HomeUiState(isLoading = false, result = result, updatedAtMillis = clock())
+        }
+    }
 
     companion object {
         val Factory = viewModelFactory {
             initializer {
                 val container = (this[APPLICATION_KEY] as ScrollJourneyApp).container
-                HomePlaceholderViewModel(container.appRepository)
+                HomePlaceholderViewModel(container.getTodayUsageUseCase)
             }
         }
     }

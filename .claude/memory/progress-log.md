@@ -78,3 +78,25 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Tests: 19 JVM unit tests pass (AppSelectionRules 10, AppPickerViewModel 5, UsageAccessViewModel 4), using `fakes/FakeAppRepository`.
 - The phone has Instagram, Facebook and YouTube installed (no Reddit, X or Snapchat).
 - Installed on the phone, but the **device check is pending**: the phone was locked, so the screenshot was black.
+- **Device check passed (2026-09-27):** 33 launcher apps listed, Instagram/Facebook/YouTube pre-selected, search works, Continue is disabled with 0 selected, the selection survives relaunch, and Change apps with Back behaves correctly. **Phase 2 ✅.**
+
+## 2026-09-27: Phase 3, usage tracking built (session 2, continued)
+
+- Domain:
+  - `UsageEvent` + `UsageEventType` (RESUMED, PAUSED, SCREEN_OFF, SHUTDOWN), our own types, not Android's.
+  - `AppUsage` (foregroundMillis → minutes, rounded down) and `DailyUsageSummary` (totalMinutes = sum of per-app minutes, so the breakdown adds up; hasAnyUsage).
+  - `domain/calculator/UsageCalculator.foregroundMillis(events, windowStart, windowEnd, tracked)`. Rules:
+    - An app is in the foreground while ANY of its activities is resumed (tracked per className).
+    - A first PAUSED in the window with no RESUMED before it means the app was open at window start, so it counts from windowStart (midnight crossing).
+    - Still open at windowEnd: counted to the end.
+    - SCREEN_OFF or SHUTDOWN closes all sessions.
+    - Stray pauses are ignored.
+  - `UsageRepository` interface.
+  - `domain/usecase/GetTodayUsageUseCase` gives `TodayUsageResult` Success, AccessDenied or Failure. The window is local midnight to now. Only enabled apps count, sorted most-used first. It checks access first, since queryEvents returns nothing silently without access; SecurityException becomes AccessDenied, and CancellationException is re-thrown.
+- Data:
+  - `data/usage/UsageDataSource` + `AndroidUsageDataSource` (the only UsageStatsManager caller). It maps MOVE_TO_FOREGROUND/BACKGROUND (same values as ACTIVITY_RESUMED/PAUSED), SCREEN_NON_INTERACTIVE and DEVICE_SHUTDOWN.
+  - `AndroidUsageRepository` runs the calculator and logs under tag `UsageTracking`.
+- UI: the temporary home now shows "Today": the total, per-app minutes, "Updated at", Refresh and Change apps, plus an AccessDenied card. It refreshes on every resume. `ui/common/formatMinutes` gives "1h 05m".
+- Tests: 41 JVM tests pass. New: UsageCalculator 12, GetTodayUsage 9, DurationFormat 1. Fakes are shared in `test/.../fakes/`.
+- Installed on the phone; the **device comparison with Digital Wellbeing is pending** (the phone was locked).
+- Debug: `adb logcat -s UsageTracking:D` shows the event count and per-package milliseconds on each refresh.

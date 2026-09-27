@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 2 (app picker). The code is done and 19 unit tests pass. **Waiting on the physical-phone test.**
-- **Last done (2026-09-27):** Room brought in early (only SelectedAppEntity, DB v1), app picker with `<queries>`, pre-selection rules, startup routing, and a "Change apps" button on the temporary home.
-- **Waiting on:** the user to test the picker on the realme (see the checklist in the last progress-log entry, or ask).
-- **Next step:** Phase 3, UsageStats integration (`UsageDataSource` with `queryEvents()`, today's minutes per selected app, compared with Digital Wellbeing).
+- **Phase:** 3 (UsageStats integration). The code is done and 41 unit tests pass. **Waiting on the phone comparison with Digital Wellbeing.**
+- **Last done (2026-09-27):** Phase 2 ✅ verified (33 apps). Built UsageCalculator (queryEvents pairing), GetTodayUsageUseCase, and a home screen showing today's minutes per tracked app.
+- **Waiting on:** the user to compare the app's minutes with Digital Wellbeing (target within about ±1 min per app).
+- **Next step:** Phase 4, Room history. Add DailyUsage, DailyAppUsage and UserSettings entities via a DB v2 migration, the onboardingComplete flag, and backfill of past days.
 
 ## Memory index: read on demand
 
@@ -54,7 +54,9 @@ navigate_scrolling/
     │   ├─ domain/model/{UsageAccessState, InstalledApp, SelectedApp}.kt
     │   ├─ domain/calculator/AppSelectionRules.kt
     │   ├─ domain/repository/{UsageAccessRepository, AppRepository}.kt
-    │   ├─ data/usage/AndroidUsageAccessRepository.kt
+    │   ├─ domain/model/{UsageEvent, DailyUsageSummary}.kt, domain/calculator/UsageCalculator.kt
+    │   ├─ domain/usecase/GetTodayUsageUseCase.kt, domain/repository/UsageRepository.kt
+    │   ├─ data/usage/{AndroidUsageAccessRepository, UsageDataSource, AndroidUsageRepository}.kt
     │   ├─ data/local/{ScrollJourneyDatabase, entity/SelectedAppEntity, dao/SelectedAppDao}.kt
     │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
     │   ├─ util/UsageAccessSettings.kt

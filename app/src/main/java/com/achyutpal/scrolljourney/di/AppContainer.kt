@@ -7,8 +7,12 @@ import com.achyutpal.scrolljourney.data.apps.AndroidAppRepository
 import com.achyutpal.scrolljourney.data.apps.AppIconSource
 import com.achyutpal.scrolljourney.data.local.ScrollJourneyDatabase
 import com.achyutpal.scrolljourney.data.usage.AndroidUsageAccessRepository
+import com.achyutpal.scrolljourney.data.usage.AndroidUsageDataSource
+import com.achyutpal.scrolljourney.data.usage.AndroidUsageRepository
 import com.achyutpal.scrolljourney.domain.repository.AppRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
+import com.achyutpal.scrolljourney.domain.repository.UsageRepository
+import com.achyutpal.scrolljourney.domain.usecase.GetTodayUsageUseCase
 
 /**
  * Manual dependency injection: the single place that decides which concrete class
@@ -37,5 +41,13 @@ class AppContainer(context: Context) {
 
     val appIconSource: AppIconSource by lazy {
         AndroidAppIconSource(appContext.packageManager)
+    }
+
+    val usageRepository: UsageRepository by lazy {
+        AndroidUsageRepository(AndroidUsageDataSource(appContext))
+    }
+
+    val getTodayUsageUseCase: GetTodayUsageUseCase by lazy {
+        GetTodayUsageUseCase(usageAccessRepository, appRepository, usageRepository)
     }
 }

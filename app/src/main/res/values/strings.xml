@@ -20,11 +20,14 @@
     <string name="action_open_settings">Open settings</string>
 
     <!-- Post-onboarding placeholder -->
-    <string name="home_granted_title">Usage Access is on</string>
     <string name="home_revoked_title">Usage Access is disabled</string>
     <string name="home_revoked_body">Enable it to continue tracking your selected apps.</string>
-    <string name="home_checking">Checking Usage Access…</string>
-    <string name="home_tracked_title">Tracking %1$d apps</string>
+    <string name="home_today_title">Today</string>
+    <string name="home_updated_at">Updated at %1$s</string>
+    <string name="home_total_label">in your tracked apps since midnight</string>
+    <string name="home_no_usage">No usage recorded yet today.</string>
+    <string name="home_usage_error">Couldn’t read usage: %1$s</string>
+    <string name="action_refresh">Refresh</string>
     <string name="home_change_apps">Change apps</string>
 
     <!-- App picker -->
