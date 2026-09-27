@@ -21,8 +21,16 @@
 
     <!-- Post-onboarding placeholder -->
     <string name="home_granted_title">Usage Access is on</string>
-    <string name="home_granted_body">Scroll Journey can now read how long your apps are used. Next up: choosing which apps to track.</string>
     <string name="home_revoked_title">Usage Access is disabled</string>
     <string name="home_revoked_body">Enable it to continue tracking your selected apps.</string>
     <string name="home_checking">Checking Usage Access…</string>
+    <string name="home_tracked_title">Tracking %1$d apps</string>
+    <string name="home_change_apps">Change apps</string>
+
+    <!-- App picker -->
+    <string name="app_picker_title">Choose apps to track</string>
+    <string name="app_picker_body">Minutes in these apps count toward your daily limit.</string>
+    <string name="app_picker_search">Search apps</string>
+    <string name="app_picker_empty">No apps found. Android may be hiding installed apps from Scroll Journey.</string>
+    <string name="app_picker_continue">Continue (%1$d selected)</string>
 </resources>

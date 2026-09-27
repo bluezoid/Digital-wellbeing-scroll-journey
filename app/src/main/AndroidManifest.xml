@@ -11,6 +11,18 @@
         android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
 
+    <!--
+        Android 11+ hides other installed apps by default ("package visibility").
+        This declares the one kind of app we need to see: anything with a launcher icon.
+        It's the narrow alternative to QUERY_ALL_PACKAGES, which Google Play restricts.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
     <application
         android:name=".ScrollJourneyApp"
         android:allowBackup="true"

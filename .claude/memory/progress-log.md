@@ -55,3 +55,26 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
   - Revoking sets the mode to `ignore` (MODE_IGNORED=1). The process isn't killed.
   - **`adb shell appops set` is blocked** (SecurityException MANAGE_APP_OPS_MODES), so the permission must be toggled by hand in Settings for testing. (Enabling "Disable permission monitoring" in Developer options may allow it.)
 - **Next:** Phase 2, the app picker. Waiting on the user's approval of the storage approach for the selection.
+
+## 2026-09-27: Phase 2, app picker built (session 2, continued)
+
+- The user chose **Option A**: bring Room in early with only `SelectedAppEntity`. Phase 4 adds the other 3 tables via version bump + migration.
+- Build: added KSP 2.1.0-1.0.28, Room 2.7.2 (runtime, ktx, compiler), and kotlinx-coroutines-test 1.8.1. The Room schema is exported to `app/schemas/` (commit it; needed for migration tests).
+- Manifest: a `<queries>` block for MAIN/LAUNCHER intents (package visibility on Android 11+). No QUERY_ALL_PACKAGES.
+- Domain:
+  - `InstalledApp` and `SelectedApp` models.
+  - `domain/calculator/AppSelectionRules`: DEFAULT_PACKAGES, initialSelection, sortForDisplay, buildSelectionRecords.
+  - Rules: untick means disabled, not deleted. A saved app that is no longer installed gets disabled, so a reinstall isn't auto re-enabled. addedAt is preserved.
+  - `AppRepository` interface.
+- Data:
+  - `data/local/{ScrollJourneyDatabase v1, entity/SelectedAppEntity (+ mappers), dao/SelectedAppDao (getAll, observeEnabled Flow, @Upsert)}`.
+  - `data/apps/AndroidAppRepository`: `queryIntentActivities` for launcher apps, excluding our own package.
+  - `data/apps/AppIconSource` + `AndroidAppIconSource`: cached 96 px ImageBitmap.
+- UI:
+  - `ui/apppicker/{AppPickerViewModel, AppPickerScreen}`: search box, checkbox list with icons, "Continue (N selected)" disabled when N = 0, error text if the list is empty.
+  - `ui/startup/StartupViewModel`: picks the start screen. Apps saved → HOME; access granted but no apps → APP_PICKER; otherwise ONBOARDING. "Has an enabled tracked app" stands in for onboardingComplete until Phase 4.
+  - MainActivity shows a blank background until the start screen is known.
+  - Home placeholder now lists the tracked apps and has a "Change apps" button (the picker opened from Home pops back; in onboarding it continues to Home).
+- Tests: 19 JVM unit tests pass (AppSelectionRules 10, AppPickerViewModel 5, UsageAccessViewModel 4), using `fakes/FakeAppRepository`.
+- The phone has Instagram, Facebook and YouTube installed (no Reddit, X or Snapchat).
+- Installed on the phone, but the **device check is pending**: the phone was locked, so the screenshot was black.

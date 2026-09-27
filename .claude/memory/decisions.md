@@ -4,6 +4,10 @@ Newest first. Don't re-open a settled decision unless the user asks. Record reve
 
 | Date | Decision | Why | Status |
 |---|---|---|---|
+| 2026-09-27 | Room brought in during Phase 2 with only SelectedAppEntity (DB v1); Phase 4 adds tables through a v2 migration | The user chose Option A; a picker that forgets choices can't be tested | Final |
+| 2026-09-27 | Until the onboardingComplete flag exists, "at least one enabled tracked app" means onboarding is done (StartupViewModel) | Avoids throwaway storage | Temporary (Phase 4) |
+| 2026-09-27 | Unticked or uninstalled apps are kept as enabled=false rows, never deleted | Spec: keep history, don't auto re-enable on reinstall | Final |
+| 2026-09-27 | The user must select at least 1 app to continue | Also makes the "first run" check (empty table) reliable | Final |
 | 2026-09-27 | Phase 1: no persisted onboarding flag yet. MainActivity starts at HOME if Usage Access is granted, otherwise INTRO | Room arrives in Phase 4; avoid throwaway storage code | Temporary |
 | 2026-09-27 | `UsageAccessState.REVOKED` means "currently off," whether never granted or switched off later | Matches the spec enum; the UI treats both the same | Final |
 | 2026-09-27 | Library versions pinned to AGP 8.7.2 / Kotlin 2.1.0 / compileSdk 34 (see tech-stack.md) | Works with the installed SDK and the cached Gradle | Revisit before Play release |

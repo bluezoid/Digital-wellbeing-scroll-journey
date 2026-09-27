@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 1 ✅ verified on the device (realme, Android 13). Phase 2 (app picker) not started.
-- **Last done (2026-09-27):** Phase 1 passed every device check. Added the `UsageAccess` debug log. realme blocks `adb shell appops set`, so toggle the permission by hand.
-- **Waiting on:** the user's approval to start Phase 2, including how to store the app selection (proposed: bring in Room early with only `SelectedAppEntity`).
-- **Next step:** Phase 2, the app picker (PackageManager + `<queries>` for launcher apps, pre-select installed social apps, save the selection).
+- **Phase:** 2 (app picker). The code is done and 19 unit tests pass. **Waiting on the physical-phone test.**
+- **Last done (2026-09-27):** Room brought in early (only SelectedAppEntity, DB v1), app picker with `<queries>`, pre-selection rules, startup routing, and a "Change apps" button on the temporary home.
+- **Waiting on:** the user to test the picker on the realme (see the checklist in the last progress-log entry, or ask).
+- **Next step:** Phase 3, UsageStats integration (`UsageDataSource` with `queryEvents()`, today's minutes per selected app, compared with Digital Wellbeing).
 
 ## Memory index: read on demand
 
@@ -51,13 +51,18 @@ navigate_scrolling/
     │   ├─ ScrollJourneyApp.kt   Application → AppContainer
     │   ├─ MainActivity.kt       picks the start route, hosts navigation
     │   ├─ di/AppContainer.kt    manual DI
-    │   ├─ domain/model/UsageAccessState.kt
-    │   ├─ domain/repository/UsageAccessRepository.kt
+    │   ├─ domain/model/{UsageAccessState, InstalledApp, SelectedApp}.kt
+    │   ├─ domain/calculator/AppSelectionRules.kt
+    │   ├─ domain/repository/{UsageAccessRepository, AppRepository}.kt
     │   ├─ data/usage/AndroidUsageAccessRepository.kt
+    │   ├─ data/local/{ScrollJourneyDatabase, entity/SelectedAppEntity, dao/SelectedAppDao}.kt
+    │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
     │   ├─ util/UsageAccessSettings.kt
-    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, home
-    │   └─ ui/{theme, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel, home/HomePlaceholderScreen}
-    └─ test/.../ui/permission/UsageAccessViewModelTest.kt
+    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker, home
+    │   └─ ui/{theme, startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
+    │          apppicker/{AppPickerScreen, AppPickerViewModel}, home/{HomePlaceholderScreen, HomePlaceholderViewModel}}
+    ├─ schemas/                  Room schema JSON per DB version (committed)
+    └─ test/.../                 fakes/, domain/calculator/, ui/apppicker/, ui/permission/ tests
 ```
 
 Build commands are in `memory/tech-stack.md`.
