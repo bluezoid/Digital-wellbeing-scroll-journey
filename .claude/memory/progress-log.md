@@ -338,3 +338,27 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
   - SceneView's `createImageInstance` (unlit) shows stripe artefacts on spheres, so **only use the lit `createTextureInstance`**.
   - After the fix: a correct textured Earth (continents correctly oriented, not mirrored) at 57 FPS (screenshot confirmed).
 - **Debug shortcut:** debug builds accept `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route <route>` (MainActivity checks FLAG_DEBUGGABLE; AppNavHost navigates via LaunchedEffect). E.g. `--es debug_route space_spike`. With the phone unlocked, Claude can open screens and `adb exec-out screencap -p` to inspect them.
+
+## 2026-09-28: 3D-2 solar system built (session 3)
+
+- The user's 3D-1 check passed (57–59 FPS, rotate/zoom OK); they expected more than one Earth, which is what 3D-2 delivers.
+- **Custom Filament materials** (SceneView has no emissive/unlit option that works on spheres):
+  - Sources in `materials/*.mat`; compiled with **matc 1.56.0** (must match the Filament runtime 1.56.0 from SceneView 2.3.0) to `app/src/main/assets/materials/*.filamat`. See `materials/README.md` for the commands. matc comes from the filament-v1.56.0-linux.tgz release.
+  - `space_unlit_textured`: unlit, culling none, uv0, params baseTexture + intensity; used for the Sun (1.4) and the starfield sphere (0.8).
+  - `space_unlit_color`: unlit, transparent, depthWrite false, params color (float4) + intensity; used for orbit paths (0.75, 0.8, 1, 0.22).
+  - **Unlit materials are NOT affected by camera exposure**, so intensity ≈ 1 = texture as-is. The first try used 14 000/48 000 and blew the screen out white/pink.
+- Textures in `assets/textures/` (≈2 MB total): sun, jupiter, saturn, stars (2K); mercury, venus (atmosphere), moon, mars, uranus, neptune, pluto (= makemake_fictional), ceres (= ceres_fictional) (1K); earth (2K); saturn_ring.png (RGBA strip). `CREDITS.txt`: Solar System Scope CC BY 4.0.
+- `ui/space/SolarSystemLayout.kt` (pure): `SpacePoint`, `enum SpaceBody(texture, radius, orbitRadius, orbitPeriodSeconds, startAngleDegrees, spinPeriodSeconds)` with parent moons (MOON→EARTH, EUROPA→JUPITER, TITAN→SATURN).
+  - Stylised layout: Sun r3.5; orbits Mercury 6.5, Venus 9, Earth 12, Mars 15.5, Ceres 18.5, Jupiter 24, Saturn 31, Uranus 37, Neptune 42, Pluto 46.
+  - `positionAt(t)`, `spinAt(t)`; Saturn ring 1.8–3.3, tilt 27°; starfield radius 500.
+- `ui/space/SpaceGeometry.kt`: orbitCircle (LINES, 160 segments), ring (annulus, u radial / v around).
+- `ui/space/ClampedOrbitManipulator.kt`: delegates to SceneView's default orbit manipulator and blocks pinch-zoom past min 7 / max 140 from the origin.
+- `ui/space/SpaceScreen.kt` (replaces EarthSpikeScreen):
+  - Environment IBL intensity lowered to 6000 (dark night sides); `mainLightNode = null`.
+  - A Sun **point light** at the origin (3.0e8 lm, falloff 200).
+  - Lit planets via `createTextureInstance` (single materialInstance!); Saturn ring via `createTextureInstance(isOpaque = false)` + `setCullingMode(NONE)`.
+  - Camera home (0, 26, 62) looking at the Sun; onFrame animates orbits and spins with a SceneClock; FPS overlay.
+  - Route `space` (debug_route space), menu "3D solar system (preview)".
+- Result on the realme (screenshot): Sun, orbit rings, Saturn + rings, Earth + Moon, Venus, Mars, Mercury, starfield at **58 FPS**. The INTERNET permission is still stripped.
+- Tests: **142 JVM** (+SolarSystemLayoutTest 6) and 18 on-device pass. The debug APK is 44 MB (all ABIs).
+- Pending: the user's check (rotate 360°, zoom limits, find all planets). Then **3D-3**: rocket + trail from RocketState, highlight reached/dim unreached, tap-a-planet card, deep-space star view past the Oort Cloud.

@@ -50,3 +50,6 @@
 - Default Scene environment: black skybox + neutral IBL + a directional light pointing (0, -1, 0).
 - SceneView pulls in fuel (networking), so strip `android.permission.INTERNET` with `tools:node="remove"`.
 - The realme (Dimensity, Mali-G77 MC9, GLES 3.2) runs about 58 FPS with a 2K-textured sphere.
+- **Unlit Filament materials ignore camera exposure**: output = baseColor. Keep intensity around 1 (the Sun 1.4, stars 0.8). Lit materials do use exposure (SceneView's sunny-16).
+- Custom materials: write a `.mat`, compile with matc (same version as the runtime, 1.56.0) `-p mobile -a opengl`, load with `materialLoader.createMaterial("materials/x.filamat")`, then `createInstance(material)` and `setTexture("name", tex)` / `setParameter(...)`.
+- Sun lighting: a point light at the origin (3e8 lm, falloff 200) + IBL intensity 6000 gives day/night sides that still read on the outer planets.

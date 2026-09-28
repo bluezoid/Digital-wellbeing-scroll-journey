@@ -1,0 +1,3 @@
+Planet, Sun, ring and star textures: Solar System Scope (https://www.solarsystemscope.com/textures/),
+licensed CC BY 4.0. Resized/compressed for the app.
+pluto.jpg and ceres.jpg are Solar System Scope "fictional" textures (Makemake / Ceres), used as stylised stand-ins.

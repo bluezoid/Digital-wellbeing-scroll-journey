@@ -19,8 +19,8 @@ It is the entry point to the project's memory. **Read it first, then open only t
 ## Current status (update this every session)
 
 - **Phases 0–11 ✅.** Phase 12 validation 🔄 since 2026-09-28. The new 18-stop route is live.
-- **3D-1 spike working (2026-09-28):** a textured lit Earth at about 57 FPS on the realme (the grey-ball bug is fixed: use a single `materialInstance` on SphereNode; see research-notes "SceneView gotchas"). **Waiting on the user to confirm the gestures feel good**, then 3D-2.
-- **Next:** 3D-2 (Sun, all planets + Mercury/Venus scenery, Moon, Saturn rings, orbit rings, starfield).
+- **3D-2 built (2026-09-28):** the full stylised solar system (`ui/space/SpaceScreen`, ⋮ → "3D solar system (preview)", debug_route `space`) at about 58 FPS. Custom Filament materials in `materials/` (compile with matc 1.56.0). **Waiting on the user's check.**
+- **Next:** 3D-3 journey (rocket + trail from RocketState, reached/dimmed destinations, tap card, deep-space stars) → 3D-4 integration (dashboard hero, fullscreen, 2D fallback, texture credits in Settings, remove the FPS overlay).
 - Debug shortcut: `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route <route>`.
 - **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, the schema-bump gotcha, and how to prove worker runs (workdb period_count).
 
@@ -42,13 +42,15 @@ It is the entry point to the project's memory. **Read it first, then open only t
 ```text
 navigate_scrolling/
  ├─ .claude/                     project memory (this folder)
+ ├─ materials/                   Filament material sources (.mat) + README (matc 1.56.0)
  ├─ README.md                    original research; the scroll-counting part is superseded
  ├─ idea.txt                     the user's scratch file
  ├─ settings.gradle.kts, build.gradle.kts, gradle.properties, gradle/libs.versions.toml, gradlew
  └─ app/src/
     ├─ main/AndroidManifest.xml  PACKAGE_USAGE_STATS declared
     ├─ main/res/                 strings, themes, colors, adaptive rocket icon
-    ├─ main/assets/textures/     planet textures (Solar System Scope CC BY 4.0 / NASA PD)
+    ├─ main/assets/textures/     planet textures (Solar System Scope CC BY 4.0), CREDITS.txt
+    ├─ main/assets/materials/    compiled Filament materials (.filamat) ← sources in /materials/*.mat
     ├─ main/java/com/achyutpal/scrolljourney/
     │   ├─ ScrollJourneyApp.kt   Application → AppContainer
     │   ├─ MainActivity.kt       picks the start route, hosts navigation
@@ -69,7 +71,7 @@ navigate_scrolling/
     │   └─ ui/{theme (+StatusColors), startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
     │          apppicker/*, dailylimit/*, dashboard/{DashboardScreen, DashboardViewModel, DashboardUiState(+Builder)},
     │          history/{HistoryScreen, HistoryViewModel, MonthCalendar}, settings/{SettingsScreen, SettingsViewModel}, journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, DestinationUi, BackTopBar, StatusUi, ComparisonUi}}
-    │   ├─ ui/space/EarthSpikeScreen.kt  (3D-1 spike, temporary)
+    │   ├─ ui/space/{SpaceScreen, SolarSystemLayout, SpaceGeometry, ClampedOrbitManipulator}.kt  (3D)
     │   └─ worker/{DailyUsageWorker, DailySyncScheduler, DailySyncPolicy}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/

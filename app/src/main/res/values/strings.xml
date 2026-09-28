@@ -32,9 +32,9 @@
     <string name="action_back">Back</string>
     <string name="action_cancel">Cancel</string>
 
-    <!-- 3D-1 spike (temporary) -->
-    <string name="spike_menu">3D test (Earth)</string>
-    <string name="spike_title">3D test: Earth</string>
+    <!-- 3D solar system (preview) -->
+    <string name="spike_menu">3D solar system (preview)</string>
+    <string name="space_title">Solar system</string>
     <string name="spike_hint">Drag to rotate 360° · pinch to zoom · two fingers to pan</string>
 
     <!-- Settings -->

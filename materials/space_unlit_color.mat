@@ -1,0 +1,21 @@
+// Flat, self-lit colour with transparency: orbit paths and highlight markers.
+material {
+    name : space_unlit_color,
+    shadingModel : unlit,
+    blending : transparent,
+    culling : none,
+    depthWrite : false,
+    parameters : [
+        { type : float4, name : color },
+        { type : float, name : intensity }
+    ]
+}
+
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        vec4 c = materialParams.color;
+        // Transparent blending in Filament expects premultiplied alpha.
+        material.baseColor = vec4(c.rgb * c.a * materialParams.intensity, c.a);
+    }
+}

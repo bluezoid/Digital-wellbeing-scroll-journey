@@ -13,7 +13,7 @@ import com.achyutpal.scrolljourney.ui.dailylimit.DailyLimitScreen
 import com.achyutpal.scrolljourney.ui.dashboard.DashboardScreen
 import com.achyutpal.scrolljourney.ui.history.HistoryScreen
 import com.achyutpal.scrolljourney.ui.settings.SettingsScreen
-import com.achyutpal.scrolljourney.ui.space.EarthSpikeScreen
+import com.achyutpal.scrolljourney.ui.space.SpaceScreen
 import com.achyutpal.scrolljourney.ui.onboarding.IntroScreen
 import com.achyutpal.scrolljourney.ui.onboarding.UsageAccessScreen
 import com.achyutpal.scrolljourney.ui.startup.StartDestination
@@ -26,7 +26,7 @@ object Routes {
     const val DASHBOARD = "dashboard"
     const val HISTORY = "history"
     const val SETTINGS = "settings"
-    const val SPACE_SPIKE = "space_spike" // 3D-1 test, temporary
+    const val SPACE = "space" // 3D solar system (preview until 3D-4 puts it on the dashboard)
 
     // Picker and limit are used both in onboarding (default) and from the dashboard (onboarding=false).
     const val APP_PICKER = "app_picker?$ARG_ONBOARDING={$ARG_ONBOARDING}"
@@ -96,14 +96,14 @@ fun AppNavHost(startDestination: String, debugRoute: String? = null) {
             DashboardScreen(
                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
-                onOpen3dTest = { navController.navigate(Routes.SPACE_SPIKE) },
+                onOpen3dTest = { navController.navigate(Routes.SPACE) },
             )
         }
         composable(Routes.HISTORY) {
             HistoryScreen(onBack = { navController.popBackStack() })
         }
-        composable(Routes.SPACE_SPIKE) {
-            EarthSpikeScreen(onBack = { navController.popBackStack() })
+        composable(Routes.SPACE) {
+            SpaceScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.SETTINGS) {
             SettingsScreen(
