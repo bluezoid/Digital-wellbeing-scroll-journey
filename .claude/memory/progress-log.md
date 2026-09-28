@@ -332,3 +332,9 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Size: the debug APK is 42.7 MB (all 4 ABIs). Per ABI the Filament libs are about 6–7.5 MB (arm64 7.0 MB); assets 4.7 MB (texture + SceneView's neutral IBL). Play AAB splits give about +7–12 MB per device.
 - Tests: 136 JVM + 18 on-device pass. Installed; the phone was locked, so the **user must open ⋮ → 3D test and report the smoothness/FPS**.
 - Default SceneView environment: black skybox + neutral IBL + a default directional light.
+- **3D-1 user test (2026-09-28 12:10):** 57–59 FPS, but the Earth rendered as a flat **grey ball**.
+  - **Root cause:** SceneView's `Sphere` has **one primitive per stack**. `SphereNode(materialInstances = listOf(x))` applies x to the first stack only (the top cap); every other stack gets Filament's default grey material.
+  - **Fix:** use the `materialInstance = x` constructor (a single range covering the whole sphere). Diagnosed with a 3-sphere test (red lit, lit Earth, unlit Earth).
+  - SceneView's `createImageInstance` (unlit) shows stripe artefacts on spheres, so **only use the lit `createTextureInstance`**.
+  - After the fix: a correct textured Earth (continents correctly oriented, not mirrored) at 57 FPS (screenshot confirmed).
+- **Debug shortcut:** debug builds accept `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route <route>` (MainActivity checks FLAG_DEBUGGABLE; AppNavHost navigates via LaunchedEffect). E.g. `--es debug_route space_spike`. With the phone unlocked, Claude can open screens and `adb exec-out screencap -p` to inspect them.

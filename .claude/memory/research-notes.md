@@ -41,3 +41,12 @@
 
 - A phone's diagonal size is not the vertical scroll distance. Physical conversion: `pixels / ydpi = inches`.
 - OEM battery optimisation doesn't matter much now, since there's no long-running service.
+
+## SceneView / Filament (3D) gotchas (2026-09-28)
+
+- `SphereNode`: pass a **single `materialInstance`**. `materialInstances = listOf(x)` only covers the first primitive (Sphere has one primitive per stack), so the rest render grey.
+- Use `materialLoader.createTextureInstance(texture, ...)` (lit, `opaque_textured.filamat`, parameter "texture", uses UV0). `createImageInstance` (unlit) showed stripe artefacts on spheres.
+- `ImageTexture.Builder().bitmap(assets, path).build(engine)` gives SRGB8_A8 with mipmaps generated (12 levels for 2048×1024).
+- Default Scene environment: black skybox + neutral IBL + a directional light pointing (0, -1, 0).
+- SceneView pulls in fuel (networking), so strip `android.permission.INTERNET` with `tools:node="remove"`.
+- The realme (Dimensity, Mali-G77 MC9, GLES 3.2) runs about 58 FPS with a 2K-textured sphere.

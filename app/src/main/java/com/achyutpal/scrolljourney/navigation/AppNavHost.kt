@@ -1,6 +1,7 @@
 package com.achyutpal.scrolljourney.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -50,8 +51,12 @@ private val onboardingArgument = listOf(
 
 /** Onboarding: intro → usage access → app picker → daily limit → dashboard. */
 @Composable
-fun AppNavHost(startDestination: String) {
+fun AppNavHost(startDestination: String, debugRoute: String? = null) {
     val navController = rememberNavController()
+
+    if (debugRoute != null) {
+        LaunchedEffect(debugRoute) { navController.navigate(debugRoute) }
+    }
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.INTRO) {

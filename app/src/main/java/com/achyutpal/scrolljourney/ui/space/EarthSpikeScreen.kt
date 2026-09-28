@@ -37,14 +37,15 @@ import io.github.sceneview.rememberNodes
 import io.github.sceneview.texture.ImageTexture
 
 /**
- * 3D-1 SPIKE (temporary): one textured, slowly spinning Earth with an orbit camera.
- * Goal: prove SceneView/Filament runs smoothly on the test phone before building the
- * full solar system. The FPS counter is for that check and will be removed.
- *
- * - Engine: Filament's GPU renderer. One per scene; remembered so it survives recomposition.
- * - MaterialLoader: creates materials (how a surface reacts to light); here a lit, textured one.
- * - SphereNode: a sphere mesh; the equirectangular Earth map wraps around it.
- * - CameraManipulator: turns drag / pinch / two-finger gestures into orbit / zoom / pan.
+ * 3D-1 SPIKE (temporary): one textured, lit, slowly spinning Earth with an orbit camera.
+ * Goal: prove SceneView/Filament runs smoothly on the test phone. The FPS counter is for that check.
+ * (Diagnosis 2026-09-28: lit colour + lit texture render correctly; SceneView's unlit
+ *  createImageInstance showed stripe artefacts on spheres, so it's not used.)
+ * NOTE: SceneView's Sphere has one primitive per stack. Pass a single `materialInstance` (applied to
+ * the whole sphere), NOT `materialInstances = listOf(x)`, which only colours the first stack (top cap)
+ * and leaves the rest on Filament's grey default material.
+ * Open from ⋮ → "3D test", or in debug builds:
+ *   adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space_spike
  */
 @Composable
 fun EarthSpikeScreen(onBack: () -> Unit) {
@@ -61,7 +62,8 @@ fun EarthSpikeScreen(onBack: () -> Unit) {
             radius = 1f,
             stacks = 48,
             slices = 96,
-            materialInstances = listOf(materialLoader.createTextureInstance(texture, roughness = 0.9f)),
+            // A single materialInstance covers the whole sphere (see note above).
+            materialInstance = materialLoader.createTextureInstance(texture, roughness = 0.9f),
         )
     }
     val cameraNode = rememberCameraNode(engine) { position = Position(z = 3.5f) }
@@ -86,11 +88,7 @@ fun EarthSpikeScreen(onBack: () -> Unit) {
             },
         )
 
-        Column(
-            modifier = Modifier
-                .statusBarsPadding()
-                .padding(8.dp),
-        ) {
+        Column(Modifier.statusBarsPadding().padding(8.dp)) {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = Color.White)
             }

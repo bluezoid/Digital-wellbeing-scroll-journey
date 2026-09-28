@@ -19,8 +19,9 @@ It is the entry point to the project's memory. **Read it first, then open only t
 ## Current status (update this every session)
 
 - **Phases 0–11 ✅.** Phase 12 validation 🔄 since 2026-09-28. The new 18-stop route is live.
-- **3D-1 spike built and installed (2026-09-28):** SceneView 2.3.0, a textured spinning Earth, orbit/zoom camera, FPS overlay (⋮ → "3D test (Earth)"). The INTERNET permission is stripped (privacy). **Waiting on the user's smoothness/FPS report.**
-- **Next:** if smooth → 3D-2 (Sun, all planets + Mercury/Venus scenery, Moon, Saturn rings, orbit rings, starfield). If not → rethink (lower poly/texture, or a fallback).
+- **3D-1 spike working (2026-09-28):** a textured lit Earth at about 57 FPS on the realme (the grey-ball bug is fixed: use a single `materialInstance` on SphereNode; see research-notes "SceneView gotchas"). **Waiting on the user to confirm the gestures feel good**, then 3D-2.
+- **Next:** 3D-2 (Sun, all planets + Mercury/Venus scenery, Moon, Saturn rings, orbit rings, starfield).
+- Debug shortcut: `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route <route>`.
 - **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, the schema-bump gotcha, and how to prove worker runs (workdb period_count).
 
 ## Memory index: read on demand

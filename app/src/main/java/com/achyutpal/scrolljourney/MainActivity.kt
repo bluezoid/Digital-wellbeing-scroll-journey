@@ -1,5 +1,6 @@
 package com.achyutpal.scrolljourney
 
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,13 +26,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Debug builds only: `adb shell am start -n <pkg>/.MainActivity --es debug_route <route>` jumps to a screen.
+        val isDebuggable = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+        val debugRoute = if (isDebuggable) intent.getStringExtra(EXTRA_DEBUG_ROUTE) else null
+
         setContent {
             ScrollJourneyTheme {
                 val start by startupViewModel.start.collectAsStateWithLifecycle()
                 // The first screen needs a quick database read; show a blank background until it's known.
-                start?.let { AppNavHost(startDestination = it.toRoute()) }
+                start?.let { AppNavHost(startDestination = it.toRoute(), debugRoute = debugRoute) }
                     ?: Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
             }
         }
+    }
+
+    private companion object {
+        const val EXTRA_DEBUG_ROUTE = "debug_route"
     }
 }
