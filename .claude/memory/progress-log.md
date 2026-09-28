@@ -309,3 +309,4 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
   - 28 Sep live: 12 min, GREEN so far.
 - Phase 11 installed. **18/18 on-device tests pass**, including the reset test. App data intact.
 - Pending: the user checks the Settings screen (reset dialog; background/usage status rows).
+- **User check passed (2026-09-28):** Settings screen OK. **Phase 11 ✅.** Next: the 3D plan (12b) presented for approval; SceneView 2.3.0 (Filament 1.56, Kotlin stdlib 2.0.21, no minCompileSdk constraint) is compatible with the current toolchain.
