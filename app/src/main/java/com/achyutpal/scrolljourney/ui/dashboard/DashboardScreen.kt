@@ -102,7 +102,8 @@ fun DashboardScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DashboardContent(
+// internal (not private) so on-device UI tests can render it with fake state.
+internal fun DashboardContent(
     state: DashboardUiState,
     onRefresh: () -> Unit,
     onOpenUsageAccess: () -> Unit,

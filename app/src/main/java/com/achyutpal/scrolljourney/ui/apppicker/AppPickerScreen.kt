@@ -66,7 +66,8 @@ fun AppPickerScreen(
 }
 
 @Composable
-private fun AppPickerContent(
+// internal (not private) so on-device UI tests can render it with fake state.
+internal fun AppPickerContent(
     state: AppPickerUiState,
     onBack: (() -> Unit)?,
     onToggle: (String) -> Unit,

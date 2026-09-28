@@ -18,7 +18,7 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phases 0–11 ✅.** Phase 12 validation 🔄 since 2026-09-28. The new 18-stop route is live.
+- **Phases 0–11 ✅.** Phase 12 validation 🔄 since 2026-09-28: force-stop ✅, reboot part 1 ✅, uninstall/reinstall ✅ (after a fix), Compose UI tests ✅ (26), late-tap crash fixed; pending: midnight, missed day, 7-day DW comparison, 18:51 native crash watch. **Next session: start with the "Resume checklist for next session (2026-09-29)" in memory/progress-log.md.**
 - **3D (Phase 12b) ✅ COMPLETE (2026-09-28):** 3D-1…3D-4 done; the user confirmed the final rocket size ("absolutely perfect").
 - **Next:** after the user's 3D-4 check → 3D (12b) done; continue Phase 12 real-use validation (reboot, missed day, 23:59→00:01, uninstall/reinstall), then the Later items in roadmap.md.
 - Debug: `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space [--ei debug_fuel N]`.

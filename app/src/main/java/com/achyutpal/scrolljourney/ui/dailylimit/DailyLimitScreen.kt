@@ -72,7 +72,8 @@ fun DailyLimitScreen(
 }
 
 @Composable
-private fun DailyLimitContent(
+// internal (not private) so on-device UI tests can render it with fake state.
+internal fun DailyLimitContent(
     state: DailyLimitUiState,
     isOnboarding: Boolean,
     onBack: (() -> Unit)?,

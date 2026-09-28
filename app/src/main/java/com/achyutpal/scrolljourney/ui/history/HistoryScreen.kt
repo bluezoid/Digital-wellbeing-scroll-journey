@@ -84,7 +84,8 @@ fun HistoryScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HistoryContent(
+// internal (not private) so on-device UI tests can render it with fake state.
+internal fun HistoryContent(
     state: HistoryUiState,
     onBack: () -> Unit,
     onPrevious: () -> Unit,

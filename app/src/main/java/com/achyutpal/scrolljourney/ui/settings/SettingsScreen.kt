@@ -92,7 +92,8 @@ fun SettingsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsContent(
+// internal (not private) so on-device UI tests can render it with fake state.
+internal fun SettingsContent(
     state: SettingsUiState,
     onBack: () -> Unit,
     onChangeApps: () -> Unit,
