@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 10 (WorkManager). The code is done and verified via an on-device test; the overnight run is still to observe. UI polish from the user's review is done (back arrows, chips, comparison wording). 128 unit + 17 on-device tests pass.
-- **Last done (2026-09-27, end of session 2):** Phases 0–9 ✅ verified on the realme; Phase 10 code done.
-- **Next session: start with the "Resume checklist for next session" at the bottom of memory/progress-log.md** (morning check of 27 Sep finalization + worker, then Phase 11 Settings, then the 3D plan 12b).
-- **Never run `connectedAndroidTest`** (it uninstalls the app). See progress-log for the manual on-device test commands, and the schema-bump gotcha.
+- **Phase:** 11 (Settings). The code is done, committed and builds; 133 unit tests pass. **Not yet installed**: the phone shows `unauthorized` in adb (the user must accept the USB-debugging prompt). Phase 10's overnight check is also pending on the same.
+- **Last done (2026-09-28, session 3):** the Settings screen (apps, limit, Usage Access/background status, reset journey with confirmation keeping history, privacy, version); the ⋮ menu is now History + Settings.
+- **Next:** once authorized → the morning check (27 Sep finalized, worker log), install, on-device tests, the user checks Settings → then present the **3D plan (12b)** → Phase 12 validation.
+- **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, and the schema-bump gotcha.
 
 ## Memory index: read on demand
 
@@ -61,11 +61,12 @@ navigate_scrolling/
     │   ├─ data/local/ScrollJourneyDatabase.kt (v4)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
     │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt, data/journey/RoomJourneyRepository.kt
     │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
-    │   ├─ util/UsageAccessSettings.kt
-    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, dashboard, history
+    │   ├─ data/system/AndroidDeviceStatusRepository.kt, domain/repository/DeviceStatusRepository.kt
+    │   ├─ util/UsageAccessSettings.kt (+ openAppDetailsSettings)
+    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, dashboard, history, settings
     │   └─ ui/{theme (+StatusColors), startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
     │          apppicker/*, dailylimit/*, dashboard/{DashboardScreen, DashboardViewModel, DashboardUiState(+Builder)},
-    │          history/{HistoryScreen, HistoryViewModel, MonthCalendar}, journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, PlanetUi, StatusUi, ComparisonUi}}
+    │          history/{HistoryScreen, HistoryViewModel, MonthCalendar}, settings/{SettingsScreen, SettingsViewModel}, journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, PlanetUi, StatusUi, ComparisonUi}}
     │   └─ worker/{DailyUsageWorker, DailySyncScheduler, DailySyncPolicy}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/

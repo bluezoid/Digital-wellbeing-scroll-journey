@@ -46,6 +46,11 @@ class RoomSettingsRepository(
         dao.setDailyLimit(minutes)
     }
 
+    override suspend fun resetJourney(journeyStart: LocalDate) {
+        ensureRow()
+        dao.resetJourney(journeyStart.toString())
+    }
+
     private suspend fun ensureRow() {
         dao.insertIfMissing(UserSettings().toEntity())
     }

@@ -1,6 +1,7 @@
 package com.achyutpal.scrolljourney.fakes
 
 import com.achyutpal.scrolljourney.domain.calculator.DailyLimitRules
+import com.achyutpal.scrolljourney.domain.model.Planet
 import com.achyutpal.scrolljourney.domain.model.UserSettings
 import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +22,16 @@ class FakeSettingsRepository(initial: UserSettings = UserSettings()) : SettingsR
 
     override suspend fun ensureJourneyStarted(journeyStart: LocalDate) {
         state.value = state.value.copy(journeyStartDate = state.value.journeyStartDate ?: journeyStart)
+    }
+
+    override suspend fun resetJourney(journeyStart: LocalDate) {
+        state.value = state.value.copy(
+            currentFuel = 0,
+            lifetimeFuel = 0,
+            highestReachedPlanet = Planet.EARTH,
+            journeyDistance = 0,
+            journeyStartDate = journeyStart,
+        )
     }
 
     override suspend fun setDailyLimit(minutes: Int) {

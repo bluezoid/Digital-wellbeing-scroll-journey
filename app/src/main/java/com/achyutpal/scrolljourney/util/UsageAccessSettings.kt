@@ -13,6 +13,17 @@ import android.provider.Settings
  * the full Usage Access list, then plain Settings. Some manufacturers remove or
  * rename these screens, hence the fallbacks.
  */
+/** Opens this app's page in Android Settings (battery / background activity live there). */
+fun Context.openAppDetailsSettings() {
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
+        startActivity(Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+}
+
 fun Context.openUsageAccessSettings() {
     val candidates = listOf(
         Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:$packageName")),

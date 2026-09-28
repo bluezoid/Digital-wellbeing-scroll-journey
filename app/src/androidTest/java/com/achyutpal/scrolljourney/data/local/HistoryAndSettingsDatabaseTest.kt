@@ -108,6 +108,33 @@ class HistoryAndSettingsDatabaseTest {
         assertEquals(90, settings.getSettings().dailyLimitMinutes)
     }
 
+    @Test
+    fun resetJourneyRestartsRocketButKeepsHistoryAndLimit() = runTest {
+        val journey = RoomJourneyRepository(db)
+        settings.setOnboardingComplete(journeyStart = day.minusDays(10))
+        settings.setDailyLimit(90)
+        history.saveDay(
+            DailyRecord(day, 20, status = DayStatus.GREEN, limitMinutes = 90, distance = 2_000, finalized = true),
+            listOf(AppUsage("insta", "Instagram", 20 * min)),
+        )
+        journey.applyDay(history.getDay(day)!!, 1) { it.copy(currentFuel = 5, lifetimeFuel = 5, highestReachedPlanet = Planet.MOON) }
+
+        settings.resetJourney(journeyStart = day.plusDays(1))
+
+        val s = settings.getSettings()
+        assertEquals(0, s.currentFuel)
+        assertEquals(0, s.lifetimeFuel)
+        assertEquals(Planet.EARTH, s.highestReachedPlanet)
+        assertEquals(0L, s.journeyDistance)
+        assertEquals(day.plusDays(1), s.journeyStartDate)
+        assertEquals(90, s.dailyLimitMinutes)
+        assertTrue(s.onboardingComplete)
+        val kept = history.getDay(day)!!
+        assertEquals(20, kept.totalMinutes)
+        assertTrue(kept.fuelApplied)
+        assertEquals(1, db.dailyAppUsageDao().getForDate(day.toString()).size)
+    }
+
     @Test(expected = IllegalArgumentException::class)
     fun invalidDailyLimitIsRejected() = runTest {
         settings.setDailyLimit(241)

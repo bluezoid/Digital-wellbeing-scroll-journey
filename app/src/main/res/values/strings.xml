@@ -30,6 +30,34 @@
     <string name="action_refresh">Refresh</string>
     <string name="action_more">More options</string>
     <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_tracking">Tracking</string>
+    <string name="settings_tracked_apps">Tracked apps</string>
+    <string name="settings_daily_limit">Daily limit</string>
+    <string name="settings_section_phone">Phone permissions</string>
+    <string name="settings_usage_access">Usage Access</string>
+    <string name="settings_on">On</string>
+    <string name="settings_off">Off</string>
+    <string name="settings_background">Background activity</string>
+    <string name="settings_allowed">Allowed</string>
+    <string name="settings_restricted">Restricted</string>
+    <string name="settings_battery_optimised">Battery optimisation: on</string>
+    <string name="settings_battery_unrestricted">Battery optimisation: off</string>
+    <string name="settings_background_hint">Scroll Journey saves each day in the background around 00:30. Some phones (realme, Xiaomi, Oppo…) pause background apps; if a day ever goes missing, open this and allow background activity. Opening the app always catches up too.</string>
+    <string name="settings_section_journey">Rocket journey</string>
+    <string name="settings_journey_since">Journey since %1$s</string>
+    <string name="settings_reset_journey">Reset journey</string>
+    <string name="settings_reset_subtitle">Rocket back to Earth with 0 fuel. Your usage history is kept.</string>
+    <string name="settings_reset_confirm_title">Reset your journey?</string>
+    <string name="settings_reset_confirm_body">Your rocket goes back to Earth with 0 fuel and the journey restarts today. Your daily history, colours and minutes are not deleted. This can\'t be undone.</string>
+    <string name="settings_reset_confirm_action">Reset</string>
+    <string name="settings_reset_done">Journey reset. The rocket is back on Earth.</string>
+    <string name="settings_section_privacy">Privacy</string>
+    <string name="settings_privacy_body">Everything stays on this phone. Scroll Journey only reads how many minutes the apps you choose were open, using Android\'s Usage Access. It never sees what you do inside them, has no account, no server, no ads and no location. Uninstalling the app deletes all of its data.</string>
+    <string name="settings_version">Scroll Journey %1$s</string>
 
     <!-- History -->
     <string name="history_title">History</string>
@@ -106,6 +134,10 @@
     <string name="limit_start_journey">Start my journey</string>
     <string name="limit_save">Save</string>
 
+    <plurals name="settings_app_count">
+        <item quantity="one">%1$d app</item>
+        <item quantity="other">%1$d apps</item>
+    </plurals>
     <plurals name="streak_days">
         <item quantity="one">🔥 %1$d-day green streak</item>
         <item quantity="other">🔥 %1$d-day green streak</item>

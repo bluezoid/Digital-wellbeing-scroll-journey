@@ -11,6 +11,7 @@ import com.achyutpal.scrolljourney.ui.apppicker.AppPickerScreen
 import com.achyutpal.scrolljourney.ui.dailylimit.DailyLimitScreen
 import com.achyutpal.scrolljourney.ui.dashboard.DashboardScreen
 import com.achyutpal.scrolljourney.ui.history.HistoryScreen
+import com.achyutpal.scrolljourney.ui.settings.SettingsScreen
 import com.achyutpal.scrolljourney.ui.onboarding.IntroScreen
 import com.achyutpal.scrolljourney.ui.onboarding.UsageAccessScreen
 import com.achyutpal.scrolljourney.ui.startup.StartDestination
@@ -22,6 +23,7 @@ object Routes {
     const val USAGE_ACCESS = "usage_access"
     const val DASHBOARD = "dashboard"
     const val HISTORY = "history"
+    const val SETTINGS = "settings"
 
     // Picker and limit are used both in onboarding (default) and from the dashboard (onboarding=false).
     const val APP_PICKER = "app_picker?$ARG_ONBOARDING={$ARG_ONBOARDING}"
@@ -85,13 +87,19 @@ fun AppNavHost(startDestination: String) {
         }
         composable(Routes.DASHBOARD) {
             DashboardScreen(
-                onChangeApps = { navController.navigate(Routes.appPicker(onboarding = false)) },
-                onChangeLimit = { navController.navigate(Routes.dailyLimit(onboarding = false)) },
                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
             )
         }
         composable(Routes.HISTORY) {
             HistoryScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.SETTINGS) {
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onChangeApps = { navController.navigate(Routes.appPicker(onboarding = false)) },
+                onChangeLimit = { navController.navigate(Routes.dailyLimit(onboarding = false)) },
+            )
         }
     }
 }

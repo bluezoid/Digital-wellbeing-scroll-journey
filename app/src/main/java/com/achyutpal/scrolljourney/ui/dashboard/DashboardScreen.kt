@@ -72,9 +72,8 @@ import java.util.Locale
 /** The main screen after onboarding. Syncs usage on every resume. */
 @Composable
 fun DashboardScreen(
-    onChangeApps: () -> Unit,
-    onChangeLimit: () -> Unit,
     onOpenHistory: () -> Unit,
+    onOpenSettings: () -> Unit,
     viewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,10 +87,9 @@ fun DashboardScreen(
     DashboardContent(
         state = state,
         onRefresh = viewModel::refresh,
-        onOpenSettings = { context.openUsageAccessSettings() },
-        onChangeApps = onChangeApps,
-        onChangeLimit = onChangeLimit,
+        onOpenUsageAccess = { context.openUsageAccessSettings() },
         onOpenHistory = onOpenHistory,
+        onOpenSettings = onOpenSettings,
     )
 }
 
@@ -100,10 +98,9 @@ fun DashboardScreen(
 private fun DashboardContent(
     state: DashboardUiState,
     onRefresh: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onChangeApps: () -> Unit,
-    onChangeLimit: () -> Unit,
+    onOpenUsageAccess: () -> Unit,
     onOpenHistory: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -125,12 +122,8 @@ private fun DashboardContent(
                             onClick = { menuOpen = false; onOpenHistory() },
                         )
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.home_change_apps)) },
-                            onClick = { menuOpen = false; onChangeApps() },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.home_change_limit)) },
-                            onClick = { menuOpen = false; onChangeLimit() },
+                            text = { Text(stringResource(R.string.settings_title)) },
+                            onClick = { menuOpen = false; onOpenSettings() },
                         )
                     }
                 },
@@ -148,7 +141,7 @@ private fun DashboardContent(
             if (state.isLoading && state.today == null) {
                 LinearProgressIndicator(Modifier.fillMaxWidth())
             }
-            if (state.accessDenied) AccessDeniedCard(onOpenSettings)
+            if (state.accessDenied) AccessDeniedCard(onOpenUsageAccess)
             state.errorMessage?.let {
                 Text(stringResource(R.string.home_usage_error, it), color = MaterialTheme.colorScheme.error)
             }
@@ -366,10 +359,9 @@ private fun DashboardPreview() {
                 updatedAtMillis = 0L,
             ),
             onRefresh = {},
-            onOpenSettings = {},
-            onChangeApps = {},
-            onChangeLimit = {},
+            onOpenUsageAccess = {},
             onOpenHistory = {},
+            onOpenSettings = {},
         )
     }
 }

@@ -15,4 +15,10 @@ interface SettingsRepository {
 
     /** @throws IllegalArgumentException if outside DailyLimitRules' range. */
     suspend fun setDailyLimit(minutes: Int)
+
+    /**
+     * Spec §42: rocket back to Earth with 0 fuel and 0 journey distance, restarting on [journeyStart].
+     * Usage history (days, colours, minutes, past fuel badges) is NOT touched.
+     */
+    suspend fun resetJourney(journeyStart: LocalDate)
 }

@@ -277,3 +277,23 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 2. Ask the user to confirm the three UI fixes (back arrows, pyramid wording, chips).
 3. Then **Phase 11 Settings**: change apps, change limit, **reset journey** (confirmation dialog; fuel = 0, highest = EARTH, journeyDistance = 0, journeyStartDate = today, history kept, clear fuelApplied? NO: keep fuel history, just restart the rocket from today), privacy text, and a battery/background hint for OEMs like realme. Move the ⋮ menu items into Settings.
 4. After that: present the **3D solar system plan (12b)** to the user before coding, then Phase 12 validation.
+
+## 2026-09-28: Session 3, Phase 11 Settings (built; device install pending)
+
+- Morning check blocked: at 10:36 the phone shows as **`unauthorized`** in `adb devices` (the USB-debugging prompt needs accepting). Always run adb with `timeout` (e.g. `timeout 20 adb ...`); `adb exec-out` hangs with "waiting for device" when unauthorized.
+- **Phase 11 built:**
+  - `SettingsRepository.resetJourney(journeyStart)` via the DAO query `resetJourney`: currentFuel 0, lifetimeFuel 0, highestReachedPlanet EARTH, journeyDistance 0, journeyStartDate = today. **History untouched** (days, colours, minutes, fuelApplied/fuelDelta badges, per-app rows); limit and onboarding flag untouched.
+  - `domain/repository/DeviceStatusRepository` + `data/system/AndroidDeviceStatusRepository`: isBackgroundRestricted (ActivityManager, API 28+), isIgnoringBatteryOptimizations (PowerManager), appVersionName.
+  - `util.openAppDetailsSettings()` (ACTION_APPLICATION_DETAILS_SETTINGS with a fallback).
+  - `ui/settings/{SettingsViewModel, SettingsScreen}`, with sections:
+    - Tracking: tracked apps (count of enabled) → picker; daily limit → limit screen.
+    - Phone permissions: Usage Access On/Off → usage access settings; Background activity Allowed/Restricted plus the battery-optimisation subtitle → app details; a realme/Xiaomi hint.
+    - Rocket journey: planet · fuel · since date; **Reset journey** → AlertDialog (Cancel/Reset) → "Journey reset" confirmation.
+    - Privacy text, and the version at the bottom.
+    - Device status refreshes on every resume.
+  - Route `settings`. The dashboard ⋮ menu is now **History, Settings** (Change apps/limit moved into Settings). DashboardScreen params are now onOpenHistory, onOpenSettings.
+- Tests: **133 JVM** (+SettingsViewModel 5, incl. spec §69 reset and "history kept") and on-device +1 (`resetJourneyRestartsRocketButKeepsHistoryAndLimit`), 18 total, not yet run on the device.
+- **Next once the phone is authorized:**
+  1. The morning check from the resume checklist (27 Sep finalized YELLOW, 0 fuel badge, worker log).
+  2. installDebug + run the on-device tests (manual am instrument).
+  3. The user checks the Settings screen.
