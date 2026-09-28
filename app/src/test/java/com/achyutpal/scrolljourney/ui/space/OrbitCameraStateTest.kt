@@ -77,4 +77,15 @@ class OrbitCameraStateTest {
         c.orbit(-360f / OrbitCameraState.ORBIT_DEGREES_PER_PIXEL, 0f) // one full turn
         assertEquals(0f, before.distanceTo(c.eye()), 0.01f)
     }
+
+    @Test
+    fun `viewFrom places the camera in that direction from the target`() {
+        val c = OrbitCameraState()
+        c.focus(radius = 0.2f, overview = false, viewFrom = SpacePoint(1f, 0f, 0f))
+        settle(c, SpacePoint.ORIGIN)
+        val eye = c.eye()
+        assertTrue(eye.x > 0.9f * c.distance)
+        assertEquals(0f, eye.y, 0.01f)
+        assertEquals(0f, eye.z, 0.01f)
+    }
 }

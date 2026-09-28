@@ -51,6 +51,7 @@ import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironment
 import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberMaterialLoader
+import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberNodes
 import io.github.sceneview.rememberOnGestureListener
 import kotlin.math.hypot
@@ -72,10 +73,11 @@ fun SpaceScreen(
 
     val engine = rememberEngine()
     val materialLoader = rememberMaterialLoader(engine)
+    val modelLoader = rememberModelLoader(engine)
     val environmentLoader = rememberEnvironmentLoader(engine)
     // Keep only a little ambient light so planets have a dark night side.
     val environment = rememberEnvironment(environmentLoader).also { it.indirectLight?.intensity = 6_000f }
-    val scene = remember(engine) { SolarSystemScene(engine, materialLoader, context.assets) }
+    val scene = remember(engine) { SolarSystemScene(engine, materialLoader, modelLoader, context.assets) }
 
     val clock = remember { SceneClock() }
     val camera = remember { OrbitCameraState() }
@@ -94,7 +96,11 @@ fun SpaceScreen(
                 camera.focus(radius = target.body.radius, overview = false)
             }
             is SpaceFocus.Marker -> camera.focus(radius = JourneyMap.radius(target.destination), overview = false)
-            SpaceFocus.Rocket -> camera.focus(radius = ROCKET_FOCUS_RADIUS, overview = false)
+            SpaceFocus.Rocket -> camera.focus(
+                radius = ROCKET_FOCUS_RADIUS,
+                overview = false,
+                viewFrom = rocketViewDirection(rocketState, clock.lastSeconds),
+            )
         }
     }
 
@@ -150,6 +156,7 @@ fun SpaceScreen(
             modifier = Modifier.fillMaxSize().onSizeChanged { viewSize = it },
             engine = engine,
             materialLoader = materialLoader,
+            modelLoader = modelLoader,
             environmentLoader = environmentLoader,
             environment = environment,
             mainLightNode = null, // the Sun's point light replaces the default overhead light
@@ -193,7 +200,19 @@ fun SpaceScreen(
 }
 
 /** Treated as the rocket's "size" when focusing: the camera settles about 6× this away. */
-private const val ROCKET_FOCUS_RADIUS = 0.7f
+private const val ROCKET_FOCUS_RADIUS = RocketModel.LENGTH
+
+/**
+ * Look at the rocket from the side facing away from the nearest body (plus a little height and a
+ * sideways angle), so that body sits behind the rocket instead of blocking the camera.
+ */
+private fun rocketViewDirection(rocket: RocketState, seconds: Float): SpacePoint {
+    val p = JourneyMap.rocketPosition(rocket, seconds)
+    val nearest = SpaceBody.entries.minBy { it.positionAt(seconds).distanceTo(p) - it.radius }
+    val away = p - nearest.positionAt(seconds)
+    val heading = JourneyMap.rocketHeading(rocket, seconds)
+    return away + heading * 0.6f + SpacePoint(0f, 0.5f * OrbitCameraState.length(away), 0f)
+}
 
 private data class Pickable(val focus: SpaceFocus, val x: Float, val y: Float, val radiusPx: Float)
 

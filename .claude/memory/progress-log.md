@@ -400,3 +400,12 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Verified on the realme with the debug preview: 40 fuel (Europa → Saturn; green glows, route, Find my rocket flies to a clean rocket on the route) and 320 fuel (Proxima → Alpha Centauri), 56–59 FPS.
 - Tests: **168 JVM** and 18 on-device pass.
 - The user's real state is still 0 fuel at Earth (the rocket sits just outside Earth heading to the Moon).
+- 2026-09-28: The user reviewed 3D-3 and disliked the oversized primitive rocket (as big as Earth, overlapping Earth/Moon), the zig-zag straight route lines and the flat disc glows. Claude analysed it and proposed the 'mission control' restyle; **the user approved all recommendations** (see decisions). Step 1 = beacon + CC0 rocket model at correct scale + rim glow; step 2 = flight arc + rings + labels.
+- **Restyle step 1 done (2026-09-28):**
+  - Rocket = Kenney Space Kit CC0 parts (`assets/models/rocket/`: baseA + fuelB + sidesB + topB, 4.1 model units, stacked at y 0/1/2/3), loaded as ModelNodes with `centerOrigin (0, −1, 0)`, scaled to **LENGTH 0.2** and rotated so the nose faces −Z.
+  - **The GLBs needed cleaning:** the scene root node was also a child of `tmpParent` (gltfio returned null, so an NPE), plus a (2, 0, 1.5) offset and metallic = 1 materials (they render near-black here). A Python script rewrote the JSON chunk: single root, offset removed, metallic 0 / roughness 0.55, `KHR_materials_unlit` usage dropped. Noted in LICENSE.txt.
+  - The far view shows a **beacon** (core glow, radius = camDist × 0.011, visible when > 4) plus a **comet tail** (9 fading glows behind, spacing camDist × 0.016). The model is visible up close; an engine glow at the back.
+  - New material **`space_glow`** (unlit, additive, no depth write, requires tangents; params color/power/rim/intensity; rim 0 = core, 1 = edge).
+  - The next stop gets a thin rim glow (power 6, ×1.18 radius). Reached glows removed. Star markers get a soft core halo (r × 3.5).
+  - "Find my rocket" camera now **looks from the side away from the nearest body** (`OrbitCameraState.focus(viewFrom = …)`, `lookFrom()` sets yaw/pitch; +1 test), so the planet sits behind the rocket instead of blocking the view.
+  - Verified on the phone: a detailed small rocket leaving Earth toward the Moon, 59 FPS; overview 57 FPS.

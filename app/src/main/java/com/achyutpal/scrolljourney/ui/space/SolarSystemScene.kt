@@ -11,6 +11,7 @@ import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.lookTowards
 import io.github.sceneview.geometries.Geometry
 import io.github.sceneview.loaders.MaterialLoader
+import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.material.setTexture
 import io.github.sceneview.math.Position
 import io.github.sceneview.math.Rotation
@@ -26,16 +27,27 @@ import kotlin.math.sin
  * Builds every 3D object once and animates them each frame:
  * - the solar system (Sun + point light, planets, moons, Saturn's ring, orbit paths, starfield)
  * - deep-space stops (Kuiper Belt / Oort Cloud rings and glowing star markers)
- * - the journey: the rocket, the travelled route (bright), the next few stops (faint),
- *   a green glow around reached stops and a pulsing orange glow around the next stop.
+ * - the journey ("mission control" style): the rocket (beacon + comet tail from afar, real model
+ *   up close), the travelled route (bright), the next few stops (faint), and a soft pulsing rim
+ *   glow around the next stop.
  */
-class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, assets: AssetManager) {
+class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoader: ModelLoader, assets: AssetManager) {
 
     private fun texture(engine: Engine, assets: AssetManager, name: String) =
         ImageTexture.Builder().bitmap(assets, "textures/$name").build(engine)
 
     private val unlitTextured: Material = materialLoader.createMaterial("materials/space_unlit_textured.filamat")
     private val unlitColor: Material = materialLoader.createMaterial("materials/space_unlit_color.filamat")
+    private val glowMaterial: Material = materialLoader.createMaterial("materials/space_glow.filamat")
+
+    /** Soft additive glow (see materials/space_glow.mat): rim = false → bright core, true → bright edge. */
+    private fun softGlow(materialLoader: MaterialLoader, r: Float, g: Float, b: Float, a: Float, power: Float, rim: Boolean) =
+        materialLoader.createInstance(glowMaterial).apply {
+            setParameter("color", r, g, b, a)
+            setParameter("power", power)
+            setParameter("rim", if (rim) 1f else 0f)
+            setParameter("intensity", 1f)
+        }
 
     private fun glowingTexture(materialLoader: MaterialLoader, tex: com.google.android.filament.Texture, intensity: Float) =
         materialLoader.createInstance(unlitTextured).apply {
@@ -94,12 +106,18 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, assets: A
             GeometryNode(engine, SpaceGeometry.orbitCircle(engine, JourneyMap.OORT_CLOUD_RADIUS, 260), beltMaterial).decorative()
     }
 
-    /** Deep-space stops: glowing spheres (no texture) at fixed spots. */
+    /** Deep-space stops: glowing spheres (no texture) at fixed spots, each with a soft light halo. */
     val markers: Map<Destination, SphereNode> = JourneyMap.deepSpace.associate { m ->
         val (r, g, b) = m.color
         m.destination to SphereNode(engine, radius = m.radius, materialInstance = flatColor(materialLoader, r, g, b, 1f)).apply {
             position = Position(m.position.x, m.position.y, m.position.z)
         }
+    }
+    private val markerHalos: List<Node> = JourneyMap.deepSpace.map { m ->
+        val (r, g, b) = m.color
+        SphereNode(engine, radius = m.radius * 3.5f, materialInstance = softGlow(materialLoader, r, g, b, 0.9f, power = 4f, rim = false)).apply {
+            position = Position(m.position.x, m.position.y, m.position.z)
+        }.decorative()
     }
 
     private val sunlight = LightNode(engine, LightManager.Type.POINT) {
@@ -111,13 +129,14 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, assets: A
 
     // --- Journey layer ---------------------------------------------------------------------
 
-    val rocket = RocketModel(engine, materialLoader, unlitColor)
+    val rocket = RocketModel(engine, modelLoader, materialLoader, glowMaterial)
 
-    private val reachedGlow: Map<Destination, Node> = Destination.entries.associateWith { d ->
-        SphereNode(engine, radius = JourneyMap.radius(d) * 1.35f, materialInstance = flatColor(materialLoader, 0.3f, 1f, 0.55f, 0.16f))
-            .decorative()
-    }
-    private val nextGlow = SphereNode(engine, radius = 1f, materialInstance = flatColor(materialLoader, 1f, 0.6f, 0.2f, 0.28f)).decorative()
+    /** Soft pulsing rim glow around the next stop (transparent in the middle: the planet stays visible). */
+    private val nextGlow = SphereNode(
+        engine = engine,
+        radius = 1f,
+        materialInstance = softGlow(materialLoader, 1f, 0.6f, 0.2f, 1f, power = 6f, rim = true),
+    ).decorative()
 
     /** Fixed vertex counts (a geometry's size can't change after creation): unused segments collapse. */
     private val travelledLine = lineNode(engine, flatColor(materialLoader, 1f, 0.6f, 0.25f, 0.95f), segments = Destination.entries.size)
@@ -138,8 +157,8 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, assets: A
         return GeometryNode(engine, geometry, material).decorative()
     }
 
-    val all: List<Node> = listOf(stars, sunlight) + orbits + bodies.values + saturnRing + markers.values +
-        reachedGlow.values + nextGlow + travelledLine + upcomingLine + rocket.root
+    val all: List<Node> = listOf(stars, sunlight) + orbits + bodies.values + saturnRing + markers.values + markerHalos +
+        nextGlow + travelledLine + upcomingLine + rocket.root
 
     private val bodyByNode: Map<Node, SpaceBody> = bodies.entries.associate { (body, node) -> node to body } +
         (saturnRing to SpaceBody.SATURN)
@@ -170,16 +189,12 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, assets: A
         rocket.root.transform = lookTowards(Float3(p.x, p.y, p.z), Float3(h.x, h.y, h.z), Float3(0f, 1f, 0f))
         rocket.animate(seconds, cameraDistance = cameraEye.distanceTo(p))
 
-        // Glows: green around reached stops, a pulsing orange around the next one.
-        reachedGlow.forEach { (d, node) ->
-            node.isVisible = d <= journey.highestReachedPlanet
-            if (node.isVisible) node.position = JourneyMap.anchor(d, seconds).toPosition()
-        }
+        // A soft pulsing rim glow around the next stop.
         val next = journey.nextPlanet
         nextGlow.isVisible = next != null
         if (next != null) {
-            val pulse = 1f + 0.15f * sin(seconds * 3f)
-            val s = JourneyMap.radius(next) * 1.5f * pulse
+            val pulse = 1f + 0.06f * sin(seconds * 3f)
+            val s = JourneyMap.radius(next) * 1.18f * pulse
             nextGlow.position = JourneyMap.anchor(next, seconds).toPosition()
             nextGlow.scale = Scale(s, s, s)
         }

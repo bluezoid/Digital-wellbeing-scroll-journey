@@ -8,3 +8,4 @@ Rebuild after editing (matc from https://github.com/google/filament/releases/tag
 
     matc -p mobile -a opengl -o app/src/main/assets/materials/space_unlit_textured.filamat materials/space_unlit_textured.mat
     matc -p mobile -a opengl -o app/src/main/assets/materials/space_unlit_color.filamat materials/space_unlit_color.mat
+    matc -p mobile -a opengl -o app/src/main/assets/materials/space_glow.filamat materials/space_glow.mat

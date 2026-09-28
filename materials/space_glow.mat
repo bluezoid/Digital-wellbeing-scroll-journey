@@ -1,0 +1,33 @@
+// Soft additive glow on a sphere, fading smoothly instead of a flat disc.
+//   rim = 0 → "core" glow: brightest facing the camera, fading to nothing at the edge (beacon, comet tail, engine)
+//   rim = 1 → "rim" glow: transparent in the middle, brightest at the edge (atmosphere-like highlight)
+// Additive blending + no depth writes: glows light up what's behind them and never hide planets.
+material {
+    name : space_glow,
+    shadingModel : unlit,
+    blending : add,
+    depthWrite : false,
+    culling : back,
+    requires : [ tangents ],
+    parameters : [
+        { type : float4, name : color },
+        { type : float, name : power },
+        { type : float, name : rim },
+        { type : float, name : intensity }
+    ]
+}
+
+fragment {
+    void material(inout MaterialInputs material) {
+        prepareMaterial(material);
+        vec3 n = normalize(getWorldGeometricNormalVector());
+        vec3 v = normalize(getWorldViewVector());
+        float facing = clamp(abs(dot(n, v)), 0.0, 1.0);
+        float core = pow(facing, materialParams.power);
+        float edge = pow(1.0 - facing, materialParams.power);
+        float f = mix(core, edge, materialParams.rim);
+        vec4 c = materialParams.color;
+        float a = c.a * f;
+        material.baseColor = vec4(c.rgb * a * materialParams.intensity, a);
+    }
+}

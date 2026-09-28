@@ -1,95 +1,117 @@
 package com.achyutpal.scrolljourney.ui.space
 
-import androidx.compose.ui.graphics.Color
 import com.google.android.filament.Engine
 import com.google.android.filament.Material
+import com.google.android.filament.MaterialInstance
 import io.github.sceneview.loaders.MaterialLoader
+import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.math.Position
 import io.github.sceneview.math.Rotation
 import io.github.sceneview.math.Scale
-import io.github.sceneview.math.Size
-import io.github.sceneview.node.CubeNode
-import io.github.sceneview.node.CylinderNode
+import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
 import io.github.sceneview.node.SphereNode
 
 /**
- * A small rocket built from simple shapes (no downloaded model, so no licensing or size cost).
- * It points along -Z (the "forward" of a lookTowards transform): white body, red nose,
- * orange fins, a flickering flame behind, and a soft glow that only appears from far away
- * (so the rocket stays findable as a dot in the overview, but looks clean up close).
+ * The user's rocket, in the "mission control" style:
+ * - From afar: a soft glowing **beacon** that keeps about the same size on screen at any zoom,
+ *   with a fading **comet tail** behind it. Never oversized next to planets.
+ * - Up close: a real low-poly rocket (Kenney "Space Kit", CC0) at a believable scale
+ *   ([LENGTH] ≈ a third of Earth's radius), with a small engine glow.
+ *
+ * The root is driven by a lookTowards transform, so "forward" is −Z.
  */
 class RocketModel(
     engine: Engine,
+    modelLoader: ModelLoader,
     materialLoader: MaterialLoader,
-    unlitColor: Material,
+    glowMaterial: Material,
 ) {
-    val root = Node(engine).apply {
+    val root = Node(engine).decorative()
+
+    private val body: Node = Node(engine).decorative()
+    private val engineGlow: Node
+    private val beacon: Node
+    private val tail: List<Node>
+
+    init {
+        fun glow(r: Float, g: Float, b: Float, a: Float, power: Float): MaterialInstance =
+            materialLoader.createInstance(glowMaterial).apply {
+                setParameter("color", r, g, b, a)
+                setParameter("power", power)
+                setParameter("rim", 0f)
+                setParameter("intensity", 1f)
+            }
+
+        // Kenney parts stack along +Y with their bottoms at the origin (body top of the base = 1.0).
+        // Model units → scene: the stacked rocket is MODEL_HEIGHT tall; scale it to LENGTH and centre it.
+        body.rotation = Rotation(x = -90f) // model +Y (nose) → scene −Z (forward)
+        val s = LENGTH / MODEL_HEIGHT
+        body.scale = Scale(s, s, s)
+        PARTS.forEach { (file, y) ->
+            val part = ModelNode(
+                modelInstance = modelLoader.createModelInstance("models/rocket/$file"),
+                autoAnimate = false,
+                centerOrigin = Position(0f, -1f, 0f), // bottom-centre at the node origin
+            ).decorative()
+            part.position = Position(y = y - MODEL_HEIGHT / 2f)
+            body.addChildNode(part)
+        }
+
+        engineGlow = SphereNode(engine, radius = 0.05f, materialInstance = glow(1f, 0.55f, 0.15f, 1f, power = 2f)).apply {
+            position = Position(z = LENGTH / 2f + 0.02f)
+        }.decorative()
+
+        beacon = SphereNode(engine, radius = 1f, materialInstance = glow(1f, 0.85f, 0.6f, 1f, power = 3f)).decorative()
+        val tailMaterial = glow(1f, 0.5f, 0.15f, 0.55f, power = 2.5f)
+        tail = List(TAIL_SEGMENTS) { SphereNode(engine, radius = 1f, materialInstance = tailMaterial).decorative() }
+
+        (listOf(body, engineGlow, beacon) + tail).forEach(root::addChildNode)
+    }
+
+    /**
+     * Switches between the close-up model and the far-away beacon, and keeps the beacon and
+     * tail a steady size on screen by scaling them with the camera distance.
+     */
+    fun animate(seconds: Float, cameraDistance: Float) {
+        val far = cameraDistance > MODEL_VISIBLE_DISTANCE
+        body.isVisible = !far || cameraDistance < MODEL_VISIBLE_DISTANCE * 1.5f
+        engineGlow.isVisible = !far
+
+        val beaconRadius = cameraDistance * BEACON_SCREEN_SIZE * (1f + 0.1f * kotlin.math.sin(seconds * 3f))
+        beacon.isVisible = cameraDistance > BEACON_MIN_DISTANCE
+        beacon.scale = Scale(beaconRadius)
+
+        val spacing = cameraDistance * TAIL_SPACING
+        tail.forEachIndexed { i, node ->
+            node.isVisible = beacon.isVisible
+            val fade = 1f - i.toFloat() / TAIL_SEGMENTS
+            node.position = Position(z = LENGTH / 2f + spacing * (i + 1)) // behind the rocket (+Z)
+            node.scale = Scale(beaconRadius * 0.7f * fade)
+        }
+    }
+
+    private fun <T : Node> T.decorative(): T = apply {
         isTouchable = false
         isHittable = false
     }
 
-    private val flame: Node
-    private val glow: Node
+    companion object {
+        /** Rocket length in scene units (Earth's radius is 0.6). */
+        const val LENGTH = 0.2f
 
-    init {
-        val white = materialLoader.createColorInstance(Color(0xFFF4F4FA), roughness = 0.4f)
-        val red = materialLoader.createColorInstance(Color(0xFFE53935), roughness = 0.5f)
-        val orange = materialLoader.createColorInstance(Color(0xFFFF8A3D), roughness = 0.6f)
+        private const val MODEL_HEIGHT = 4.1f
+        private val PARTS = listOf(
+            "rocket_baseA.glb" to 0f,
+            "rocket_fuelB.glb" to 1f,
+            "rocket_sidesB.glb" to 2f,
+            "rocket_topB.glb" to 3f,
+        )
 
-        fun glowing(r: Float, g: Float, b: Float, a: Float) = materialLoader.createInstance(unlitColor).apply {
-            setParameter("color", r, g, b, a)
-            setParameter("intensity", 1f)
-        }
-
-        // Body: a cylinder along Y by default, turned to lie along Z.
-        val body = CylinderNode(engine, radius = 0.12f, height = 0.5f, materialInstance = white).apply {
-            rotation = Rotation(x = 90f)
-        }
-        // Nose: a stretched sphere at the front (-Z).
-        val nose = SphereNode(engine, radius = 0.12f, materialInstance = red).apply {
-            position = Position(z = -0.25f)
-            scale = Scale(1f, 1f, 1.9f)
-        }
-        // Three fins at the back (+Z), 120° apart.
-        val fins = (0 until 3).map { i ->
-            CubeNode(engine, size = Size(0.02f, 0.16f, 0.16f), materialInstance = orange).apply {
-                val angle = i * 120f
-                rotation = Rotation(z = angle)
-                val rad = Math.toRadians(angle.toDouble())
-                position = Position((0.14f * -kotlin.math.sin(rad)).toFloat(), (0.14f * kotlin.math.cos(rad)).toFloat(), 0.2f)
-            }
-        }
-        flame = SphereNode(engine, radius = 0.06f, materialInstance = glowing(1f, 0.45f, 0.1f, 0.85f)).apply {
-            position = Position(z = 0.34f)
-            scale = Scale(1f, 1f, 2f)
-        }
-        glow = SphereNode(engine, radius = 0.5f, materialInstance = glowing(1f, 0.55f, 0.2f, 0.10f))
-
-        listOf(body, nose, flame, glow).plus(fins).forEach {
-            it.isTouchable = false
-            it.isHittable = false
-            root.addChildNode(it)
-        }
-    }
-
-    /**
-     * Flame flicker, plus the far-away glow: hidden when the camera is close, and growing with
-     * distance so it stays a visible dot however far out the user zooms.
-     */
-    fun animate(seconds: Float, cameraDistance: Float) {
-        val flicker = 1.6f + 0.5f * kotlin.math.sin(seconds * 23f) * kotlin.math.sin(seconds * 7f)
-        flame.scale = Scale(1f, 1f, flicker)
-        glow.isVisible = cameraDistance > GLOW_MIN_DISTANCE
-        if (glow.isVisible) {
-            val pulse = 1f + 0.12f * kotlin.math.sin(seconds * 3f)
-            val s = (cameraDistance / GLOW_REFERENCE_DISTANCE).coerceAtLeast(0.6f) * pulse
-            glow.scale = Scale(s, s, s)
-        }
-    }
-
-    private companion object {
-        const val GLOW_MIN_DISTANCE = 10f
-        const val GLOW_REFERENCE_DISTANCE = 30f
+        private const val MODEL_VISIBLE_DISTANCE = 8f
+        private const val BEACON_MIN_DISTANCE = 4f
+        private const val BEACON_SCREEN_SIZE = 0.011f
+        private const val TAIL_SEGMENTS = 9
+        private const val TAIL_SPACING = 0.016f
     }
 }

@@ -60,8 +60,12 @@ class OrbitCameraState(
         )
     }
 
-    /** Fly to a body of [radius]; [overview] = the whole-system view around the Sun. */
-    fun focus(radius: Float, overview: Boolean) {
+    /**
+     * Fly to a body of [radius]; [overview] = the whole-system view around the Sun.
+     * [viewFrom] (optional) = direction the camera should look *from*, e.g. away from a planet
+     * that would otherwise block the view of the rocket.
+     */
+    fun focus(radius: Float, overview: Boolean, viewFrom: SpacePoint? = null) {
         panOffset = SpacePoint.ORIGIN
         if (overview) {
             minDistance = SUN_MIN_DISTANCE
@@ -72,6 +76,16 @@ class OrbitCameraState(
             desiredDistance = (radius * FOCUS_DISTANCE_RADII).coerceAtLeast(MIN_FOCUS_DISTANCE)
         }
         maxDistance = MAX_DISTANCE
+        viewFrom?.let(::lookFrom)
+    }
+
+    /** Set yaw/pitch so the camera sits in [direction] from the target (the inverse of eye()). */
+    private fun lookFrom(direction: SpacePoint) {
+        val len = length(direction)
+        if (len == 0f) return
+        val d = direction * (1f / len)
+        yawDegrees = (kotlin.math.atan2(d.x, d.z) / DEG)
+        pitchDegrees = (kotlin.math.asin(d.y.coerceIn(-1f, 1f)) / DEG).coerceIn(-MAX_PITCH, MAX_PITCH)
     }
 
     /** Called every frame: ease toward the (possibly moving) focus centre and the wanted distance. */

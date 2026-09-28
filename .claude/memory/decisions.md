@@ -4,6 +4,7 @@ Newest first. Don't re-open a settled decision unless the user asks. Record reve
 
 | Date | Decision | Why | Status |
 |---|---|---|---|
+| 2026-09-28 | **3D journey restyle APPROVED ("mission control")**: rocket = small bright beacon + comet tail from afar, and a real-scale CC0 low-poly rocket model up close (about 1/5 of Earth's radius); path = only the current leg as a curved flight arc (bright behind the rocket, dotted/fading ahead); no lines for past legs; thin pulsing ring for the next stop, a subtle ring + ✓ for reached; rim-fade glow material; floating Compose labels | The user rejected the oversized primitive rocket and the zig-zag route lines/flat glows; chose all recommendations | Final |
 | 2026-09-28 | 3D camera stays **focus-orbit** (orbits the Sun by default, or the tapped planet; 2-finger pan shifts the centre), not free-fly | The user asked and accepted: can't get lost, standard for planetarium apps. Free-fly could be an optional toggle later | Final |
 | 2026-09-28 | **3D plan APPROVED by the user**: SceneView 2.3.0 (Filament), Solar System Scope (CC BY 4.0) + NASA (PD) textures, rocket built from primitives, stylised scale, steps 3D-1 spike → 3D-2 solar system → 3D-3 journey → 3D-4 integration with 2D fallback, about +10–15 MB | The user approved the recommendations | Final |
 | 2026-09-28 | Show Mercury and Venus as scenery (not journey stops) | The user wants the whole solar system visible | Final |

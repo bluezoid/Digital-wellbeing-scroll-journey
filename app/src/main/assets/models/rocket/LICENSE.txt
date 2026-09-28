@@ -1,0 +1,7 @@
+Rocket parts (rocket_baseA, rocket_fuelB, rocket_sidesB, rocket_topB) from "Space Kit" (2.0)
+by Kenney (www.kenney.nl), licensed Creative Commons Zero (CC0):
+http://creativecommons.org/publicdomain/zero/1.0/
+Free for personal, educational and commercial use. Credit appreciated, not required.
+
+Modified for this app: scene hierarchy cleaned (single root node, offset removed) and materials made
+non-metallic (metallic 0, roughness 0.55). Geometry unchanged.
