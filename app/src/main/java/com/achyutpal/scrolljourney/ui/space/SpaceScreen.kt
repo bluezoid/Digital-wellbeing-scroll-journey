@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,6 +37,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -187,10 +190,15 @@ fun SpaceScreen(
         }
         // Spots are in priority order (you → next stop → reached); a label that would overlap a more
         // important one is hidden rather than moved (moving it could place it next to the wrong object).
+        // A planet's label that would sit on top of the rocket itself is hidden too.
+        val rocketAt = screenAbove(JourneyMap.rocketPosition(rocket, t), 0f)
         val placed = mutableListOf<LabelSpot>()
         spots.forEach { spot ->
             val overlaps = placed.any { kotlin.math.abs(it.x - spot.x) < labelGapPx * 5 && kotlin.math.abs(it.y - spot.y) < labelGapPx * 1.4f }
-            if (!overlaps) placed += spot
+            val coversRocket = spot.kind != LabelKind.ROCKET && rocketAt != null &&
+                kotlin.math.abs(rocketAt.first - spot.x) < labelGapPx * 3 &&
+                rocketAt.second - spot.y in -labelGapPx * 1.6f..labelGapPx * 0.8f
+            if (!overlaps && !coversRocket) placed += spot
         }
         return placed
     }
@@ -340,15 +348,31 @@ private fun FocusCard(
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = 4.dp),
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+        // Equal-width buttons with one centred line each (a lone button keeps its natural width).
+        val both = focus != SpaceFocus.Overview && focus != SpaceFocus.Rocket
+        val buttonModifier = if (both) Modifier.weight(1f) else Modifier
+        val padding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(top = 8.dp).then(if (both) Modifier.fillMaxWidth() else Modifier),
+        ) {
             if (focus != SpaceFocus.Overview) {
-                OutlinedButton(onClick = onOverview) { Text(stringResource(R.string.space_back_to_sun)) }
+                OutlinedButton(onClick = onOverview, modifier = buttonModifier, contentPadding = padding) {
+                    ButtonLabel(stringResource(R.string.space_back_to_sun))
+                }
             }
             if (focus != SpaceFocus.Rocket) {
-                Button(onClick = onFindRocket, colors = ButtonDefaults.buttonColors()) { Text(stringResource(R.string.space_find_rocket)) }
+                Button(onClick = onFindRocket, modifier = buttonModifier, contentPadding = padding, colors = ButtonDefaults.buttonColors()) {
+                    ButtonLabel(stringResource(R.string.space_find_rocket))
+                }
             }
         }
     }
+}
+
+@Composable
+private fun ButtonLabel(text: String) {
+    Text(text, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
 }
 
 @Composable

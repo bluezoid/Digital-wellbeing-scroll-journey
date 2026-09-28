@@ -140,11 +140,11 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
         ).decorative()
     }
 
-    /** Soft pulsing rim glow around the next stop (transparent in the middle: the planet stays visible). */
+    /** Thin pulsing rim ring around the next stop (transparent in the middle: the planet stays visible). */
     private val nextGlow = SphereNode(
         engine = engine,
         radius = 1f,
-        materialInstance = softGlow(materialLoader, 1f, 0.6f, 0.2f, 1f, power = 6f, rim = true),
+        materialInstance = softGlow(materialLoader, 1f, 0.6f, 0.2f, 0.85f, power = 12f, rim = true),
     ).decorative()
 
     /** The flight arc of the current leg: solid behind the rocket, dashed and faint ahead of it. */
@@ -167,7 +167,7 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
     }
 
     val all: List<Node> = listOf(stars, sunlight) + orbits + bodies.values + saturnRing + markers.values + markerHalos +
-        reachedRings.values + nextGlow + arcTravelled + arcAhead + rocket.root
+        reachedRings.values + nextGlow + arcTravelled + arcAhead + rocket.nodes
 
     private val bodyByNode: Map<Node, SpaceBody> = bodies.entries.associate { (body, node) -> node to body } +
         (saturnRing to SpaceBody.SATURN)
@@ -196,7 +196,16 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
         val p = JourneyMap.rocketPosition(journey, seconds)
         val h = JourneyMap.rocketHeading(journey, seconds)
         rocket.root.transform = lookTowards(Float3(p.x, p.y, p.z), Float3(h.x, h.y, h.z), Float3(0f, 1f, 0f))
-        rocket.animate(seconds, cameraDistance = cameraEye.distanceTo(p))
+        val arc = JourneyMap.leg(journey, seconds)
+        rocket.animate(
+            seconds,
+            cameraDistance = cameraEye.distanceTo(p),
+            clearance = JourneyMap.clearance(journey, seconds, p),
+        ) { spacing, count ->
+            arc?.pointsBehind(journey.legProgress, spacing, count)
+                ?.map { it to JourneyMap.clearance(journey, seconds, it) }
+                .orEmpty()
+        }
 
         // Faint rings on reached stops; a soft pulsing rim glow around the next stop.
         reachedRings.forEach { (d, node) ->
@@ -206,14 +215,13 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
         val next = journey.nextPlanet
         nextGlow.isVisible = next != null
         if (next != null) {
-            val pulse = 1f + 0.06f * sin(seconds * 3f)
-            val s = JourneyMap.radius(next) * 1.18f * pulse
+            val pulse = 1f + 0.03f * sin(seconds * 3f)
+            val s = JourneyMap.radius(next) * 1.08f * pulse
             nextGlow.position = JourneyMap.anchor(next, seconds).toPosition()
             nextGlow.scale = Scale(s, s, s)
         }
 
         // Flight arc for the current leg only (nothing is drawn for past legs).
-        val arc = JourneyMap.leg(journey, seconds)
         arcTravelled.isVisible = arc != null
         arcAhead.isVisible = arc != null
         if (arc != null) {

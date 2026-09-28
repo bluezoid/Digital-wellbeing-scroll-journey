@@ -14,12 +14,15 @@ import io.github.sceneview.node.SphereNode
 
 /**
  * The user's rocket, in the "mission control" style:
- * - From afar: a soft glowing **beacon** that keeps about the same size on screen at any zoom,
- *   with a fading **comet tail** behind it. Never oversized next to planets.
+ * - From afar: a small warm **beacon** that keeps about the same size on screen at any zoom,
+ *   with a fading **comet tail** that follows the path already flown. Both are capped by the
+ *   free space around them, so they never spill over a planet.
  * - Up close: a real low-poly rocket (Kenney "Space Kit", CC0) at a believable scale
  *   ([LENGTH] ≈ a third of Earth's radius), with a small engine glow.
+ * The two cross-fade with zoom: you see either the model or the beacon, never both at full.
  *
- * The root is driven by a lookTowards transform, so "forward" is −Z.
+ * The root is driven by a lookTowards transform, so "forward" is −Z. The tail dots are placed
+ * in world space (they bend along the arc), so they are separate nodes: add all of [nodes].
  */
 class RocketModel(
     engine: Engine,
@@ -32,7 +35,12 @@ class RocketModel(
     private val body: Node = Node(engine).decorative()
     private val engineGlow: Node
     private val beacon: Node
+    private val beaconMaterial: MaterialInstance
     private val tail: List<Node>
+    private val tailMaterial: MaterialInstance
+
+    /** Everything to add to the scene: the rocket itself plus its world-space tail dots. */
+    val nodes: List<Node>
 
     init {
         fun glow(r: Float, g: Float, b: Float, a: Float, power: Float): MaterialInstance =
@@ -62,32 +70,52 @@ class RocketModel(
             position = Position(z = LENGTH / 2f + 0.015f)
         }.decorative()
 
-        beacon = SphereNode(engine, radius = 1f, materialInstance = glow(1f, 0.85f, 0.6f, 1f, power = 3f)).decorative()
-        val tailMaterial = glow(1f, 0.5f, 0.15f, 0.35f, power = 2.5f)
+        beaconMaterial = glow(BEACON_COLOR.first, BEACON_COLOR.second, BEACON_COLOR.third, 1f, power = 3f)
+        beacon = SphereNode(engine, radius = 1f, materialInstance = beaconMaterial).decorative()
+        tailMaterial = glow(TAIL_COLOR.first, TAIL_COLOR.second, TAIL_COLOR.third, TAIL_ALPHA, power = 2.5f)
         tail = List(TAIL_SEGMENTS) { SphereNode(engine, radius = 1f, materialInstance = tailMaterial).decorative() }
 
-        (listOf(body, engineGlow, beacon) + tail).forEach(root::addChildNode)
+        listOf(body, engineGlow, beacon).forEach(root::addChildNode)
+        nodes = listOf(root) + tail
     }
 
     /**
-     * Switches between the close-up model and the far-away beacon, and keeps the beacon and
+     * Cross-fades between the close-up model and the far-away beacon, and keeps the beacon and
      * tail a steady size on screen by scaling them with the camera distance.
+     *
+     * @param clearance free space around the rocket (the beacon never grows past it).
+     * @param trail points behind the rocket along the flown arc, each with its own clearance,
+     *   given the wanted spacing and count (see [JourneyMap.FlightArc.pointsBehind]).
      */
-    fun animate(seconds: Float, cameraDistance: Float) {
-        val far = cameraDistance > MODEL_VISIBLE_DISTANCE
-        body.isVisible = !far || cameraDistance < MODEL_VISIBLE_DISTANCE * 1.5f
-        engineGlow.isVisible = !far
+    fun animate(
+        seconds: Float,
+        cameraDistance: Float,
+        clearance: Float,
+        trail: (spacing: Float, count: Int) -> List<Pair<SpacePoint, Float>>,
+    ) {
+        body.isVisible = cameraDistance < MODEL_HIDE_DISTANCE
+        engineGlow.isVisible = body.isVisible
 
-        val beaconRadius = cameraDistance * BEACON_SCREEN_SIZE * (1f + 0.1f * kotlin.math.sin(seconds * 3f))
-        beacon.isVisible = cameraDistance > BEACON_MIN_DISTANCE
+        // 0 up close → 1 far away (smoothstep), so the beacon fades in as the model gets tiny.
+        val x = ((cameraDistance - BEACON_FADE_START) / (BEACON_FADE_END - BEACON_FADE_START)).coerceIn(0f, 1f)
+        val fade = x * x * (3f - 2f * x)
+        beacon.isVisible = fade > 0f
+        val wanted = cameraDistance * BEACON_SCREEN_SIZE * (1f + 0.1f * kotlin.math.sin(seconds * 3f))
+        val beaconRadius = minOf(wanted, clearance)
         beacon.scale = Scale(beaconRadius)
+        beaconMaterial.setParameter("color", BEACON_COLOR.first, BEACON_COLOR.second, BEACON_COLOR.third, fade)
+        tailMaterial.setParameter("color", TAIL_COLOR.first, TAIL_COLOR.second, TAIL_COLOR.third, TAIL_ALPHA * fade)
 
-        val spacing = cameraDistance * TAIL_SPACING
+        val points = if (beacon.isVisible) trail(cameraDistance * TAIL_SPACING, TAIL_SEGMENTS) else emptyList()
         tail.forEachIndexed { i, node ->
-            node.isVisible = beacon.isVisible
-            val fade = 1f - i.toFloat() / TAIL_SEGMENTS
-            node.position = Position(z = LENGTH / 2f + spacing * (i + 1)) // behind the rocket (+Z)
-            node.scale = Scale(beaconRadius * 0.55f * fade)
+            val point = points.getOrNull(i)
+            node.isVisible = point != null
+            if (point != null) {
+                val (p, room) = point
+                val shrink = 1f - i.toFloat() / TAIL_SEGMENTS
+                node.position = Position(p.x, p.y, p.z)
+                node.scale = Scale(minOf(wanted * 0.5f * shrink, room))
+            }
         }
     }
 
@@ -108,10 +136,18 @@ class RocketModel(
             "rocket_topB.glb" to 3f,
         )
 
-        private const val MODEL_VISIBLE_DISTANCE = 8f
-        private const val BEACON_MIN_DISTANCE = 4f
-        private const val BEACON_SCREEN_SIZE = 0.008f
-        private const val TAIL_SEGMENTS = 16
-        private const val TAIL_SPACING = 0.0055f
+        /** Camera distances: the model hides past MODEL_HIDE; the beacon fades in between FADE_START..END. */
+        private const val MODEL_HIDE_DISTANCE = 10f
+        private const val BEACON_FADE_START = 8f
+        private const val BEACON_FADE_END = 12f
+
+        /** Beacon radius per unit of camera distance: about Moon-sized in the overview. */
+        private const val BEACON_SCREEN_SIZE = 0.0025f
+        private val BEACON_COLOR = Triple(1f, 0.62f, 0.28f)
+
+        private const val TAIL_SEGMENTS = 12
+        private const val TAIL_SPACING = 0.004f
+        private const val TAIL_ALPHA = 0.3f
+        private val TAIL_COLOR = Triple(1f, 0.5f, 0.15f)
     }
 }

@@ -99,6 +99,16 @@ object JourneyMap {
     fun rocketHeading(rocket: RocketState, seconds: Float): SpacePoint =
         leg(rocket, seconds)?.tangentAt(rocket.legProgress) ?: SpacePoint(0f, 1f, 0f)
 
+    /**
+     * How much empty space is around [point]: its distance to the nearer surface of the current
+     * leg's two stops (never negative). The rocket's glow is capped by this so it never spills
+     * over the planet it just left or the one it's heading to.
+     */
+    fun clearance(rocket: RocketState, seconds: Float, point: SpacePoint): Float {
+        val stops = listOfNotNull(rocket.highestReachedPlanet, rocket.nextPlanet)
+        return stops.minOf { point.distanceTo(anchor(it, seconds)) - radius(it) }.coerceAtLeast(0f)
+    }
+
     /** A quadratic Bézier curve: start → (pulled toward control) → end. */
     data class FlightArc(val start: SpacePoint, val control: SpacePoint, val end: SpacePoint) {
         fun pointAt(u: Float): SpacePoint {
@@ -114,6 +124,37 @@ object JourneyMap {
         /** [count] + 1 evenly spaced points from u = [from] to u = [to]. */
         fun sample(from: Float, to: Float, count: Int): List<SpacePoint> =
             (0..count).map { i -> pointAt(from + (to - from) * i / count) }
+
+        /**
+         * Up to [count] points behind u = [from], each [spacing] further back *along the curve*
+         * (for the comet tail). Stops at the start of the arc, so the tail is never longer than
+         * the distance flown and never reaches back into the launch planet.
+         */
+        fun pointsBehind(from: Float, spacing: Float, count: Int): List<SpacePoint> {
+            val result = mutableListOf<SpacePoint>()
+            if (spacing <= 0f) return result
+            var u = from
+            var prev = pointAt(u)
+            var travelled = 0f
+            while (u > 0f && result.size < count) {
+                val nextU = maxOf(0f, u - STEP)
+                val next = pointAt(nextU)
+                val step = prev.distanceTo(next)
+                // Drop a point at each multiple of spacing that falls inside this small step.
+                while (result.size < count && travelled + step >= spacing * (result.size + 1)) {
+                    val k = if (step == 0f) 0f else (spacing * (result.size + 1) - travelled) / step
+                    result += prev + (next - prev) * k
+                }
+                travelled += step
+                prev = next
+                u = nextU
+            }
+            return result
+        }
+
+        private companion object {
+            const val STEP = 1f / 256
+        }
     }
 
     const val GAP = 0.6f

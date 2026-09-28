@@ -107,4 +107,39 @@ class JourneyMapTest {
             JourneyMap.destinationFor(body)?.let { assertEquals(body, JourneyMap.bodyFor(it)) }
         }
     }
+
+    @Test
+    fun `just launched - no tail behind the rocket`() {
+        val arc = JourneyMap.leg(RocketState(), t)!!
+        assertTrue(arc.pointsBehind(from = 0f, spacing = 0.1f, count = 12).isEmpty())
+    }
+
+    @Test
+    fun `tail points are evenly spaced along the flown arc and stop at its start`() {
+        val rocket = RocketState(currentFuel = 25, highestReachedPlanet = Destination.CERES)
+        val arc = JourneyMap.leg(rocket, t)!!
+        val flown = arc.sample(0f, rocket.legProgress, 400).zipWithNext().sumOf { (a, b) -> a.distanceTo(b).toDouble() }.toFloat()
+        val spacing = flown / 4.5f // room for 4 points, not 5
+        val points = arc.pointsBehind(rocket.legProgress, spacing, count = 12)
+        assertEquals(4, points.size)
+        val all = listOf(arc.pointAt(rocket.legProgress)) + points
+        all.zipWithNext().forEach { (a, b) -> assertEquals(spacing, a.distanceTo(b), spacing * 0.05f) }
+    }
+
+    @Test
+    fun `tail never has more points than asked`() {
+        val rocket = RocketState(currentFuel = 29, highestReachedPlanet = Destination.CERES)
+        assertEquals(3, JourneyMap.leg(rocket, t)!!.pointsBehind(rocket.legProgress, 0.01f, count = 3).size)
+    }
+
+    @Test
+    fun `clearance is the gap to the nearer surface of the leg's stops`() {
+        val rocket = RocketState() // Earth → Moon
+        val p = JourneyMap.rocketPosition(rocket, t)
+        val toEarth = p.distanceTo(JourneyMap.anchor(Destination.EARTH, t)) - JourneyMap.radius(Destination.EARTH)
+        val toMoon = p.distanceTo(JourneyMap.anchor(Destination.MOON, t)) - JourneyMap.radius(Destination.MOON)
+        assertEquals(minOf(toEarth, toMoon), JourneyMap.clearance(rocket, t, p), 1e-4f)
+        assertTrue(JourneyMap.clearance(rocket, t, p) > 0f)
+        assertEquals(0f, JourneyMap.clearance(rocket, t, JourneyMap.anchor(Destination.EARTH, t)), 0f)
+    }
 }
