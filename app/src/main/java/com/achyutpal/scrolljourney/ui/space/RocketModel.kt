@@ -58,12 +58,12 @@ class RocketModel(
             body.addChildNode(part)
         }
 
-        engineGlow = SphereNode(engine, radius = 0.05f, materialInstance = glow(1f, 0.55f, 0.15f, 1f, power = 2f)).apply {
-            position = Position(z = LENGTH / 2f + 0.02f)
+        engineGlow = SphereNode(engine, radius = 0.028f, materialInstance = glow(1f, 0.45f, 0.1f, 0.9f, power = 3f)).apply {
+            position = Position(z = LENGTH / 2f + 0.015f)
         }.decorative()
 
         beacon = SphereNode(engine, radius = 1f, materialInstance = glow(1f, 0.85f, 0.6f, 1f, power = 3f)).decorative()
-        val tailMaterial = glow(1f, 0.5f, 0.15f, 0.55f, power = 2.5f)
+        val tailMaterial = glow(1f, 0.5f, 0.15f, 0.35f, power = 2.5f)
         tail = List(TAIL_SEGMENTS) { SphereNode(engine, radius = 1f, materialInstance = tailMaterial).decorative() }
 
         (listOf(body, engineGlow, beacon) + tail).forEach(root::addChildNode)
@@ -87,7 +87,7 @@ class RocketModel(
             node.isVisible = beacon.isVisible
             val fade = 1f - i.toFloat() / TAIL_SEGMENTS
             node.position = Position(z = LENGTH / 2f + spacing * (i + 1)) // behind the rocket (+Z)
-            node.scale = Scale(beaconRadius * 0.7f * fade)
+            node.scale = Scale(beaconRadius * 0.55f * fade)
         }
     }
 
@@ -110,8 +110,8 @@ class RocketModel(
 
         private const val MODEL_VISIBLE_DISTANCE = 8f
         private const val BEACON_MIN_DISTANCE = 4f
-        private const val BEACON_SCREEN_SIZE = 0.011f
-        private const val TAIL_SEGMENTS = 9
-        private const val TAIL_SPACING = 0.016f
+        private const val BEACON_SCREEN_SIZE = 0.008f
+        private const val TAIL_SEGMENTS = 16
+        private const val TAIL_SPACING = 0.0055f
     }
 }

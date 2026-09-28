@@ -19,8 +19,8 @@ It is the entry point to the project's memory. **Read it first, then open only t
 ## Current status (update this every session)
 
 - **Phases 0–11 ✅.** Phase 12 validation 🔄 since 2026-09-28. The new 18-stop route is live.
-- **3D: 3D-1 ✅, 3D-2 ✅ (solar system + tap-to-focus camera), 3D-3 built (2026-09-28):** rocket + route + reached/next glows + deep-space markers + tap card + "Find my rocket". Claude verified it on the phone with `--ei debug_fuel 40/320`. **Waiting on the user's check.**
-- **Next:** 3D-4 integration (3D as the dashboard hero + fullscreen Explore, 2D fallback, texture credits in Settings, remove the FPS label/preview menu, performance/battery: pause rendering when not visible).
+- **3D: 3D-1 ✅, 3D-2 ✅, 3D-3 built and restyled "mission control" (2026-09-28):** Kenney CC0 rocket at real scale + beacon/comet tail, curved flight arc for the current leg only, thin rim rings, floating labels. Claude verified it on the phone. **Waiting on the user's check of the restyle.**
+- **Next:** 3D-4 integration (3D as the dashboard hero + fullscreen Explore, 2D fallback, credits in Settings (Solar System Scope CC BY 4.0, Kenney CC0), remove the FPS label/preview menu, pause rendering when not visible).
 - Debug: `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space [--ei debug_fuel N]`.
 - **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, the schema-bump gotcha, and how to prove worker runs (workdb period_count).
 
@@ -50,6 +50,7 @@ navigate_scrolling/
     ├─ main/AndroidManifest.xml  PACKAGE_USAGE_STATS declared
     ├─ main/res/                 strings, themes, colors, adaptive rocket icon
     ├─ main/assets/textures/     planet textures (Solar System Scope CC BY 4.0), CREDITS.txt
+    ├─ main/assets/models/rocket/ Kenney Space Kit rocket parts (CC0, cleaned GLBs) + LICENSE.txt
     ├─ main/assets/materials/    compiled Filament materials (.filamat) ← sources in /materials/*.mat
     ├─ main/java/com/achyutpal/scrolljourney/
     │   ├─ ScrollJourneyApp.kt   Application → AppContainer

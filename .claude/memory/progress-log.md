@@ -409,3 +409,10 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
   - The next stop gets a thin rim glow (power 6, ×1.18 radius). Reached glows removed. Star markers get a soft core halo (r × 3.5).
   - "Find my rocket" camera now **looks from the side away from the nearest body** (`OrbitCameraState.focus(viewFrom = …)`, `lookFrom()` sets yaw/pitch; +1 test), so the planet sits behind the rocket instead of blocking the view.
   - Verified on the phone: a detailed small rocket leaving Earth toward the Moon, 59 FPS; overview 57 FPS.
+- **Restyle step 2 done (2026-09-28):**
+  - The zig-zag route lines are removed. `JourneyMap.leg()` returns a **FlightArc** (quadratic Bézier from just off the last stop to just off the next, control = midpoint lifted by `ARC_LIFT 0.18` × length, gap rules kept). `rocketPosition` = `arc.pointAt(legProgress)` and `rocketHeading` = `arc.tangentAt()`. `reachedRoute/upcomingRoute` were removed. Tests updated (+4 arc tests, 171 total).
+  - The scene draws the arc for the current leg only: **solid** orange from 0 → progress (40 segments) and **dashed** faint from progress → 1 (20 dashes). Nothing for past legs.
+  - A faint green rim ring on reached stops (power 12, alpha 0.22, ×1.06). The next stop's rim ring is power 6, ×1.18.
+  - **Floating Compose labels** (`LabelSpot`, `FloatingLabel`): "🚀 YOU", "<stop> · next · N fuel", "✓ <last reached>". Projected every frame via `cameraNode.worldToView`, positioned with `offset { } + graphicsLayer` (centred above). Priority order you → next → reached; **overlapping lower-priority labels are hidden** (nudging had put the Moon label next to Saturn).
+  - Tuning: beacon 0.008 × distance; tail 16 segments, spacing 0.0055 × distance, alpha 0.35 (a smooth streak, not beads); engine glow r 0.028.
+  - Verified on the phone with real data (Earth → Moon): overview shows only "YOU" + a fine tail; close-up shows a detailed rocket, thin rings, dashed arc; 59 FPS. The 40-fuel preview showed "Saturn · next · 10 fuel".

@@ -67,14 +67,15 @@ object JourneyMap {
         bodyFor(destination)?.radius ?: deepSpace.first { it.destination == destination }.radius
 
     /**
-     * The rocket sits on the straight path from the last reached stop to the next one, at the
-     * fraction of the leg its fuel has covered. Both ends are pushed out past the bodies' surfaces
-     * (plus a gap) so the rocket is never drawn inside a planet. Short legs (a planet to its own moon)
-     * shrink the gap to a third of the free space. At the final stop it parks beside it.
+     * The current leg as a smooth flight arc: a quadratic Bézier from just off the last reached
+     * stop to just off the next one, lifted above the orbit plane by [ARC_LIFT] × its length.
+     * Ends are pushed past the bodies' surfaces (plus a gap; short planet→moon legs shrink the
+     * gap to a third of the free space) so nothing is drawn inside a planet.
+     * Returns null at the final destination (no leg left).
      */
-    fun rocketPosition(rocket: RocketState, seconds: Float): SpacePoint {
+    fun leg(rocket: RocketState, seconds: Float): FlightArc? {
         val from = rocket.highestReachedPlanet
-        val to = rocket.nextPlanet ?: return anchor(from, seconds) + SpacePoint(0f, radius(from) + GAP, 0f)
+        val to = rocket.nextPlanet ?: return null
         val a = anchor(from, seconds)
         val b = anchor(to, seconds)
         val dir = direction(a, b)
@@ -82,32 +83,48 @@ object JourneyMap {
         val gap = minOf(GAP, free / 3f)
         val start = a + dir * (radius(from) + gap)
         val end = b - dir * (radius(to) + gap)
-        return lerp(start, end, rocket.legProgress)
+        val lift = start.distanceTo(end) * ARC_LIFT
+        val control = lerp(start, end, 0.5f) + SpacePoint(0f, lift, 0f)
+        return FlightArc(start, control, end)
     }
 
-    /** Unit direction the rocket is heading (toward the next stop). */
-    fun rocketHeading(rocket: RocketState, seconds: Float): SpacePoint {
-        val to = rocket.nextPlanet ?: return SpacePoint(0f, 1f, 0f)
-        return direction(anchor(rocket.highestReachedPlanet, seconds), anchor(to, seconds))
+    /** Where the rocket is: on the flight arc at the fraction of the leg its fuel has covered. */
+    fun rocketPosition(rocket: RocketState, seconds: Float): SpacePoint {
+        val arc = leg(rocket, seconds)
+            ?: return anchor(rocket.highestReachedPlanet, seconds) + SpacePoint(0f, radius(rocket.highestReachedPlanet) + GAP, 0f)
+        return arc.pointAt(rocket.legProgress)
     }
 
-    /** Stops already reached, in order: the travelled route drawn behind the rocket. */
-    fun reachedRoute(rocket: RocketState): List<Destination> =
-        Destination.entries.filter { it <= rocket.highestReachedPlanet }
+    /** Unit direction the rocket is heading: along the arc (its tangent). */
+    fun rocketHeading(rocket: RocketState, seconds: Float): SpacePoint =
+        leg(rocket, seconds)?.tangentAt(rocket.legProgress) ?: SpacePoint(0f, 1f, 0f)
 
-    /** The next few stops ahead of the rocket: the upcoming route drawn faintly. */
-    fun upcomingRoute(rocket: RocketState, count: Int = UPCOMING_STOPS): List<Destination> =
-        Destination.entries.filter { it > rocket.highestReachedPlanet }.take(count)
+    /** A quadratic Bézier curve: start → (pulled toward control) → end. */
+    data class FlightArc(val start: SpacePoint, val control: SpacePoint, val end: SpacePoint) {
+        fun pointAt(u: Float): SpacePoint {
+            val v = 1f - u
+            return start * (v * v) + control * (2f * v * u) + end * (u * u)
+        }
+
+        fun tangentAt(u: Float): SpacePoint = direction(
+            SpacePoint.ORIGIN,
+            (control - start) * (2f * (1f - u)) + (end - control) * (2f * u),
+        )
+
+        /** [count] + 1 evenly spaced points from u = [from] to u = [to]. */
+        fun sample(from: Float, to: Float, count: Int): List<SpacePoint> =
+            (0..count).map { i -> pointAt(from + (to - from) * i / count) }
+    }
 
     const val GAP = 0.6f
-    const val UPCOMING_STOPS = 3
+    const val ARC_LIFT = 0.18f
 
     private fun polar(dist: Float, angleDeg: Float, y: Float): SpacePoint {
         val a = Math.toRadians(angleDeg.toDouble())
         return SpacePoint((dist * cos(a)).toFloat(), y, (dist * sin(a)).toFloat())
     }
 
-    private fun direction(a: SpacePoint, b: SpacePoint): SpacePoint {
+    internal fun direction(a: SpacePoint, b: SpacePoint): SpacePoint {
         val d = b - a
         val len = sqrt(d.x * d.x + d.y * d.y + d.z * d.z)
         return if (len == 0f) SpacePoint(1f, 0f, 0f) else d * (1f / len)

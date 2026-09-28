@@ -28,8 +28,8 @@ import kotlin.math.sin
  * - the solar system (Sun + point light, planets, moons, Saturn's ring, orbit paths, starfield)
  * - deep-space stops (Kuiper Belt / Oort Cloud rings and glowing star markers)
  * - the journey ("mission control" style): the rocket (beacon + comet tail from afar, real model
- *   up close), the travelled route (bright), the next few stops (faint), and a soft pulsing rim
- *   glow around the next stop.
+ *   up close) on a curved flight arc for the current leg only (solid behind the rocket, dashed
+ *   ahead), a soft pulsing rim ring on the next stop and a faint green ring on reached stops.
  */
 class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoader: ModelLoader, assets: AssetManager) {
 
@@ -131,6 +131,15 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
 
     val rocket = RocketModel(engine, modelLoader, materialLoader, glowMaterial)
 
+    /** Faint green rim ring around every reached stop. */
+    private val reachedRings: Map<Destination, Node> = Destination.entries.associateWith { d ->
+        SphereNode(
+            engine = engine,
+            radius = JourneyMap.radius(d) * 1.06f,
+            materialInstance = softGlow(materialLoader, 0.35f, 1f, 0.6f, 0.22f, power = 12f, rim = true),
+        ).decorative()
+    }
+
     /** Soft pulsing rim glow around the next stop (transparent in the middle: the planet stays visible). */
     private val nextGlow = SphereNode(
         engine = engine,
@@ -138,9 +147,9 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
         materialInstance = softGlow(materialLoader, 1f, 0.6f, 0.2f, 1f, power = 6f, rim = true),
     ).decorative()
 
-    /** Fixed vertex counts (a geometry's size can't change after creation): unused segments collapse. */
-    private val travelledLine = lineNode(engine, flatColor(materialLoader, 1f, 0.6f, 0.25f, 0.95f), segments = Destination.entries.size)
-    private val upcomingLine = lineNode(engine, flatColor(materialLoader, 1f, 0.85f, 0.6f, 0.35f), segments = JourneyMap.UPCOMING_STOPS)
+    /** The flight arc of the current leg: solid behind the rocket, dashed and faint ahead of it. */
+    private val arcTravelled = lineNode(engine, flatColor(materialLoader, 1f, 0.62f, 0.25f, 0.95f), segments = ARC_SEGMENTS)
+    private val arcAhead = lineNode(engine, flatColor(materialLoader, 1f, 0.85f, 0.65f, 0.5f), segments = ARC_DASHES)
 
     /**
      * The initial points span the whole scene: Filament refuses an empty bounding box, and the box
@@ -158,7 +167,7 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
     }
 
     val all: List<Node> = listOf(stars, sunlight) + orbits + bodies.values + saturnRing + markers.values + markerHalos +
-        nextGlow + travelledLine + upcomingLine + rocket.root
+        reachedRings.values + nextGlow + arcTravelled + arcAhead + rocket.root
 
     private val bodyByNode: Map<Node, SpaceBody> = bodies.entries.associate { (body, node) -> node to body } +
         (saturnRing to SpaceBody.SATURN)
@@ -189,7 +198,11 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
         rocket.root.transform = lookTowards(Float3(p.x, p.y, p.z), Float3(h.x, h.y, h.z), Float3(0f, 1f, 0f))
         rocket.animate(seconds, cameraDistance = cameraEye.distanceTo(p))
 
-        // A soft pulsing rim glow around the next stop.
+        // Faint rings on reached stops; a soft pulsing rim glow around the next stop.
+        reachedRings.forEach { (d, node) ->
+            node.isVisible = d <= journey.highestReachedPlanet
+            if (node.isVisible) node.position = JourneyMap.anchor(d, seconds).toPosition()
+        }
         val next = journey.nextPlanet
         nextGlow.isVisible = next != null
         if (next != null) {
@@ -199,25 +212,34 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
             nextGlow.scale = Scale(s, s, s)
         }
 
-        // Routes: travelled (Earth → … → rocket) and upcoming (rocket → next few stops).
-        val reached = JourneyMap.reachedRoute(journey).map { JourneyMap.anchor(it, seconds) } + p
-        travelledLine.updateGeometry(vertices = segments(reached, Destination.entries.size, p))
-        val upcoming = listOf(p) + JourneyMap.upcomingRoute(journey).map { JourneyMap.anchor(it, seconds) }
-        upcomingLine.updateGeometry(vertices = segments(upcoming, JourneyMap.UPCOMING_STOPS, upcoming.last()))
-    }
-
-    /** A polyline as LINES pairs, padded with zero-length segments at [pad] to a fixed size. */
-    private fun segments(points: List<SpacePoint>, count: Int, pad: SpacePoint): List<Geometry.Vertex> {
-        val pairs = points.zipWithNext().take(count)
-        return (0 until count).flatMap { i ->
-            val (a, b) = pairs.getOrElse(i) { pad to pad }
-            listOf(Geometry.Vertex(position = a.toPosition()), Geometry.Vertex(position = b.toPosition()))
+        // Flight arc for the current leg only (nothing is drawn for past legs).
+        val arc = JourneyMap.leg(journey, seconds)
+        arcTravelled.isVisible = arc != null
+        arcAhead.isVisible = arc != null
+        if (arc != null) {
+            val u = journey.legProgress
+            arcTravelled.updateGeometry(vertices = polyline(arc.sample(0f, u, ARC_SEGMENTS)))
+            arcAhead.updateGeometry(vertices = dashes(arc.sample(u, 1f, ARC_DASHES * 2)))
         }
     }
 
-    private fun SpacePoint.toPosition() = Position(x, y, z)
-}
+    /** Consecutive points as LINES pairs: a continuous line. */
+    private fun polyline(points: List<SpacePoint>): List<Geometry.Vertex> =
+        points.zipWithNext().flatMap { (a, b) -> listOf(Geometry.Vertex(position = a.toPosition()), Geometry.Vertex(position = b.toPosition())) }
 
+    /** Every other segment only: a dashed line (2 × dashes + 1 points → dashes pairs). */
+    private fun dashes(points: List<SpacePoint>): List<Geometry.Vertex> =
+        (0 until points.size / 2).flatMap { i ->
+            listOf(Geometry.Vertex(position = points[2 * i].toPosition()), Geometry.Vertex(position = points[2 * i + 1].toPosition()))
+        }
+
+    private fun SpacePoint.toPosition() = Position(x, y, z)
+
+    private companion object {
+        const val ARC_SEGMENTS = 40
+        const val ARC_DASHES = 20
+    }
+}
 /** What the camera is centred on. */
 sealed interface SpaceFocus {
     data object Overview : SpaceFocus

@@ -64,19 +64,34 @@ class JourneyMapTest {
     }
 
     @Test
-    fun `half-way fuel puts the rocket half-way along the leg`() {
-        val half = RocketState(currentFuel = 21, highestReachedPlanet = Destination.CERES) // Ceres 20 → Jupiter 30
-        val start = JourneyMap.rocketPosition(half.copy(currentFuel = 20), t)
-        val end = JourneyMap.rocketPosition(half.copy(currentFuel = 30), t)
-        val mid = JourneyMap.rocketPosition(half.copy(currentFuel = 25), t)
-        assertEquals(start.distanceTo(end) / 2f, start.distanceTo(mid), 0.05f)
+    fun `rocket sits on the flight arc at its fuel fraction`() {
+        val rocket = RocketState(currentFuel = 25, highestReachedPlanet = Destination.CERES) // Ceres 20 → Jupiter 30
+        val arc = JourneyMap.leg(rocket, t)!!
+        assertEquals(0f, arc.pointAt(0.5f).distanceTo(JourneyMap.rocketPosition(rocket, t)), 0.001f)
+        // A symmetric arc: the half-way point is equally far from both ends.
+        assertEquals(arc.start.distanceTo(arc.pointAt(0.5f)), arc.end.distanceTo(arc.pointAt(0.5f)), 0.01f)
     }
 
     @Test
-    fun `routes split at the rocket`() {
-        val rocket = RocketState(currentFuel = 14, highestReachedPlanet = Destination.MARS)
-        assertEquals(listOf(Destination.EARTH, Destination.MOON, Destination.MARS), JourneyMap.reachedRoute(rocket))
-        assertEquals(listOf(Destination.CERES, Destination.JUPITER, Destination.EUROPA), JourneyMap.upcomingRoute(rocket))
+    fun `flight arc bows upward above the straight line`() {
+        val arc = JourneyMap.leg(RocketState(currentFuel = 20, highestReachedPlanet = Destination.CERES), t)!!
+        val chordMid = (arc.start + arc.end) * 0.5f
+        assertTrue(arc.pointAt(0.5f).y > chordMid.y + 0.1f)
+    }
+
+    @Test
+    fun `heading follows the arc`() {
+        val rocket = RocketState(currentFuel = 20, highestReachedPlanet = Destination.CERES)
+        val arc = JourneyMap.leg(rocket, t)!!
+        val h = JourneyMap.rocketHeading(rocket, t)
+        val towardControl = JourneyMap.direction(arc.start, arc.control)
+        assertEquals(1f, h.x * towardControl.x + h.y * towardControl.y + h.z * towardControl.z, 0.001f) // at u = 0
+    }
+
+    @Test
+    fun `no leg after the final destination`() {
+        val done = RocketState(currentFuel = 1_000, highestReachedPlanet = Destination.GALACTIC_CENTRE)
+        assertEquals(null, JourneyMap.leg(done, t))
     }
 
     @Test

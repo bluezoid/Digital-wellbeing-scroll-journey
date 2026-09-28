@@ -1,6 +1,8 @@
 package com.achyutpal.scrolljourney.ui.space
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,11 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,6 +59,7 @@ import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberNodes
 import io.github.sceneview.rememberOnGestureListener
 import kotlin.math.hypot
+import kotlin.math.roundToInt
 
 /**
  * 3D solar system + the user's journey. Drag = orbit 360°, pinch = zoom, two fingers = pan.
@@ -150,6 +155,45 @@ fun SpaceScreen(
 
     var fps by remember { mutableIntStateOf(0) }
     val frameStats = remember { FrameStats() }
+    var labels by remember { mutableStateOf(emptyList<LabelSpot>()) }
+    val labelGapPx = with(density) { 30.dp.toPx() }
+
+    /** Screen position just above a 3D point (null if behind the camera or off screen). */
+    fun screenAbove(p: SpacePoint, radius: Float): Pair<Float, Float>? {
+        if (viewSize == IntSize.Zero) return null
+        val eye = camera.eye()
+        val forward = camera.target - eye
+        val toP = p - eye
+        if (toP.x * forward.x + toP.y * forward.y + toP.z * forward.z <= 0f) return null
+        val w = viewSize.width.toFloat()
+        val h = viewSize.height.toFloat()
+        val top = cameraNode.worldToView(Position(p.x, p.y + radius, p.z))
+        val x = top.x * w
+        val y = (1f - top.y) * h
+        return if (x in 0f..w && y in 0f..h) x to y else null
+    }
+
+    /** The rocket, the next stop and the last reached stop, each with a floating label. */
+    fun computeLabels(t: Float, rocket: RocketState): List<LabelSpot> {
+        val spots = buildList {
+            screenAbove(JourneyMap.rocketPosition(rocket, t), 0.08f)?.let { (x, y) -> add(LabelSpot(LabelKind.ROCKET, null, x, y)) }
+            rocket.nextPlanet?.let { d ->
+                screenAbove(JourneyMap.anchor(d, t), JourneyMap.radius(d) * 1.2f)?.let { (x, y) -> add(LabelSpot(LabelKind.NEXT, d, x, y)) }
+            }
+            val reached = rocket.highestReachedPlanet
+            screenAbove(JourneyMap.anchor(reached, t), JourneyMap.radius(reached) * 1.15f)?.let { (x, y) ->
+                add(LabelSpot(LabelKind.REACHED, reached, x, y))
+            }
+        }
+        // Spots are in priority order (you → next stop → reached); a label that would overlap a more
+        // important one is hidden rather than moved (moving it could place it next to the wrong object).
+        val placed = mutableListOf<LabelSpot>()
+        spots.forEach { spot ->
+            val overlaps = placed.any { kotlin.math.abs(it.x - spot.x) < labelGapPx * 5 && kotlin.math.abs(it.y - spot.y) < labelGapPx * 1.4f }
+            if (!overlaps) placed += spot
+        }
+        return placed
+    }
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         Scene(
@@ -174,9 +218,12 @@ fun SpaceScreen(
                 // Follow the focus as it moves, easing the camera there after a tap.
                 camera.advance(clock.delta(frameTimeNanos), focusCentre(t, rocketState))
                 cameraNode.transform = FocusOrbitManipulator.cameraTransform(camera)
+                labels = computeLabels(t, rocketState)
                 frameStats.onFrame(frameTimeNanos)?.let { fps = it }
             },
         )
+
+        labels.forEach { spot -> FloatingLabel(spot, rocketState) }
 
         Row(
             modifier = Modifier.statusBarsPadding().padding(8.dp).fillMaxWidth(),
@@ -212,6 +259,40 @@ private fun rocketViewDirection(rocket: RocketState, seconds: Float): SpacePoint
     val away = p - nearest.positionAt(seconds)
     val heading = JourneyMap.rocketHeading(rocket, seconds)
     return away + heading * 0.6f + SpacePoint(0f, 0.5f * OrbitCameraState.length(away), 0f)
+}
+
+private enum class LabelKind { ROCKET, NEXT, REACHED }
+
+private data class LabelSpot(val kind: LabelKind, val destination: Destination?, val x: Float, val y: Float)
+
+/** A small pill label floating just above a 3D object (positioned in the layout phase each frame). */
+@Composable
+private fun FloatingLabel(spot: LabelSpot, rocket: RocketState) {
+    val (text, color) = when (spot.kind) {
+        LabelKind.ROCKET -> stringResource(R.string.space_label_you) to Color(0xFFFFB066)
+        LabelKind.NEXT -> {
+            val d = spot.destination ?: return
+            stringResource(R.string.space_label_next, stringResource(d.nameRes()), (d.fuelRequired - rocket.currentFuel).coerceAtLeast(0)) to
+                Color(0xFFFF8A3D)
+        }
+        LabelKind.REACHED -> stringResource(R.string.space_label_reached, stringResource((spot.destination ?: return).nameRes())) to
+            StatusGreen
+    }
+    Text(
+        text = text,
+        color = color,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .offset { IntOffset(spot.x.roundToInt(), spot.y.roundToInt()) }
+            .graphicsLayer {
+                translationX = -size.width / 2f
+                translationY = -size.height - 6.dp.toPx()
+            }
+            .background(Color(0xB30B1026), RoundedCornerShape(50))
+            .border(1.dp, color.copy(alpha = 0.6f), RoundedCornerShape(50))
+            .padding(horizontal = 10.dp, vertical = 3.dp),
+    )
 }
 
 private data class Pickable(val focus: SpaceFocus, val x: Float, val y: Float, val radiusPx: Float)

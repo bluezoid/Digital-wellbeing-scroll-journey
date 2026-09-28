@@ -44,6 +44,9 @@
     <string name="space_status_locked">🔒 Stop %1$d of %2$d · needs %3$d fuel · %4$d to go</string>
     <string name="space_not_a_stop">Scenery: not a stop on your route</string>
     <string name="space_find_rocket">🚀 Find my rocket</string>
+    <string name="space_label_you">🚀 YOU</string>
+    <string name="space_label_next">%1$s · next · %2$d fuel</string>
+    <string name="space_label_reached">✓ %1$s</string>
     <string name="space_back_to_sun">Solar system</string>
     <string name="body_sun">Sun</string>
     <string name="body_mercury">Mercury</string>
