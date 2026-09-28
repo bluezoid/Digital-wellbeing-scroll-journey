@@ -218,11 +218,16 @@ fun SpaceScreen(
             // SceneView keeps the screen awake for its activity and never undoes it; with no activity it skips that.
             activity = null,
             onGestureListener = rememberOnGestureListener(
+                // A single tap is confirmed ~300 ms later (in case it becomes a double tap). If the
+                // screen closed meanwhile, the engine is already destroyed: ignore the late tap.
                 // Try the 3D hit first, then fall back to screen-space picking (small far objects).
-                onSingleTapConfirmed = { e, node -> (scene.focusFor(node) ?: focusAt(e.x, e.y))?.let(::focusOn) },
-                onDoubleTap = { _, _ -> focusOn(SpaceFocus.Overview) },
+                onSingleTapConfirmed = { e, node ->
+                    if (engine.isValid) (scene.focusFor(node) ?: focusAt(e.x, e.y))?.let(::focusOn)
+                },
+                onDoubleTap = { _, _ -> if (engine.isValid) focusOn(SpaceFocus.Overview) },
             ),
-            onFrame = { frameTimeNanos ->
+            onFrame = frame@{ frameTimeNanos ->
+                if (!engine.isValid) return@frame
                 val t = clock.seconds(frameTimeNanos)
                 scene.update(t, rocketState, camera.eye())
                 // Follow the focus as it moves, easing the camera there after a tap.

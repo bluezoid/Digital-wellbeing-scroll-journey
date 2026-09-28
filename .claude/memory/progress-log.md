@@ -441,3 +441,13 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - The phone was locked (PIN) during the session, so the hero/Explore/Settings visuals are **not yet checked on screen**.
 - **2026-09-28: rocket shrunk after the user's review** (the user: "rocket size still bigger as compared to the moon"). At 0.2 long the rocket was almost 2/3 of the Moon's 0.32 diameter. Now `RocketModel.LENGTH = 0.08` (about 1/4 of the Moon, 1/15 of Earth, smaller than Europa/Ceres); engine glow r = LENGTH × 0.14. The model/beacon cross-fade scaled down: model hidden past cam 4.5, beacon fades in 3.5→5.5. `OrbitCameraState.focus(minFocusDistance = …)` (+1 test, **189 JVM**) lets "Find my rocket" settle at 1.2 units (`ROCKET_FOCUS_RADIUS = LENGTH × 2.5`; 0.72 was tried first and was too close: the rocket filled the screen with no planets visible). Claude verified on the phone: the hero shows a small craft between Earth and the Moon; Find my rocket shows the Moon left, Earth right, the small rocket between on its dashed arc.
 - **2026-09-28: the user confirmed the smaller rocket: "absolutely perfect". 3D (Phase 12b) ✅ complete.** Next: Phase 12 real-device validation plan (spec "Real device" list) + the missing Compose UI tests, proposed to the user.
+
+## 2026-09-28: Phase 12 validation, day 1 (session 3, evening)
+
+- The user approved: Phase 12 plan (C UI tests, A1 force-stop, A2 reboot, B multi-day checks) + crash fixes + Brave for the tracked-app uninstall check.
+- **A1 force-stop ✅:** before/after `am force-stop` + relaunch: 8 days, today 13 min GREEN, rocket EARTH 0 fuel 14 400 cm, identical.
+- **Crashes found in the logs (real use this evening):**
+  - 18:25 Java `IllegalStateException: Calling method on destroyed Engine`: Explore `onSingleTapConfirmed` → `focusAt` → `cameraNode.worldToView` after the Scene was disposed (a single tap is confirmed ~300 ms later). **Fixed:** `if (engine.isValid)` guard on the tap/double-tap handlers and `onFrame` in SpaceScreen, and on the hero's `onFrame`.
+  - 18:51 native SIGSEGV in `libgltfio-jni.so` (null deref at 0x2a8; only frame #00 kept, even in `dumpsys dropbox --print data_app_native_crash`). Not reproduced in: 12 normal dashboard↔Explore loops, 10 fast loops (leave while loading), 8 tap-then-back races, 8 Settings 3D-switch toggle loops. Suspect: model teardown order when a 3D screen is disposed. **Keep checking the crash log every session** (`adb logcat -d -b crash`, `dumpsys dropbox | grep data_app`).
+  - 13:37/13:38 (AABB) and 14:56 (GLB NPE) were old dev crashes, already fixed; 15:06/16:15 were realme's com.coloros.phonemanager.
+- Tip: read crash history with `adb shell dumpsys dropbox --print data_app_crash` / `data_app_native_crash` (it survives after logcat rotates).

@@ -149,7 +149,8 @@ private fun HeroScene(
         // SceneView keeps the screen awake for its activity and never undoes it; with no activity it skips that.
         activity = null,
         lifecycle = rememberSceneLifecycle(active),
-        onFrame = { frameTimeNanos ->
+        onFrame = frame@{ frameTimeNanos ->
+            if (!engine.isValid) return@frame // a frame arriving after the scene was torn down
             val t = clock.seconds(frameTimeNanos)
             yaw += clock.delta(frameTimeNanos) * HeroCamera.DRIFT_DEGREES_PER_SECOND
             val framing = HeroCamera.frame(rocket, t)
