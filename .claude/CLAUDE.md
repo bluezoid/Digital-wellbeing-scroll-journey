@@ -19,7 +19,7 @@ It is the entry point to the project's memory. **Read it first, then open only t
 ## Current status (update this every session)
 
 - **Phases 0–11 ✅.** Phase 12 validation 🔄 since 2026-09-28. The new 18-stop route is live.
-- **3D: 3D-1 ✅, 3D-2 ✅, 3D-3 ✅, 3D-4 built (2026-09-28):** the dashboard hero (watch-only live 3D, tap → Explore), 2D fallback (low-RAM / GLES < 3 / Settings switch / scene build failure), drawing paused off-screen, SceneView keep-screen-on bug fixed, credits in Settings, DB v5. The user checked it: all OK. Rocket then shrunk to 0.08 (the user's request), verified on the phone by Claude. **Waiting on the user's check of the smaller rocket.**
+- **3D (Phase 12b) ✅ COMPLETE (2026-09-28):** 3D-1…3D-4 done; the user confirmed the final rocket size ("absolutely perfect").
 - **Next:** after the user's 3D-4 check → 3D (12b) done; continue Phase 12 real-use validation (reboot, missed day, 23:59→00:01, uninstall/reinstall), then the Later items in roadmap.md.
 - Debug: `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space [--ei debug_fuel N]`.
 - **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, the schema-bump gotcha, and how to prove worker runs (workdb period_count).
