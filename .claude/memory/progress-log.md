@@ -317,3 +317,18 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
   - The completion string key is `rocket_journey_complete` ("centre of the galaxy").
   - RocketProgressCalculatorTest was rewritten for the route (13 tests). 136 JVM + 18 on-device tests pass; installed, no crash; the user's rocket state (EARTH, 0 fuel) loads fine.
 - **Next:** 3D-1 spike (SceneView 2.3.0, a single textured rotating Earth with an orbit camera) on the phone.
+
+## 2026-09-28: 3D-1 spike built (session 3)
+
+- Added `io.github.sceneview:sceneview:2.3.0` (Filament 1.56, gltfio, filament-utils, kotlin-math, fragment 1.8.6, compose 1.7.8, fuel). It's compatible with compileSdk 34 / Kotlin 2.1.
+- **Privacy:** SceneView/fuel brought in `android.permission.INTERNET`. It's **removed in our manifest** with `tools:node="remove"`; the merged manifest was checked. Remaining permissions come from WorkManager (network state, wake lock, boot, foreground service) plus usage stats.
+- Texture `app/src/main/assets/textures/earth_2k.jpg` (Solar System Scope 2k_earth_daymap, CC BY 4.0, 452 KB). **Credit must be added in Settings (3D-4).**
+- `ui/space/EarthSpikeScreen` (TEMPORARY):
+  - rememberEngine/MaterialLoader.
+  - An Earth `SphereNode(radius 1, stacks 48, slices 96)` with `materialLoader.createTextureInstance(ImageTexture from assets, roughness 0.9)`.
+  - A camera at z 3.5 with `rememberCameraManipulator(orbitHome z 3.5, target origin)`.
+  - onFrame spins the Earth 0.15°/frame, and a `FrameStats` FPS counter overlay.
+  - Route `space_spike`, opened from the dashboard ⋮ → "3D test (Earth)".
+- Size: the debug APK is 42.7 MB (all 4 ABIs). Per ABI the Filament libs are about 6–7.5 MB (arm64 7.0 MB); assets 4.7 MB (texture + SceneView's neutral IBL). Play AAB splits give about +7–12 MB per device.
+- Tests: 136 JVM + 18 on-device pass. Installed; the phone was locked, so the **user must open ⋮ → 3D test and report the smoothness/FPS**.
+- Default SceneView environment: black skybox + neutral IBL + a default directional light.

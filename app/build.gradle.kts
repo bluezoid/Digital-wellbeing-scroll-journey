@@ -69,6 +69,9 @@ dependencies {
 
     implementation(libs.androidx.work.runtime.ktx)
 
+    // 3D: SceneView (Compose wrapper around Google's Filament rendering engine)
+    implementation(libs.sceneview)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 

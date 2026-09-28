@@ -18,9 +18,9 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phases 0–11 ✅.** Phase 12 real-use validation 🔄 started 2026-09-28 (in parallel). The **new 18-stop route** (Destination enum, Moon 3 … Galactic Centre 1000) was approved and implemented; 136 unit + 18 on-device tests pass.
-- **3D plan approved (2026-09-28):** SceneView 2.3.0/Filament, textures from Solar System Scope (CC BY 4.0) + NASA (PD), Mercury/Venus as scenery, steps 3D-1 → 3D-4. See roadmap 12b and decisions.
-- **Next:** **3D-1 spike**: a single textured rotating Earth with an orbit camera (drag 360°, pinch zoom) on the realme; check smoothness before going further.
+- **Phases 0–11 ✅.** Phase 12 validation 🔄 since 2026-09-28. The new 18-stop route is live.
+- **3D-1 spike built and installed (2026-09-28):** SceneView 2.3.0, a textured spinning Earth, orbit/zoom camera, FPS overlay (⋮ → "3D test (Earth)"). The INTERNET permission is stripped (privacy). **Waiting on the user's smoothness/FPS report.**
+- **Next:** if smooth → 3D-2 (Sun, all planets + Mercury/Venus scenery, Moon, Saturn rings, orbit rings, starfield). If not → rethink (lower poly/texture, or a fallback).
 - **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, the schema-bump gotcha, and how to prove worker runs (workdb period_count).
 
 ## Memory index: read on demand
@@ -47,6 +47,7 @@ navigate_scrolling/
  └─ app/src/
     ├─ main/AndroidManifest.xml  PACKAGE_USAGE_STATS declared
     ├─ main/res/                 strings, themes, colors, adaptive rocket icon
+    ├─ main/assets/textures/     planet textures (Solar System Scope CC BY 4.0 / NASA PD)
     ├─ main/java/com/achyutpal/scrolljourney/
     │   ├─ ScrollJourneyApp.kt   Application → AppContainer
     │   ├─ MainActivity.kt       picks the start route, hosts navigation
@@ -67,6 +68,7 @@ navigate_scrolling/
     │   └─ ui/{theme (+StatusColors), startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
     │          apppicker/*, dailylimit/*, dashboard/{DashboardScreen, DashboardViewModel, DashboardUiState(+Builder)},
     │          history/{HistoryScreen, HistoryViewModel, MonthCalendar}, settings/{SettingsScreen, SettingsViewModel}, journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, DestinationUi, BackTopBar, StatusUi, ComparisonUi}}
+    │   ├─ ui/space/EarthSpikeScreen.kt  (3D-1 spike, temporary)
     │   └─ worker/{DailyUsageWorker, DailySyncScheduler, DailySyncPolicy}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/

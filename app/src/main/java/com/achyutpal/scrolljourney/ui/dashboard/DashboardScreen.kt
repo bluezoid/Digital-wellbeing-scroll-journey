@@ -74,6 +74,7 @@ import java.util.Locale
 fun DashboardScreen(
     onOpenHistory: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpen3dTest: () -> Unit,
     viewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -90,6 +91,7 @@ fun DashboardScreen(
         onOpenUsageAccess = { context.openUsageAccessSettings() },
         onOpenHistory = onOpenHistory,
         onOpenSettings = onOpenSettings,
+        onOpen3dTest = onOpen3dTest,
     )
 }
 
@@ -101,6 +103,7 @@ private fun DashboardContent(
     onOpenUsageAccess: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpen3dTest: () -> Unit = {},
 ) {
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -124,6 +127,10 @@ private fun DashboardContent(
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.settings_title)) },
                             onClick = { menuOpen = false; onOpenSettings() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.spike_menu)) },
+                            onClick = { menuOpen = false; onOpen3dTest() },
                         )
                     }
                 },

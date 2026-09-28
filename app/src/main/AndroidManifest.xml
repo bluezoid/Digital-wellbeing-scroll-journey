@@ -12,6 +12,14 @@
         tools:ignore="ProtectedPermissions" />
 
     <!--
+        Privacy promise: no network. The 3D library (SceneView) pulls in a networking helper for
+        loading models from URLs, which we never use. Its INTERNET permission is removed here.
+    -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+
+    <!--
         Android 11+ hides other installed apps by default ("package visibility").
         This declares the one kind of app we need to see: anything with a launcher icon.
         It's the narrow alternative to QUERY_ALL_PACKAGES, which Google Play restricts.
