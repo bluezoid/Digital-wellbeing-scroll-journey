@@ -1,17 +1,23 @@
 package com.achyutpal.scrolljourney.ui.space
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,20 +31,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.achyutpal.scrolljourney.R
-import com.google.android.filament.LightManager
-import com.google.android.filament.Material
+import com.achyutpal.scrolljourney.domain.model.Destination
+import com.achyutpal.scrolljourney.domain.model.RocketState
+import com.achyutpal.scrolljourney.ui.common.emoji
+import com.achyutpal.scrolljourney.ui.common.nameRes
+import com.achyutpal.scrolljourney.ui.theme.StatusGreen
 import io.github.sceneview.Scene
-import io.github.sceneview.material.setTexture
 import io.github.sceneview.math.Position
-import io.github.sceneview.math.Rotation
-import io.github.sceneview.node.GeometryNode
-import io.github.sceneview.node.LightNode
-import io.github.sceneview.node.Node
-import io.github.sceneview.node.SphereNode
 import io.github.sceneview.rememberCameraManipulator
 import io.github.sceneview.rememberCameraNode
 import io.github.sceneview.rememberEngine
@@ -47,107 +53,56 @@ import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberMaterialLoader
 import io.github.sceneview.rememberNodes
 import io.github.sceneview.rememberOnGestureListener
-import io.github.sceneview.texture.ImageTexture
 import kotlin.math.hypot
 
 /**
- * 3D-2: the stylised solar system. Sun (self-lit, with a point light inside that lights the
- * planets: real day/night sides), 9 planets incl. Pluto, the Moon, Europa, Titan, the Ceres
- * asteroid-belt stop, Saturn's rings, orbit paths and a Milky Way starfield all around.
- * Drag = orbit 360°, pinch = zoom (clamped), two fingers = pan.
- * Tap a planet = fly to it and follow it (pinch then zooms on that planet); double-tap = back to the Sun.
+ * 3D solar system + the user's journey. Drag = orbit 360°, pinch = zoom, two fingers = pan.
+ * Tap a planet / star = fly to it (card shows its journey status); double-tap = back to the Sun;
+ * "Find my rocket" = fly to the rocket.
  *
- * Debug: adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space
+ * Debug: adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space [--ei debug_fuel 140]
  */
 @Composable
-fun SpaceScreen(onBack: () -> Unit) {
+fun SpaceScreen(
+    onBack: () -> Unit,
+    viewModel: SpaceViewModel = viewModel(factory = SpaceViewModel.Factory),
+) {
     val context = LocalContext.current
+    val rocketState by viewModel.rocket.collectAsStateWithLifecycle()
+
     val engine = rememberEngine()
     val materialLoader = rememberMaterialLoader(engine)
     val environmentLoader = rememberEnvironmentLoader(engine)
     // Keep only a little ambient light so planets have a dark night side.
     val environment = rememberEnvironment(environmentLoader).also { it.indirectLight?.intensity = 6_000f }
-
-    val scene = remember(engine) {
-        fun texture(name: String) = ImageTexture.Builder()
-            .bitmap(context.assets, "textures/$name")
-            .build(engine)
-
-        val unlitTextured = materialLoader.createMaterial("materials/space_unlit_textured.filamat")
-        val unlitColor = materialLoader.createMaterial("materials/space_unlit_color.filamat")
-
-        fun glowing(textureName: String, intensity: Float) = materialLoader.createInstance(unlitTextured).apply {
-            setTexture("baseTexture", texture(textureName))
-            setParameter("intensity", intensity)
-        }
-
-        val stars = SphereNode(
-            engine = engine,
-            radius = SpaceBody.STARFIELD_RADIUS,
-            stacks = 32,
-            slices = 64,
-            materialInstance = glowing("stars.jpg", intensity = 0.8f),
-        ).apply {
-            isTouchable = false
-            isHittable = false // the camera is inside this sphere: it must never catch taps
-        }
-
-        val bodies = SpaceBody.entries.associateWith { body ->
-            val material = if (body == SpaceBody.SUN) {
-                glowing("sun.jpg", intensity = 1.4f)
-            } else {
-                materialLoader.createTextureInstance(texture("${body.texture}.jpg"), roughness = 1f)
-            }
-            SphereNode(
-                engine = engine,
-                radius = body.radius,
-                stacks = if (body.radius > 1f) 48 else 32,
-                slices = if (body.radius > 1f) 96 else 64,
-                // One materialInstance for the whole sphere (a list would only cover the first stack).
-                materialInstance = material,
-            )
-        }
-
-        val saturnRing = GeometryNode(
-            engine = engine,
-            geometry = SpaceGeometry.ring(engine, SpaceBody.SATURN_RING_INNER, SpaceBody.SATURN_RING_OUTER),
-            materialInstance = materialLoader.createTextureInstance(texture("saturn_ring.png"), isOpaque = false).apply {
-                setCullingMode(Material.CullingMode.NONE) // visible from above and below
-            },
-        )
-
-        val orbitMaterial = materialLoader.createInstance(unlitColor).apply {
-            setParameter("color", 0.75f, 0.8f, 1f, 0.22f)
-            setParameter("intensity", 1f)
-        }
-        val orbits = SpaceBody.sunOrbiters.map { body ->
-            GeometryNode(engine, SpaceGeometry.orbitCircle(engine, body.orbitRadius), orbitMaterial)
-                .apply {
-                    isTouchable = false
-                    isHittable = false
-                }
-        }
-
-        // The Sun's light: a point light at the centre, so each planet is lit on the side facing the Sun.
-        val sunlight = LightNode(engine, LightManager.Type.POINT) {
-            color(1f, 0.96f, 0.9f)
-            intensity(3.0e8f) // lumens (tuned for SceneView's "sunny 16" camera exposure)
-            falloff(200f)
-            castShadows(false)
-        }
-
-        SolarSystemNodes(stars, bodies, saturnRing, orbits, sunlight)
-    }
+    val scene = remember(engine) { SolarSystemScene(engine, materialLoader, context.assets) }
 
     val clock = remember { SceneClock() }
     val camera = remember { OrbitCameraState() }
-    var focused by remember { mutableStateOf(SpaceBody.SUN) }
+    var focus by remember { mutableStateOf<SpaceFocus>(SpaceFocus.Overview) }
     val cameraNode = rememberCameraNode(engine) { transform = FocusOrbitManipulator.cameraTransform(camera) }
     val cameraManipulator = rememberCameraManipulator(creator = { FocusOrbitManipulator(camera) })
 
-    fun focusOn(body: SpaceBody) {
-        focused = body
-        camera.focus(radius = body.radius, overview = body == SpaceBody.SUN)
+    fun focusOn(target: SpaceFocus) {
+        focus = target
+        when (target) {
+            SpaceFocus.Overview -> camera.focus(radius = SpaceBody.SUN.radius, overview = true)
+            is SpaceFocus.Body -> if (target.body == SpaceBody.SUN) {
+                focus = SpaceFocus.Overview
+                camera.focus(radius = SpaceBody.SUN.radius, overview = true)
+            } else {
+                camera.focus(radius = target.body.radius, overview = false)
+            }
+            is SpaceFocus.Marker -> camera.focus(radius = JourneyMap.radius(target.destination), overview = false)
+            SpaceFocus.Rocket -> camera.focus(radius = ROCKET_FOCUS_RADIUS, overview = false)
+        }
+    }
+
+    fun focusCentre(t: Float, rocket: RocketState): SpacePoint = when (val f = focus) {
+        SpaceFocus.Overview -> SpacePoint.ORIGIN
+        is SpaceFocus.Body -> f.body.positionAt(t)
+        is SpaceFocus.Marker -> JourneyMap.anchor(f.destination, t)
+        SpaceFocus.Rocket -> JourneyMap.rocketPosition(rocket, t)
     }
 
     var viewSize by remember { mutableStateOf(IntSize.Zero) }
@@ -155,27 +110,36 @@ fun SpaceScreen(onBack: () -> Unit) {
     val touchPx = with(density) { 36.dp.toPx() }
     val marginPx = with(density) { 16.dp.toPx() }
 
-    /** Screen-space picking: project every body and take the one nearest the finger. */
-    fun bodyAt(x: Float, y: Float): SpaceBody? {
+    /** Screen-space picking for small / far objects that the 3D hit test misses. */
+    fun focusAt(x: Float, y: Float): SpaceFocus? {
         if (viewSize == IntSize.Zero) return null
         val w = viewSize.width.toFloat()
         val h = viewSize.height.toFloat()
         val t = clock.lastSeconds
         val eye = camera.eye()
-        val target = camera.target
-        val forward = SpacePoint(target.x - eye.x, target.y - eye.y, target.z - eye.z)
-        val screenBodies = SpaceBody.entries.map { body ->
-            val p = body.positionAt(t)
-            val toBody = SpacePoint(p.x - eye.x, p.y - eye.y, p.z - eye.z)
-            val inFront = toBody.x * forward.x + toBody.y * forward.y + toBody.z * forward.z > 0f
-            val centre = cameraNode.worldToView(Position(p.x, p.y, p.z))
-            val edge = cameraNode.worldToView(Position(p.x, p.y + body.radius, p.z))
-            val cx = centre.x * w
-            val cy = (1f - centre.y) * h
-            val radiusPx = hypot(edge.x * w - cx, (1f - edge.y) * h - cy)
-            ScreenBody(body, cx, cy, radiusPx, inFront)
+        val forward = camera.target - eye
+        fun project(p: SpacePoint, radius: Float): Triple<Float, Float, Float>? {
+            val toP = p - eye
+            if (toP.x * forward.x + toP.y * forward.y + toP.z * forward.z <= 0f) return null // behind the camera
+            val c = cameraNode.worldToView(Position(p.x, p.y, p.z))
+            val e = cameraNode.worldToView(Position(p.x, p.y + radius, p.z))
+            val cx = c.x * w
+            val cy = (1f - c.y) * h
+            return Triple(cx, cy, hypot(e.x * w - cx, (1f - e.y) * h - cy))
         }
-        return SpacePicking.pick(x, y, screenBodies, minTouchPx = touchPx, marginPx = marginPx)
+        val candidates = SpaceBody.entries.mapNotNull { b ->
+            project(b.positionAt(t), b.radius)?.let { (cx, cy, r) -> Pickable(SpaceFocus.Body(b), cx, cy, r) }
+        } + JourneyMap.deepSpace.mapNotNull { m ->
+            project(m.position, m.radius)?.let { (cx, cy, r) -> Pickable(SpaceFocus.Marker(m.destination), cx, cy, r) }
+        } + listOfNotNull(
+            project(JourneyMap.rocketPosition(rocketState, t), 0.4f)?.let { (cx, cy, r) -> Pickable(SpaceFocus.Rocket, cx, cy, r) },
+        )
+        // Reuse the tested picking rule via ScreenBody-like scoring.
+        return candidates
+            .map { it to hypot(x - it.x, y - it.y) / maxOf(touchPx, it.radiusPx + marginPx) }
+            .filter { it.second <= 1f }
+            .minByOrNull { it.second }
+            ?.first?.focus
     }
 
     var fps by remember { mutableIntStateOf(0) }
@@ -193,74 +157,123 @@ fun SpaceScreen(onBack: () -> Unit) {
             cameraManipulator = cameraManipulator,
             childNodes = rememberNodes { addAll(scene.all) },
             onGestureListener = rememberOnGestureListener(
-                // Try the 3D hit first, then fall back to screen-space picking (small far planets).
-                onSingleTapConfirmed = { e, node -> (scene.bodyFor(node) ?: bodyAt(e.x, e.y))?.let(::focusOn) },
-                onDoubleTap = { _, _ -> focusOn(SpaceBody.SUN) },
+                // Try the 3D hit first, then fall back to screen-space picking (small far objects).
+                onSingleTapConfirmed = { e, node -> (scene.focusFor(node) ?: focusAt(e.x, e.y))?.let(::focusOn) },
+                onDoubleTap = { _, _ -> focusOn(SpaceFocus.Overview) },
             ),
             onFrame = { frameTimeNanos ->
                 val t = clock.seconds(frameTimeNanos)
-                scene.update(t)
-                // Follow the focused body as it orbits, easing the camera there after a tap.
-                camera.advance(clock.delta(frameTimeNanos), focused.positionAt(t))
+                scene.update(t, rocketState, camera.eye())
+                // Follow the focus as it moves, easing the camera there after a tap.
+                camera.advance(clock.delta(frameTimeNanos), focusCentre(t, rocketState))
                 cameraNode.transform = FocusOrbitManipulator.cameraTransform(camera)
                 frameStats.onFrame(frameTimeNanos)?.let { fps = it }
             },
         )
 
-        Column(Modifier.statusBarsPadding().padding(8.dp)) {
+        Row(
+            modifier = Modifier.statusBarsPadding().padding(8.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = Color.White)
             }
+            Text("FPS $fps", color = Color(0x994ADE80), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(end = 12.dp))
         }
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(24.dp)
-                .background(Color(0x99000000), RoundedCornerShape(12.dp))
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = if (focused == SpaceBody.SUN) stringResource(R.string.space_title) else stringResource(focused.nameRes()),
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Text(
-                text = stringResource(if (focused == SpaceBody.SUN) R.string.space_hint_overview else R.string.space_hint_focused),
-                color = Color(0xFFB4B8D6),
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Text("FPS: $fps", color = Color(0xFF4ADE80), style = MaterialTheme.typography.labelLarge)
+
+        FocusCard(
+            focus = focus,
+            rocket = rocketState,
+            onFindRocket = { focusOn(SpaceFocus.Rocket) },
+            onOverview = { focusOn(SpaceFocus.Overview) },
+            modifier = Modifier.align(Alignment.BottomCenter),
+        )
+    }
+}
+
+/** Treated as the rocket's "size" when focusing: the camera settles about 6× this away. */
+private const val ROCKET_FOCUS_RADIUS = 0.7f
+
+private data class Pickable(val focus: SpaceFocus, val x: Float, val y: Float, val radiusPx: Float)
+
+/** Bottom card: what's in focus and how it relates to the user's journey. */
+@Composable
+private fun FocusCard(
+    focus: SpaceFocus,
+    rocket: RocketState,
+    onFindRocket: () -> Unit,
+    onOverview: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val destination: Destination? = when (focus) {
+        is SpaceFocus.Body -> JourneyMap.destinationFor(focus.body)
+        is SpaceFocus.Marker -> focus.destination
+        else -> null
+    }
+    val title = when (focus) {
+        SpaceFocus.Overview -> stringResource(R.string.space_title)
+        is SpaceFocus.Body -> destination?.let { "${it.emoji()} ${stringResource(it.nameRes())}" } ?: stringResource(focus.body.nameRes())
+        is SpaceFocus.Marker -> "${focus.destination.emoji()} ${stringResource(focus.destination.nameRes())}"
+        SpaceFocus.Rocket -> stringResource(R.string.space_rocket_title)
+    }
+
+    Column(
+        modifier = modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+            .background(Color(0xCC0B1026), RoundedCornerShape(16.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(title, color = Color.White, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+
+        val (line, lineColor) = when {
+            destination != null -> statusLine(JourneyStatus.of(destination, rocket))
+            focus is SpaceFocus.Body -> stringResource(R.string.space_not_a_stop) to Color(0xFFB4B8D6)
+            else -> rocketLine(rocket) to Color(0xFFFFC247)
+        }
+        Text(line, color = lineColor, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+        Text(
+            text = stringResource(if (focus == SpaceFocus.Overview) R.string.space_hint_overview else R.string.space_hint_focused),
+            color = Color(0xFF8A8FB0),
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
+            if (focus != SpaceFocus.Overview) {
+                OutlinedButton(onClick = onOverview) { Text(stringResource(R.string.space_back_to_sun)) }
+            }
+            if (focus != SpaceFocus.Rocket) {
+                Button(onClick = onFindRocket, colors = ButtonDefaults.buttonColors()) { Text(stringResource(R.string.space_find_rocket)) }
+            }
         }
     }
 }
 
-/** All scene nodes plus the per-frame animation (orbits and spins). */
-private class SolarSystemNodes(
-    private val stars: Node,
-    private val bodies: Map<SpaceBody, SphereNode>,
-    private val saturnRing: Node,
-    private val orbits: List<Node>,
-    private val sunlight: Node,
-) {
-    val all: List<Node> = listOf(stars, sunlight) + orbits + bodies.values + saturnRing
+@Composable
+private fun statusLine(status: JourneyStatus): Pair<String, Color> = when (status) {
+    is JourneyStatus.Reached ->
+        stringResource(R.string.space_status_reached, status.stopNumber, JourneyStatus.TOTAL_STOPS) to StatusGreen
+    is JourneyStatus.Next ->
+        stringResource(R.string.space_status_next, status.stopNumber, JourneyStatus.TOTAL_STOPS, status.fuelToGo, status.fuelRequired) to
+            Color(0xFFFF8A3D)
+    is JourneyStatus.Locked ->
+        stringResource(R.string.space_status_locked, status.stopNumber, JourneyStatus.TOTAL_STOPS, status.fuelRequired, status.fuelToGo) to
+            Color(0xFFB4B8D6)
+}
 
-    private val bodyByNode: Map<Node, SpaceBody> = bodies.entries.associate { (body, node) -> node to body } +
-        (saturnRing to SpaceBody.SATURN)
-
-    /** Which body a tapped node belongs to (the ring counts as Saturn). */
-    fun bodyFor(node: Node?): SpaceBody? = node?.let(bodyByNode::get)
-
-    fun update(seconds: Float) {
-        bodies.forEach { (body, node) ->
-            val p = body.positionAt(seconds)
-            node.position = Position(p.x, p.y, p.z)
-            node.rotation = Rotation(y = body.spinAt(seconds))
-        }
-        val saturn = SpaceBody.SATURN.positionAt(seconds)
-        saturnRing.position = Position(saturn.x, saturn.y, saturn.z)
-        saturnRing.rotation = Rotation(x = SpaceBody.SATURN_RING_TILT_DEGREES)
-    }
+@Composable
+private fun rocketLine(rocket: RocketState): String {
+    val from = rocket.highestReachedPlanet
+    val to = rocket.nextPlanet ?: return stringResource(R.string.rocket_journey_complete)
+    return stringResource(
+        R.string.space_rocket_line,
+        "${from.emoji()} ${stringResource(from.nameRes())}",
+        "${to.emoji()} ${stringResource(to.nameRes())}",
+        rocket.currentFuel,
+        to.fuelRequired,
+    )
 }
 
 /** Seconds since the first frame, and the time since the previous frame, from the frame clock. */

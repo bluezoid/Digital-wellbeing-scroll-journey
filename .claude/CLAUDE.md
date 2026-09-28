@@ -19,9 +19,9 @@ It is the entry point to the project's memory. **Read it first, then open only t
 ## Current status (update this every session)
 
 - **Phases 0–11 ✅.** Phase 12 validation 🔄 since 2026-09-28. The new 18-stop route is live.
-- **3D-2 built (2026-09-28):** the full stylised solar system (`ui/space/SpaceScreen`, ⋮ → "3D solar system (preview)", debug_route `space`) at about 58 FPS. Custom Filament materials in `materials/` (compile with matc 1.56.0). **Waiting on the user's check.**
-- **Next:** 3D-3 journey (rocket + trail from RocketState, reached/dimmed destinations, tap card, deep-space stars) → 3D-4 integration (dashboard hero, fullscreen, 2D fallback, texture credits in Settings, remove the FPS overlay).
-- Debug shortcut: `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route <route>`.
+- **3D: 3D-1 ✅, 3D-2 ✅ (solar system + tap-to-focus camera), 3D-3 built (2026-09-28):** rocket + route + reached/next glows + deep-space markers + tap card + "Find my rocket". Claude verified it on the phone with `--ei debug_fuel 40/320`. **Waiting on the user's check.**
+- **Next:** 3D-4 integration (3D as the dashboard hero + fullscreen Explore, 2D fallback, texture credits in Settings, remove the FPS label/preview menu, performance/battery: pause rendering when not visible).
+- Debug: `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space [--ei debug_fuel N]`.
 - **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, the schema-bump gotcha, and how to prove worker runs (workdb period_count).
 
 ## Memory index: read on demand
@@ -71,7 +71,8 @@ navigate_scrolling/
     │   └─ ui/{theme (+StatusColors), startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
     │          apppicker/*, dailylimit/*, dashboard/{DashboardScreen, DashboardViewModel, DashboardUiState(+Builder)},
     │          history/{HistoryScreen, HistoryViewModel, MonthCalendar}, settings/{SettingsScreen, SettingsViewModel}, journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, DestinationUi, BackTopBar, StatusUi, ComparisonUi}}
-    │   ├─ ui/space/{SpaceScreen, SolarSystemLayout, SpaceGeometry, ClampedOrbitManipulator}.kt  (3D)
+    │   ├─ ui/space/{SpaceScreen, SolarSystemScene, SolarSystemLayout, JourneyMap, JourneyStatus, RocketModel,
+    │   │           SpaceGeometry, OrbitCameraState, FocusOrbitManipulator, SpacePicking, SpaceViewModel}.kt  (3D)
     │   └─ worker/{DailyUsageWorker, DailySyncScheduler, DailySyncPolicy}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/

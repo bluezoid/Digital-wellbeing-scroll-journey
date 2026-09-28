@@ -37,6 +37,14 @@
     <string name="space_title">Solar system</string>
     <string name="space_hint_overview">Tap a planet to fly to it · drag to rotate 360° · pinch to zoom</string>
     <string name="space_hint_focused">Pinch to zoom · drag to rotate · double-tap to return to the Sun</string>
+    <string name="space_rocket_title">🚀 Your rocket</string>
+    <string name="space_rocket_line">%1$s → %2$s · fuel %3$d / %4$d</string>
+    <string name="space_status_reached">✓ Reached · stop %1$d of %2$d</string>
+    <string name="space_status_next">🎯 Next stop (%1$d of %2$d) · %3$d more fuel · needs %4$d</string>
+    <string name="space_status_locked">🔒 Stop %1$d of %2$d · needs %3$d fuel · %4$d to go</string>
+    <string name="space_not_a_stop">Scenery: not a stop on your route</string>
+    <string name="space_find_rocket">🚀 Find my rocket</string>
+    <string name="space_back_to_sun">Solar system</string>
     <string name="body_sun">Sun</string>
     <string name="body_mercury">Mercury</string>
     <string name="body_venus">Venus</string>

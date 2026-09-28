@@ -375,3 +375,28 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Verified on the phone via adb taps (live positions logged, then logs removed): tapping Earth flies the camera to Earth and follows it (58 FPS).
 - Tests: **154 JVM** (+OrbitCameraState 7, SpacePicking 5) and 18 on-device pass.
 - 2026-09-28: The user confirmed the tap-to-focus camera feels correct and asked about the Sun-centric orbit feel. Explained it's by design (focus-orbit); the user is fine keeping it. **3D-2 ✅.** Next: 3D-3.
+
+## 2026-09-28: 3D-3 journey in 3D (built, device-verified by Claude)
+
+- `ui/space/JourneyMap.kt` (pure, 10 tests):
+  - Destination ↔ SpaceBody mapping. Deep-space markers (fixed positions, radius, colour): Kuiper Belt r54, Oort Cloud r95, Proxima 165, Alpha Centauri 180, Sirius 250, Vega 320, Galactic Centre 420 (inside the starfield r500).
+  - `anchor(d, t)`, `radius(d)`.
+  - `rocketPosition(rocket, t)`: lerp between the reached and next stop by legProgress; ends pushed off the surfaces by GAP 0.6, shrunk to 1/3 of the free space on short legs (planet→own moon). The rocket is never inside a body (tested 0..1000 fuel). At the final stop it parks above.
+  - `rocketHeading`, `reachedRoute`, `upcomingRoute` (3 stops).
+- `ui/space/JourneyStatus.kt` (pure, 4 tests): Reached / Next(fuelToGo, required) / Locked, with stop N of 18.
+- `ui/space/RocketModel.kt`: primitives along −Z (cylinder body, stretched red sphere nose, 3 cube fins, unlit orange flame flickering, far-away glow visible only when camera distance > 10 and scaled with distance).
+- `ui/space/SolarSystemScene.kt` (split out of SpaceScreen): all nodes + journey layer.
+  - Rocket transform via `lookTowards(p, heading, up)`.
+  - Green reached-glows, an orange pulsing next-glow, and deep-space marker spheres.
+  - Kuiper and Oort rings.
+  - Travelled + upcoming route lines (LINES, fixed vertex count, padded, `updateGeometry` every frame).
+  - `focusFor(node)`.
+- **Crash fixed:** Filament Precondition "AABB can't be empty". The route line geometry was created with all vertices at the origin; it's now seeded spanning ±STARFIELD_RADIUS (the creation-time AABB is also what culling uses).
+- `ui/space/SpaceViewModel.kt`: rocket from settings; **debug builds: `--ei debug_fuel N`** previews any fuel level (MainActivity sets `SpaceViewModel.debugFuelOverride`; real data untouched).
+- SpaceScreen:
+  - `SpaceFocus` (Overview / Body / Marker / Rocket); screen-space picking includes markers and the rocket.
+  - FocusCard: the title plus a journey line (✓ Reached / 🎯 Next · X more fuel / 🔒 needs F), "Scenery: not a stop" for the Sun/Mercury/Venus, and a rocket line "from → to · fuel a / b".
+  - Buttons: "🚀 Find my rocket" and "Solar system". The rocket focus radius is 0.7. FPS moved to a small top-right label.
+- Verified on the realme with the debug preview: 40 fuel (Europa → Saturn; green glows, route, Find my rocket flies to a clean rocket on the route) and 320 fuel (Proxima → Alpha Centauri), 56–59 FPS.
+- Tests: **168 JVM** and 18 on-device pass.
+- The user's real state is still 0 fuel at Earth (the rocket sits just outside Earth heading to the Moon).

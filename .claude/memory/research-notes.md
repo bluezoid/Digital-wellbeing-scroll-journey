@@ -56,3 +56,4 @@
 - **SceneView `lookAt(eye, target)` is buggy** for non-origin targets (double subtraction). Use `dev.romainguy.kotlin.math.lookTowards(eye, target - eye, Float3(0f, 1f, 0f))` for a camera model matrix.
 - SceneView hit-testing (`onSingleTapConfirmed` node) misses small/far spheres, so add screen-space picking via `cameraNode.worldToView(pos)` (returns 0..1 with y up; flip y and multiply by the view size).
 - SceneView only calls `CameraManipulator.update/getTransform` after the first touch, so drive custom camera animation from `onFrame` and set `cameraNode.transform` yourself.
+- Filament panics (SIGABRT, "Precondition … AABB can't be empty") if a renderable is built with degenerate geometry (e.g. all vertices at one point). Seed dynamic line geometry with a large box; the creation-time AABB is also used for culling. Read the panic reason with `adb logcat -d --pid=<pid>`; the crash buffer only shows the abort.

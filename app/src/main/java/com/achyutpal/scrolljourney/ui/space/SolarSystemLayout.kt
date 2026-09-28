@@ -14,6 +14,8 @@ data class SpacePoint(val x: Float, val y: Float, val z: Float) {
     }
 
     operator fun plus(o: SpacePoint) = SpacePoint(x + o.x, y + o.y, z + o.z)
+    operator fun minus(o: SpacePoint) = SpacePoint(x - o.x, y - o.y, z - o.z)
+    operator fun times(k: Float) = SpacePoint(x * k, y * k, z * k)
 
     companion object {
         val ORIGIN = SpacePoint(0f, 0f, 0f)
