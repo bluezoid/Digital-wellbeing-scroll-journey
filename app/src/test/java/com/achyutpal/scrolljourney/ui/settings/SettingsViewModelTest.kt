@@ -2,7 +2,7 @@ package com.achyutpal.scrolljourney.ui.settings
 
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DayStatus
-import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.SelectedApp
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.domain.model.UserSettings
@@ -38,7 +38,7 @@ class SettingsViewModelTest {
             onboardingComplete = true,
             currentFuel = 25,
             lifetimeFuel = 27,
-            highestReachedPlanet = Planet.SATURN,
+            highestReachedPlanet = Destination.SATURN,
             journeyDistance = 10_000,
             journeyStartDate = LocalDate.of(2026, 6, 1),
         ),
@@ -68,7 +68,7 @@ class SettingsViewModelTest {
         val state = viewModel().uiState.value
         assertEquals(2, state.trackedAppCount) // only enabled apps
         assertEquals(120, state.limitMinutes)
-        assertEquals(Planet.SATURN, state.rocket.highestReachedPlanet)
+        assertEquals(Destination.SATURN, state.rocket.highestReachedPlanet)
         assertEquals("0.1.0", state.versionName)
     }
 
@@ -97,7 +97,7 @@ class SettingsViewModelTest {
         val s = settings.state.value
         assertEquals(0, s.currentFuel)
         assertEquals(0, s.lifetimeFuel)
-        assertEquals(Planet.EARTH, s.highestReachedPlanet)
+        assertEquals(Destination.EARTH, s.highestReachedPlanet)
         assertEquals(0L, s.journeyDistance)
         assertEquals(today, s.journeyStartDate)
         assertEquals(120, s.dailyLimitMinutes) // preferences untouched
@@ -112,7 +112,7 @@ class SettingsViewModelTest {
         vm.onResetDismiss()
         assertFalse(vm.uiState.value.showResetConfirm)
         assertEquals(25, settings.state.value.currentFuel)
-        assertEquals(Planet.SATURN, settings.state.value.highestReachedPlanet)
+        assertEquals(Destination.SATURN, settings.state.value.highestReachedPlanet)
     }
 
     @Test

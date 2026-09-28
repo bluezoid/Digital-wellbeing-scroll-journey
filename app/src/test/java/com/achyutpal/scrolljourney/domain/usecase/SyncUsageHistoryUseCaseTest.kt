@@ -4,7 +4,7 @@ import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DayStatus
 import com.achyutpal.scrolljourney.domain.model.UserSettings
 import com.achyutpal.scrolljourney.domain.model.ForegroundUsage
-import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.SelectedApp
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.fakes.FakeAppRepository
@@ -259,7 +259,7 @@ class SyncUsageHistoryUseCaseTest {
 
         // 3 past days since the start, each 30 min against a 60 min limit → green → +1
         assertEquals(3, settings.state.value.currentFuel)
-        assertEquals(Planet.MOON, settings.state.value.highestReachedPlanet)
+        assertEquals(Destination.MOON, settings.state.value.highestReachedPlanet)
         assertFalse(history.records.getValue(today).fuelApplied)
         assertEquals(1, history.records.getValue(today.minusDays(1)).fuelDelta)
         assertFalse(history.records.getValue(today.minusDays(4)).fuelApplied)

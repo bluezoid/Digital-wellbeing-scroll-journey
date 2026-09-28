@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.achyutpal.scrolljourney.data.local.entity.UserSettingsEntity
-import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.Destination
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -34,7 +34,7 @@ interface UserSettingsDao {
         "UPDATE user_settings SET currentFuel = :currentFuel, lifetimeFuel = :lifetimeFuel, " +
             "highestReachedPlanet = :highestReachedPlanet, journeyDistance = journeyDistance + :addDistance WHERE id = 1",
     )
-    suspend fun saveRocket(currentFuel: Int, lifetimeFuel: Int, highestReachedPlanet: Planet, addDistance: Long)
+    suspend fun saveRocket(currentFuel: Int, lifetimeFuel: Int, highestReachedPlanet: Destination, addDistance: Long)
 
     @Query("UPDATE user_settings SET dailyLimitMinutes = :minutes WHERE id = 1")
     suspend fun setDailyLimit(minutes: Int)

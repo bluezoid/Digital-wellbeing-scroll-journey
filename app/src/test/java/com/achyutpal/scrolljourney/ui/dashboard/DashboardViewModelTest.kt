@@ -2,7 +2,7 @@ package com.achyutpal.scrolljourney.ui.dashboard
 
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DayStatus
-import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.SelectedApp
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.domain.model.UserSettings
@@ -51,7 +51,7 @@ class DashboardViewModelTest {
             onboardingComplete = true,
             currentFuel = 5,
             lifetimeFuel = 6,
-            highestReachedPlanet = Planet.MOON,
+            highestReachedPlanet = Destination.MOON,
             journeyStartDate = today.minusDays(30),
         ),
     )
@@ -99,7 +99,7 @@ class DashboardViewModelTest {
         vm.refresh()
         // Journey started 30 days ago: the 7 backfilled days (45 min, green) each add +1 → 5 + 7 = 12 → Mars.
         assertEquals(12, vm.uiState.value.rocket.currentFuel)
-        assertEquals(Planet.MARS, vm.uiState.value.rocket.highestReachedPlanet)
+        assertEquals(Destination.MARS, vm.uiState.value.rocket.highestReachedPlanet)
         assertEquals(today.minusDays(30), vm.uiState.value.journeyStartDate)
     }
 

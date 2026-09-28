@@ -9,7 +9,7 @@ import com.achyutpal.scrolljourney.data.settings.RoomSettingsRepository
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DayStatus
-import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.RocketState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -117,14 +117,14 @@ class HistoryAndSettingsDatabaseTest {
             DailyRecord(day, 20, status = DayStatus.GREEN, limitMinutes = 90, distance = 2_000, finalized = true),
             listOf(AppUsage("insta", "Instagram", 20 * min)),
         )
-        journey.applyDay(history.getDay(day)!!, 1) { it.copy(currentFuel = 5, lifetimeFuel = 5, highestReachedPlanet = Planet.MOON) }
+        journey.applyDay(history.getDay(day)!!, 1) { it.copy(currentFuel = 5, lifetimeFuel = 5, highestReachedPlanet = Destination.MOON) }
 
         settings.resetJourney(journeyStart = day.plusDays(1))
 
         val s = settings.getSettings()
         assertEquals(0, s.currentFuel)
         assertEquals(0, s.lifetimeFuel)
-        assertEquals(Planet.EARTH, s.highestReachedPlanet)
+        assertEquals(Destination.EARTH, s.highestReachedPlanet)
         assertEquals(0L, s.journeyDistance)
         assertEquals(day.plusDays(1), s.journeyStartDate)
         assertEquals(90, s.dailyLimitMinutes)
@@ -154,7 +154,7 @@ class HistoryAndSettingsDatabaseTest {
         assertEquals(60, s.dailyLimitMinutes)
         assertFalse(s.onboardingComplete)
         assertEquals(0, s.currentFuel)
-        assertEquals(Planet.EARTH, s.highestReachedPlanet)
+        assertEquals(Destination.EARTH, s.highestReachedPlanet)
     }
 
     @Test

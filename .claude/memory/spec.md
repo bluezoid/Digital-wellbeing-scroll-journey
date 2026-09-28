@@ -65,7 +65,7 @@ Use cases (suggested): GetTodayUsage, GetDailyHistory, SaveDailyUsage, GetInstal
 - `DailyAppUsageEntity`: id (PK), date, packageName, minutes. **UNIQUE(date, packageName)**, upsert
 - `UserSettingsEntity`: id (PK), dailyLimitMinutes = 60, onboardingComplete = false, plus journey state (see Rocket)
 - DAOs: SelectedAppDao, DailyUsageDao, DailyAppUsageDao, UserSettingsDao
-- `enum Planet { EARTH, MOON, MARS, JUPITER, SATURN, URANUS, NEPTUNE, PLUTO }`
+- `enum Destination(fuelRequired, kind)`: 18 stops (see thresholds). Stored by name in `user_settings.highestReachedPlanet`: never rename an entry.
 - `enum DayStatus { GREEN, YELLOW, RED }`
 - `enum UsageAccessState { GRANTED, REVOKED, UNKNOWN }`
 
@@ -77,11 +77,11 @@ Use cases (suggested): GetTodayUsage, GetDailyHistory, SaveDailyUsage, GetInstal
   - otherwise RED
   - With limit 60: 60 is green, 61 and 75 are yellow, 76 is red.
 - **Fuel:** GREEN +1, YELLOW 0, RED −1. `fuel = max(0, fuel + delta)`.
-- **Planet thresholds:** Moon 3, Mars 7, Jupiter 14, Saturn 21, Uranus 30, Neptune 45, Pluto 60.
+- **Destination thresholds (REPLACED 2026-09-28 by the user-approved route; the old Planet thresholds Moon 3 … Pluto 60 are obsolete):** Earth 0, Moon 3, Mars 12, Ceres/Asteroid Belt 20, Jupiter 30, Europa 38, Saturn 50, Titan 60, Uranus 80, Neptune 105, Pluto 135, Kuiper Belt 170, Oort Cloud 220, Proxima Centauri 300, Alpha Centauri 365, Sirius 500, Vega 650, Galactic Centre 1000. Enum `Destination` (was `Planet`).
 - **Rocket state:** `currentFuel`, `lifetimeFuel`, `highestReachedPlanet`. highestReachedPlanet is permanent: a red day lowers fuel but never moves the rocket back past a reached planet.
   - Example: at Mars with fuel 7, a red day gives fuel 6, still Mars.
 - `RocketProgressCalculator(currentFuel, highestReachedPlanet, dayStatus) → RocketState`
-- **Copy:** say "60 fuel points to reach Pluto," never "Pluto in 6 months."
+- **Copy:** talk in fuel points, never promise calendar time ("1,000 fuel to the Galactic Centre").
 - **Streak:** only GREEN counts. Yellow or red resets it. Current streak counts back from today; best streak is the longest run. `StreakCalculator(List<DayStatus>) → (current, best)` is pure Kotlin.
 - **Distance:** `minutes × DistanceConfig.scrollDistancePerMinute`. Use Long (no overflow). The constant lives in one config class. Comparisons (Eiffel Tower, Burj Khalifa, Everest, …) stay few and simple.
 - **Limit validation:** accepts 15–240; rejects 14, 241, 0 and negatives.
@@ -128,7 +128,7 @@ The dashboard is never shown before onboarding completes.
 ## Tests required (full lists are in the user's spec; key cases)
 
 - **LimitEvaluator:** (60, 0/60) GREEN; 61/75 YELLOW; 76 RED.
-- **Planet by fuel:** 0/2 Earth, 3/6 Moon, 7/13 Mars, 14/20 Jupiter, 21/29 Saturn, 30/44 Uranus, 45/59 Neptune, 60 Pluto.
+- **Destination by fuel:** the approved route table (RocketProgressCalculatorTest).
 - **Fuel:** never negative. Milestone protection.
 - **Streak:**
   - G,G,G gives 3/3

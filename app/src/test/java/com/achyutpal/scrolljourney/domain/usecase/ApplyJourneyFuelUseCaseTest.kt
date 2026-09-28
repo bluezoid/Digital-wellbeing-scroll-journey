@@ -5,7 +5,7 @@ import com.achyutpal.scrolljourney.domain.model.DayStatus
 import com.achyutpal.scrolljourney.domain.model.DayStatus.GREEN
 import com.achyutpal.scrolljourney.domain.model.DayStatus.RED
 import com.achyutpal.scrolljourney.domain.model.DayStatus.YELLOW
-import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.UserSettings
 import com.achyutpal.scrolljourney.fakes.FakeHistoryRepository
 import com.achyutpal.scrolljourney.fakes.FakeJourneyRepository
@@ -89,6 +89,6 @@ class ApplyJourneyFuelUseCaseTest {
         day(0, GREEN); day(1, GREEN); day(2, GREEN); day(3, RED)
         useCase()
         assertEquals(2, settings.state.value.currentFuel)
-        assertEquals(Planet.MOON, settings.state.value.highestReachedPlanet)
+        assertEquals(Destination.MOON, settings.state.value.highestReachedPlanet)
     }
 }

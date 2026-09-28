@@ -2,7 +2,7 @@ package com.achyutpal.scrolljourney.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.UserSettings
 import java.time.LocalDate
 
@@ -14,7 +14,7 @@ data class UserSettingsEntity(
     val onboardingComplete: Boolean,
     val currentFuel: Int,
     val lifetimeFuel: Int,
-    val highestReachedPlanet: Planet,
+    val highestReachedPlanet: Destination,
     val journeyDistance: Long,
     /** Added in DB v4, "YYYY-MM-DD". */
     val journeyStartDate: String?,

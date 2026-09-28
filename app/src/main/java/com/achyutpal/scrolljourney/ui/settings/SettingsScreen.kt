@@ -45,7 +45,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.achyutpal.scrolljourney.R
-import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.RocketState
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.ui.common.emoji
@@ -299,7 +299,7 @@ private fun SettingsPreview() {
                 trackedAppCount = 5,
                 limitMinutes = 120,
                 device = DeviceStatus(UsageAccessState.GRANTED, backgroundRestricted = false, ignoringBatteryOptimizations = false),
-                rocket = RocketState(currentFuel = 3, lifetimeFuel = 3, highestReachedPlanet = Planet.MOON),
+                rocket = RocketState(currentFuel = 3, lifetimeFuel = 3, highestReachedPlanet = Destination.MOON),
                 journeyStartDate = LocalDate.of(2026, 9, 27),
                 versionName = "0.1.0",
             ),

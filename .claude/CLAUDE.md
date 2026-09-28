@@ -18,9 +18,9 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 11 (Settings), installed on the phone; 133 unit + 18 on-device tests pass. **Waiting on the user's check of the Settings screen.** Phase 10 ✅ (the worker ran by itself at 00:30 on 2026-09-28).
-- **Last done (2026-09-28, session 3):** overnight verification (27 Sep finalized YELLOW, fuel 0 applied once, rocket at Earth), Phase 11 installed.
-- **Next:** the user confirms Settings → present the **3D solar system plan (12b)** for approval (no 3D code before approval) → Phase 12 validation (7–14 days).
+- **Phases 0–11 ✅.** Phase 12 real-use validation 🔄 started 2026-09-28 (in parallel). The **new 18-stop route** (Destination enum, Moon 3 … Galactic Centre 1000) was approved and implemented; 136 unit + 18 on-device tests pass.
+- **3D plan approved (2026-09-28):** SceneView 2.3.0/Filament, textures from Solar System Scope (CC BY 4.0) + NASA (PD), Mercury/Venus as scenery, steps 3D-1 → 3D-4. See roadmap 12b and decisions.
+- **Next:** **3D-1 spike**: a single textured rotating Earth with an orbit camera (drag 360°, pinch zoom) on the realme; check smoothness before going further.
 - **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, the schema-bump gotcha, and how to prove worker runs (workdb period_count).
 
 ## Memory index: read on demand
@@ -56,7 +56,7 @@ navigate_scrolling/
     │   ├─ domain/repository/{UsageAccessRepository, AppRepository}.kt
     │   ├─ domain/model/{UsageEvent, DailyUsageSummary}.kt, domain/calculator/UsageCalculator.kt
     │   ├─ domain/usecase/{SyncUsageHistoryUseCase, ApplyJourneyFuelUseCase, TodayUsageResult}.kt
-    │   ├─ domain/repository/{Usage,History,Settings,Journey}Repository.kt, domain/model/{DayStatus,Planet,RocketState,UserSettings,DailyRecord,ForegroundUsage}.kt
+    │   ├─ domain/repository/{Usage,History,Settings,Journey}Repository.kt, domain/model/{DayStatus,Destination,RocketState,UserSettings,DailyRecord,ForegroundUsage}.kt
     │   ├─ data/usage/{AndroidUsageAccessRepository, UsageDataSource, AndroidUsageRepository}.kt
     │   ├─ data/local/ScrollJourneyDatabase.kt (v4)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
     │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt, data/journey/RoomJourneyRepository.kt
@@ -66,7 +66,7 @@ navigate_scrolling/
     │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, dashboard, history, settings
     │   └─ ui/{theme (+StatusColors), startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
     │          apppicker/*, dailylimit/*, dashboard/{DashboardScreen, DashboardViewModel, DashboardUiState(+Builder)},
-    │          history/{HistoryScreen, HistoryViewModel, MonthCalendar}, settings/{SettingsScreen, SettingsViewModel}, journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, PlanetUi, StatusUi, ComparisonUi}}
+    │          history/{HistoryScreen, HistoryViewModel, MonthCalendar}, settings/{SettingsScreen, SettingsViewModel}, journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, DestinationUi, BackTopBar, StatusUi, ComparisonUi}}
     │   └─ worker/{DailyUsageWorker, DailySyncScheduler, DailySyncPolicy}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/

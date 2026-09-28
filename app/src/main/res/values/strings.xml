@@ -89,7 +89,7 @@
     <string name="rocket_reached">%1$s %2$s reached</string>
     <string name="rocket_fuel_to_next">Fuel %1$d / %2$d · next stop: %3$s</string>
     <string name="rocket_at_earth">🌍 On Earth, ready for launch</string>
-    <string name="rocket_pluto_done">🎉 You made it all the way to Pluto!</string>
+    <string name="rocket_journey_complete">🎉 You reached the centre of the galaxy. Journey complete!</string>
     <string name="rocket_started">Journey started %1$s. Each finished day counts from the next morning.</string>
     <string name="rocket_not_started">Your journey starts once onboarding is complete.</string>
     <string name="rocket_rules">Green day +1 fuel · yellow 0 · red −1. You never lose a planet you have reached.</string>
@@ -101,6 +101,16 @@
     <string name="planet_uranus">Uranus</string>
     <string name="planet_neptune">Neptune</string>
     <string name="planet_pluto">Pluto</string>
+    <string name="dest_ceres">Asteroid Belt</string>
+    <string name="dest_europa">Europa</string>
+    <string name="dest_titan">Titan</string>
+    <string name="dest_kuiper_belt">Kuiper Belt</string>
+    <string name="dest_oort_cloud">Oort Cloud</string>
+    <string name="dest_proxima_centauri">Proxima Centauri</string>
+    <string name="dest_alpha_centauri">Alpha Centauri</string>
+    <string name="dest_sirius">Sirius</string>
+    <string name="dest_vega">Vega</string>
+    <string name="dest_galactic_centre">Galactic Centre</string>
 
     <!-- Estimated scroll distance -->
     <string name="distance_title">Estimated scroll distance today</string>

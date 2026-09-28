@@ -38,7 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.achyutpal.scrolljourney.R
-import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.RocketState
 import com.achyutpal.scrolljourney.ui.common.emoji
 import com.achyutpal.scrolljourney.ui.common.nameRes
@@ -47,11 +47,12 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 private val RocketSize = 32.dp
+private const val ROUTE_WINDOW = 7
 
 /**
  * The hero of the dashboard:
  * - the current leg (reached planet → next planet) with the rocket placed by fuel progress,
- * - the whole route Earth → Pluto underneath, reached stops lit up.
+ * - a window of the route underneath (Earth … Galactic Centre), reached stops lit up.
  */
 @Composable
 fun RocketJourneyView(
@@ -100,7 +101,7 @@ fun RocketJourneyView(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
             } else {
-                Text(stringResource(R.string.rocket_pluto_done), color = MaterialTheme.colorScheme.tertiary)
+                Text(stringResource(R.string.rocket_journey_complete), color = MaterialTheme.colorScheme.tertiary)
             }
 
             Spacer(Modifier.height(16.dp))
@@ -125,7 +126,7 @@ fun RocketJourneyView(
 
 @Composable
 private fun headline(rocket: RocketState): String =
-    if (rocket.highestReachedPlanet == Planet.EARTH) {
+    if (rocket.highestReachedPlanet == Destination.EARTH) {
         stringResource(R.string.rocket_at_earth)
     } else {
         stringResource(
@@ -135,9 +136,9 @@ private fun headline(rocket: RocketState): String =
         )
     }
 
-/** Planet ── dashed path with the rocket on it ── next planet. */
+/** Destination ── dashed path with the rocket on it ── next planet. */
 @Composable
-private fun CurrentLeg(from: Planet, to: Planet, progress: Float) {
+private fun CurrentLeg(from: Destination, to: Destination, progress: Float) {
     // Animates the rocket to its new spot whenever fuel changes.
     val animatedProgress by animateFloatAsState(
         targetValue = progress,
@@ -190,11 +191,16 @@ private fun CurrentLeg(from: Planet, to: Planet, progress: Float) {
     }
 }
 
-/** Earth … Pluto; reached stops are bright, the current one is marked with a dot. */
+/**
+ * A window of the route around the current stop (18 stops don't fit on a phone):
+ * the last reached stop plus the next few. Reached stops are bright, the current one has a dot.
+ */
 @Composable
-private fun RouteStrip(reached: Planet) {
+private fun RouteStrip(reached: Destination) {
+    val start = (reached.ordinal - 1).coerceIn(0, Destination.entries.size - ROUTE_WINDOW)
+    val window = Destination.entries.subList(start, start + ROUTE_WINDOW)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Planet.entries.forEach { planet ->
+        window.forEach { planet ->
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = planet.emoji(),
@@ -220,7 +226,7 @@ private fun RouteStrip(reached: Planet) {
 private fun RocketJourneyPreview() {
     ScrollJourneyTheme(darkTheme = true) {
         RocketJourneyView(
-            rocket = RocketState(currentFuel = 5, lifetimeFuel = 6, highestReachedPlanet = Planet.MOON),
+            rocket = RocketState(currentFuel = 5, lifetimeFuel = 6, highestReachedPlanet = Destination.MOON),
             journeyStartDate = LocalDate.of(2026, 9, 27),
         )
     }

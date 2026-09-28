@@ -8,7 +8,7 @@ data class UserSettings(
     val onboardingComplete: Boolean = false,
     val currentFuel: Int = 0,
     val lifetimeFuel: Int = 0,
-    val highestReachedPlanet: Planet = Planet.EARTH,
+    val highestReachedPlanet: Destination = Destination.EARTH,
     /** Estimated scroll distance (cm) of the days that fuelled this journey. */
     val journeyDistance: Long = 0,
     /** First day that counts for fuel. Days before it (e.g. backfilled history) never give fuel. */

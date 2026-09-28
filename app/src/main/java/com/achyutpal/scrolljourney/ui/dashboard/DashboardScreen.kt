@@ -52,7 +52,7 @@ import com.achyutpal.scrolljourney.domain.calculator.DistanceConfig
 import com.achyutpal.scrolljourney.domain.model.AppUsage
 import com.achyutpal.scrolljourney.domain.model.DailyUsageSummary
 import com.achyutpal.scrolljourney.domain.model.DayStatus
-import com.achyutpal.scrolljourney.domain.model.Planet
+import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.RocketState
 import com.achyutpal.scrolljourney.ui.common.StatusDot
 import com.achyutpal.scrolljourney.ui.common.StatusLabel
@@ -352,7 +352,7 @@ private fun DashboardPreview() {
                 limitMinutes = 60,
                 status = DayStatus.GREEN,
                 distanceCentimetres = 5_000,
-                rocket = RocketState(currentFuel = 5, lifetimeFuel = 6, highestReachedPlanet = Planet.MOON),
+                rocket = RocketState(currentFuel = 5, lifetimeFuel = 6, highestReachedPlanet = Destination.MOON),
                 journeyStartDate = today.minusDays(10),
                 currentStreak = 3,
                 week = (6 downTo 0).map { WeekDay(today.minusDays(it.toLong()), DayStatus.GREEN, it == 0) },
