@@ -53,3 +53,6 @@
 - **Unlit Filament materials ignore camera exposure**: output = baseColor. Keep intensity around 1 (the Sun 1.4, stars 0.8). Lit materials do use exposure (SceneView's sunny-16).
 - Custom materials: write a `.mat`, compile with matc (same version as the runtime, 1.56.0) `-p mobile -a opengl`, load with `materialLoader.createMaterial("materials/x.filamat")`, then `createInstance(material)` and `setTexture("name", tex)` / `setParameter(...)`.
 - Sun lighting: a point light at the origin (3e8 lm, falloff 200) + IBL intensity 6000 gives day/night sides that still read on the outer planets.
+- **SceneView `lookAt(eye, target)` is buggy** for non-origin targets (double subtraction). Use `dev.romainguy.kotlin.math.lookTowards(eye, target - eye, Float3(0f, 1f, 0f))` for a camera model matrix.
+- SceneView hit-testing (`onSingleTapConfirmed` node) misses small/far spheres, so add screen-space picking via `cameraNode.worldToView(pos)` (returns 0..1 with y up; flip y and multiply by the view size).
+- SceneView only calls `CameraManipulator.update/getTransform` after the first touch, so drive custom camera animation from `onFrame` and set `cameraNode.transform` yourself.

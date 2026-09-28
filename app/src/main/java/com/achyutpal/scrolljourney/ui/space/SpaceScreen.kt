@@ -16,19 +16,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.achyutpal.scrolljourney.R
 import com.google.android.filament.LightManager
 import com.google.android.filament.Material
 import io.github.sceneview.Scene
-import io.github.sceneview.SceneView
 import io.github.sceneview.material.setTexture
 import io.github.sceneview.math.Position
 import io.github.sceneview.math.Rotation
@@ -43,16 +46,16 @@ import io.github.sceneview.rememberEnvironment
 import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberMaterialLoader
 import io.github.sceneview.rememberNodes
+import io.github.sceneview.rememberOnGestureListener
 import io.github.sceneview.texture.ImageTexture
-
-/** Camera starts above and in front of the Sun, looking at it. */
-private val CameraHome = Position(0f, 26f, 62f)
+import kotlin.math.hypot
 
 /**
  * 3D-2: the stylised solar system. Sun (self-lit, with a point light inside that lights the
  * planets: real day/night sides), 9 planets incl. Pluto, the Moon, Europa, Titan, the Ceres
  * asteroid-belt stop, Saturn's rings, orbit paths and a Milky Way starfield all around.
  * Drag = orbit 360°, pinch = zoom (clamped), two fingers = pan.
+ * Tap a planet = fly to it and follow it (pinch then zooms on that planet); double-tap = back to the Sun.
  *
  * Debug: adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space
  */
@@ -84,7 +87,10 @@ fun SpaceScreen(onBack: () -> Unit) {
             stacks = 32,
             slices = 64,
             materialInstance = glowing("stars.jpg", intensity = 0.8f),
-        ).apply { isTouchable = false }
+        ).apply {
+            isTouchable = false
+            isHittable = false // the camera is inside this sphere: it must never catch taps
+        }
 
         val bodies = SpaceBody.entries.associateWith { body ->
             val material = if (body == SpaceBody.SUN) {
@@ -116,7 +122,10 @@ fun SpaceScreen(onBack: () -> Unit) {
         }
         val orbits = SpaceBody.sunOrbiters.map { body ->
             GeometryNode(engine, SpaceGeometry.orbitCircle(engine, body.orbitRadius), orbitMaterial)
-                .apply { isTouchable = false }
+                .apply {
+                    isTouchable = false
+                    isHittable = false
+                }
         }
 
         // The Sun's light: a point light at the centre, so each planet is lit on the side facing the Sun.
@@ -130,31 +139,51 @@ fun SpaceScreen(onBack: () -> Unit) {
         SolarSystemNodes(stars, bodies, saturnRing, orbits, sunlight)
     }
 
-    val cameraNode = rememberCameraNode(engine) {
-        position = CameraHome
-        lookAt(Position(0f, 0f, 0f))
+    val clock = remember { SceneClock() }
+    val camera = remember { OrbitCameraState() }
+    var focused by remember { mutableStateOf(SpaceBody.SUN) }
+    val cameraNode = rememberCameraNode(engine) { transform = FocusOrbitManipulator.cameraTransform(camera) }
+    val cameraManipulator = rememberCameraManipulator(creator = { FocusOrbitManipulator(camera) })
+
+    fun focusOn(body: SpaceBody) {
+        focused = body
+        camera.focus(radius = body.radius, overview = body == SpaceBody.SUN)
     }
-    val cameraManipulator = rememberCameraManipulator(
-        creator = {
-            ClampedOrbitManipulator(
-                delegate = SceneView.createDefaultCameraManipulator(
-                    orbitHomePosition = CameraHome,
-                    targetPosition = Position(0f, 0f, 0f),
-                ),
-                target = Position(0f, 0f, 0f),
-                minDistance = 7f,
-                maxDistance = 140f,
-            )
-        },
-    )
+
+    var viewSize by remember { mutableStateOf(IntSize.Zero) }
+    val density = LocalDensity.current
+    val touchPx = with(density) { 36.dp.toPx() }
+    val marginPx = with(density) { 16.dp.toPx() }
+
+    /** Screen-space picking: project every body and take the one nearest the finger. */
+    fun bodyAt(x: Float, y: Float): SpaceBody? {
+        if (viewSize == IntSize.Zero) return null
+        val w = viewSize.width.toFloat()
+        val h = viewSize.height.toFloat()
+        val t = clock.lastSeconds
+        val eye = camera.eye()
+        val target = camera.target
+        val forward = SpacePoint(target.x - eye.x, target.y - eye.y, target.z - eye.z)
+        val screenBodies = SpaceBody.entries.map { body ->
+            val p = body.positionAt(t)
+            val toBody = SpacePoint(p.x - eye.x, p.y - eye.y, p.z - eye.z)
+            val inFront = toBody.x * forward.x + toBody.y * forward.y + toBody.z * forward.z > 0f
+            val centre = cameraNode.worldToView(Position(p.x, p.y, p.z))
+            val edge = cameraNode.worldToView(Position(p.x, p.y + body.radius, p.z))
+            val cx = centre.x * w
+            val cy = (1f - centre.y) * h
+            val radiusPx = hypot(edge.x * w - cx, (1f - edge.y) * h - cy)
+            ScreenBody(body, cx, cy, radiusPx, inFront)
+        }
+        return SpacePicking.pick(x, y, screenBodies, minTouchPx = touchPx, marginPx = marginPx)
+    }
 
     var fps by remember { mutableIntStateOf(0) }
     val frameStats = remember { FrameStats() }
-    val clock = remember { SceneClock() }
 
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         Scene(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().onSizeChanged { viewSize = it },
             engine = engine,
             materialLoader = materialLoader,
             environmentLoader = environmentLoader,
@@ -163,9 +192,17 @@ fun SpaceScreen(onBack: () -> Unit) {
             cameraNode = cameraNode,
             cameraManipulator = cameraManipulator,
             childNodes = rememberNodes { addAll(scene.all) },
+            onGestureListener = rememberOnGestureListener(
+                // Try the 3D hit first, then fall back to screen-space picking (small far planets).
+                onSingleTapConfirmed = { e, node -> (scene.bodyFor(node) ?: bodyAt(e.x, e.y))?.let(::focusOn) },
+                onDoubleTap = { _, _ -> focusOn(SpaceBody.SUN) },
+            ),
             onFrame = { frameTimeNanos ->
                 val t = clock.seconds(frameTimeNanos)
                 scene.update(t)
+                // Follow the focused body as it orbits, easing the camera there after a tap.
+                camera.advance(clock.delta(frameTimeNanos), focused.positionAt(t))
+                cameraNode.transform = FocusOrbitManipulator.cameraTransform(camera)
                 frameStats.onFrame(frameTimeNanos)?.let { fps = it }
             },
         )
@@ -183,8 +220,16 @@ fun SpaceScreen(onBack: () -> Unit) {
                 .padding(horizontal = 16.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(stringResource(R.string.space_title), color = Color.White, style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(R.string.spike_hint), color = Color(0xFFB4B8D6), style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = if (focused == SpaceBody.SUN) stringResource(R.string.space_title) else stringResource(focused.nameRes()),
+                color = Color.White,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = stringResource(if (focused == SpaceBody.SUN) R.string.space_hint_overview else R.string.space_hint_focused),
+                color = Color(0xFFB4B8D6),
+                style = MaterialTheme.typography.bodySmall,
+            )
             Text("FPS: $fps", color = Color(0xFF4ADE80), style = MaterialTheme.typography.labelLarge)
         }
     }
@@ -200,6 +245,12 @@ private class SolarSystemNodes(
 ) {
     val all: List<Node> = listOf(stars, sunlight) + orbits + bodies.values + saturnRing
 
+    private val bodyByNode: Map<Node, SpaceBody> = bodies.entries.associate { (body, node) -> node to body } +
+        (saturnRing to SpaceBody.SATURN)
+
+    /** Which body a tapped node belongs to (the ring counts as Saturn). */
+    fun bodyFor(node: Node?): SpaceBody? = node?.let(bodyByNode::get)
+
     fun update(seconds: Float) {
         bodies.forEach { (body, node) ->
             val p = body.positionAt(seconds)
@@ -212,13 +263,44 @@ private class SolarSystemNodes(
     }
 }
 
-/** Seconds since the first frame, from the renderer's frame clock. */
+/** Seconds since the first frame, and the time since the previous frame, from the frame clock. */
 private class SceneClock {
     private var start = 0L
+    private var last = 0L
+
+    /** The scene time of the most recent frame (used when handling taps between frames). */
+    var lastSeconds = 0f
+        private set
+
     fun seconds(frameTimeNanos: Long): Float {
         if (start == 0L) start = frameTimeNanos
-        return (frameTimeNanos - start) / 1_000_000_000f
+        lastSeconds = (frameTimeNanos - start) / 1_000_000_000f
+        return lastSeconds
     }
+
+    fun delta(frameTimeNanos: Long): Float {
+        val d = if (last == 0L) 0f else (frameTimeNanos - last) / 1_000_000_000f
+        last = frameTimeNanos
+        return d
+    }
+}
+
+/** Display name for each body (reuses the journey destination names where they exist). */
+private fun SpaceBody.nameRes(): Int = when (this) {
+    SpaceBody.SUN -> R.string.body_sun
+    SpaceBody.MERCURY -> R.string.body_mercury
+    SpaceBody.VENUS -> R.string.body_venus
+    SpaceBody.EARTH -> R.string.planet_earth
+    SpaceBody.MOON -> R.string.planet_moon
+    SpaceBody.MARS -> R.string.planet_mars
+    SpaceBody.CERES -> R.string.body_ceres
+    SpaceBody.JUPITER -> R.string.planet_jupiter
+    SpaceBody.EUROPA -> R.string.dest_europa
+    SpaceBody.SATURN -> R.string.planet_saturn
+    SpaceBody.TITAN -> R.string.dest_titan
+    SpaceBody.URANUS -> R.string.planet_uranus
+    SpaceBody.NEPTUNE -> R.string.planet_neptune
+    SpaceBody.PLUTO -> R.string.planet_pluto
 }
 
 /** Counts frames per one-second window; returns the FPS when a window completes. */

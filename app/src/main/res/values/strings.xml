@@ -35,7 +35,12 @@
     <!-- 3D solar system (preview) -->
     <string name="spike_menu">3D solar system (preview)</string>
     <string name="space_title">Solar system</string>
-    <string name="spike_hint">Drag to rotate 360° · pinch to zoom · two fingers to pan</string>
+    <string name="space_hint_overview">Tap a planet to fly to it · drag to rotate 360° · pinch to zoom</string>
+    <string name="space_hint_focused">Pinch to zoom · drag to rotate · double-tap to return to the Sun</string>
+    <string name="body_sun">Sun</string>
+    <string name="body_mercury">Mercury</string>
+    <string name="body_venus">Venus</string>
+    <string name="body_ceres">Ceres (Asteroid Belt)</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>

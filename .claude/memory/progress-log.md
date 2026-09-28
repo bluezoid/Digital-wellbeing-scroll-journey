@@ -362,3 +362,15 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Result on the realme (screenshot): Sun, orbit rings, Saturn + rings, Earth + Moon, Venus, Mars, Mercury, starfield at **58 FPS**. The INTERNET permission is still stripped.
 - Tests: **142 JVM** (+SolarSystemLayoutTest 6) and 18 on-device pass. The debug APK is 44 MB (all ABIs).
 - Pending: the user's check (rotate 360°, zoom limits, find all planets). Then **3D-3**: rocket + trail from RocketState, highlight reached/dim unreached, tap-a-planet card, deep-space star view past the Oort Cloud.
+
+## 2026-09-28: 3D-2 camera: tap a planet to fly to it and follow it
+
+- The user reported that pinch-zoom always zooms on the Sun (the fixed orbit target). Fix: a **focus camera**.
+  - `ui/space/OrbitCameraState.kt` (pure, 7 tests): yaw/pitch (pitch clamped ±85°), distance, target, desiredDistance; min/max per focus (Sun overview: min 7, desired 67, pitch 23; a planet: min = radius×1.8, desired = radius×6, at least 1.6; max 140); pan offset; `advance(dt, focusCentre)` eases (5/s) toward the moving focus.
+  - `ui/space/FocusOrbitManipulator.kt`: SceneView CameraManipulator → state (drag orbit, 2-finger pan, pinch zoom); `update()` is a no-op. The camera transform is set every frame from SpaceScreen.onFrame (SceneView only updates the manipulator after the first touch).
+  - Tap → `scene.bodyFor(node)` (3D hit; the ring counts as Saturn) **or** `SpacePicking.pick` (screen-space: projects bodies with `cameraNode.worldToView`, touch radius max(36dp, drawn radius + 16dp)) → focusOn(body). Double-tap → Sun overview. The bottom card shows the body name + a hint.
+  - The starfield and orbit nodes have `isHittable = false` (the camera is inside the starfield sphere).
+  - ClampedOrbitManipulator removed.
+- **Bug found:** SceneView's `lookAt(eye, target)` passes `target - eye` into kotlin-math `lookAt`, which subtracts eye again, so it's only correct when the target is the origin. Use kotlin-math `lookTowards(eye, target - eye, up)`. Recorded in research-notes.
+- Verified on the phone via adb taps (live positions logged, then logs removed): tapping Earth flies the camera to Earth and follows it (58 FPS).
+- Tests: **154 JVM** (+OrbitCameraState 7, SpacePicking 5) and 18 on-device pass.
