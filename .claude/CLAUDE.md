@@ -18,10 +18,10 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phase:** 11 (Settings). The code is done, committed and builds; 133 unit tests pass. **Not yet installed**: the phone shows `unauthorized` in adb (the user must accept the USB-debugging prompt). Phase 10's overnight check is also pending on the same.
-- **Last done (2026-09-28, session 3):** the Settings screen (apps, limit, Usage Access/background status, reset journey with confirmation keeping history, privacy, version); the ⋮ menu is now History + Settings.
-- **Next:** once authorized → the morning check (27 Sep finalized, worker log), install, on-device tests, the user checks Settings → then present the **3D plan (12b)** → Phase 12 validation.
-- **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, and the schema-bump gotcha.
+- **Phase:** 11 (Settings), installed on the phone; 133 unit + 18 on-device tests pass. **Waiting on the user's check of the Settings screen.** Phase 10 ✅ (the worker ran by itself at 00:30 on 2026-09-28).
+- **Last done (2026-09-28, session 3):** overnight verification (27 Sep finalized YELLOW, fuel 0 applied once, rocket at Earth), Phase 11 installed.
+- **Next:** the user confirms Settings → present the **3D solar system plan (12b)** for approval (no 3D code before approval) → Phase 12 validation (7–14 days).
+- **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, the schema-bump gotcha, and how to prove worker runs (workdb period_count).
 
 ## Memory index: read on demand
 

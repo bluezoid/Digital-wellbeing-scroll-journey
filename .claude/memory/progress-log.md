@@ -297,3 +297,15 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
   1. The morning check from the resume checklist (27 Sep finalized YELLOW, 0 fuel badge, worker log).
   2. installDebug + run the on-device tests (manual am instrument).
   3. The user checks the Settings screen.
+
+## 2026-09-28: Overnight check ✅ + Phase 11 installed (session 3)
+
+- USB debugging re-authorized after about 5 min (the prompt had been suppressed; adb reconnect and kill-server restarts plus the user's phone-side steps fixed it).
+- **Phase 10 verified in real life:** WorkManager's DB (`no_backup/androidx.work.workdb`, table workspec) shows DailyUsageWorker `period_count = 1` and `last_enqueue_time = 2026-09-28 00:30:16`, so **the periodic job ran by itself at 00:30**, about 9 h before the user opened the app (09:25, from `dumpsys usagestats`).
+  - Tip: read `period_count` from that DB to prove periodic runs; the worker's logcat lines get rotated away.
+- Data after the night:
+  - 27 Sep: 144 min, YELLOW (limit 120; ≤150), finalized, **fuelApplied = 1, fuelDelta 0**.
+  - Rocket: 0 fuel, EARTH, journeyDistance 14 400 cm (27 Sep's 144 m added), journey start 2026-09-27.
+  - 28 Sep live: 12 min, GREEN so far.
+- Phase 11 installed. **18/18 on-device tests pass**, including the reset test. App data intact.
+- Pending: the user checks the Settings screen (reset dialog; background/usage status rows).
