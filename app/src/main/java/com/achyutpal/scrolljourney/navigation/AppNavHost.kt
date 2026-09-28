@@ -26,7 +26,7 @@ object Routes {
     const val DASHBOARD = "dashboard"
     const val HISTORY = "history"
     const val SETTINGS = "settings"
-    const val SPACE = "space" // 3D solar system (preview until 3D-4 puts it on the dashboard)
+    const val SPACE = "space" // full-screen 3D Explore, opened from the dashboard hero
 
     // Picker and limit are used both in onboarding (default) and from the dashboard (onboarding=false).
     const val APP_PICKER = "app_picker?$ARG_ONBOARDING={$ARG_ONBOARDING}"
@@ -96,7 +96,7 @@ fun AppNavHost(startDestination: String, debugRoute: String? = null) {
             DashboardScreen(
                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
-                onOpen3dTest = { navController.navigate(Routes.SPACE) },
+                onOpenJourney = { navController.navigate(Routes.SPACE) },
             )
         }
         composable(Routes.HISTORY) {

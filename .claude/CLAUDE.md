@@ -19,8 +19,8 @@ It is the entry point to the project's memory. **Read it first, then open only t
 ## Current status (update this every session)
 
 - **Phases 0–11 ✅.** Phase 12 validation 🔄 since 2026-09-28. The new 18-stop route is live.
-- **3D: 3D-1 ✅, 3D-2 ✅, 3D-3 ✅ (2026-09-28, the user verified the "mission control" restyle + review fixes).** Next: 3D-4, plan proposed, **waiting for the user's "go"**.
-- **Next:** 3D-4 integration (3D as the dashboard hero + fullscreen Explore, 2D fallback, credits in Settings (Solar System Scope CC BY 4.0, Kenney CC0), remove the FPS label/preview menu, pause rendering when not visible).
+- **3D: 3D-1 ✅, 3D-2 ✅, 3D-3 ✅, 3D-4 built (2026-09-28):** the dashboard hero (watch-only live 3D, tap → Explore), 2D fallback (low-RAM / GLES < 3 / Settings switch / scene build failure), drawing paused off-screen, SceneView keep-screen-on bug fixed, credits in Settings, DB v5. **Waiting on the user's phone check.**
+- **Next:** after the user's 3D-4 check → 3D (12b) done; continue Phase 12 real-use validation (reboot, missed day, 23:59→00:01, uninstall/reinstall), then the Later items in roadmap.md.
 - Debug: `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space [--ei debug_fuel N]`.
 - **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, the schema-bump gotcha, and how to prove worker runs (workdb period_count).
 
@@ -57,23 +57,24 @@ navigate_scrolling/
     │   ├─ MainActivity.kt       picks the start route, hosts navigation
     │   ├─ di/AppContainer.kt    manual DI
     │   ├─ domain/model/{UsageAccessState, InstalledApp, SelectedApp}.kt
-    │   ├─ domain/calculator/{AppSelectionRules, LimitEvaluator, DailyLimitRules, DistanceConfig, DistanceCalculator, DistanceComparisons, RocketProgressCalculator, StreakCalculator}.kt
+    │   ├─ domain/calculator/{AppSelectionRules, LimitEvaluator, DailyLimitRules, DistanceConfig, DistanceCalculator, DistanceComparisons, RocketProgressCalculator, StreakCalculator, JourneyViewRules}.kt, domain/model/GraphicsCapability.kt
     │   ├─ domain/repository/{UsageAccessRepository, AppRepository}.kt
     │   ├─ domain/model/{UsageEvent, DailyUsageSummary}.kt, domain/calculator/UsageCalculator.kt
     │   ├─ domain/usecase/{SyncUsageHistoryUseCase, ApplyJourneyFuelUseCase, TodayUsageResult}.kt
     │   ├─ domain/repository/{Usage,History,Settings,Journey}Repository.kt, domain/model/{DayStatus,Destination,RocketState,UserSettings,DailyRecord,ForegroundUsage}.kt
     │   ├─ data/usage/{AndroidUsageAccessRepository, UsageDataSource, AndroidUsageRepository}.kt
-    │   ├─ data/local/ScrollJourneyDatabase.kt (v4)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
+    │   ├─ data/local/ScrollJourneyDatabase.kt (v5)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
     │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt, data/journey/RoomJourneyRepository.kt
     │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
     │   ├─ data/system/AndroidDeviceStatusRepository.kt, domain/repository/DeviceStatusRepository.kt
     │   ├─ util/UsageAccessSettings.kt (+ openAppDetailsSettings)
-    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, dashboard, history, settings
+    │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, dashboard, history, settings, space (Explore)
     │   └─ ui/{theme (+StatusColors), startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
     │          apppicker/*, dailylimit/*, dashboard/{DashboardScreen, DashboardViewModel, DashboardUiState(+Builder)},
     │          history/{HistoryScreen, HistoryViewModel, MonthCalendar}, settings/{SettingsScreen, SettingsViewModel}, journey/RocketJourneyView, common/{DurationFormat, DistanceFormat, DestinationUi, BackTopBar, StatusUi, ComparisonUi}}
-    │   ├─ ui/space/{SpaceScreen, SolarSystemScene, SolarSystemLayout, JourneyMap, JourneyStatus, RocketModel,
-    │   │           SpaceGeometry, OrbitCameraState, FocusOrbitManipulator, SpacePicking, SpaceViewModel}.kt  (3D)
+    │   ├─ ui/space/{SpaceScreen (Explore), JourneyHero (dashboard hero), HeroCamera, SceneLifecycle, SceneClock, SolarSystemScene,
+    │   │           SolarSystemLayout, JourneyMap, JourneyStatus, RocketModel, SpaceGeometry, OrbitCameraState,
+    │   │           FocusOrbitManipulator, SpacePicking, SpaceViewModel}.kt  (3D)
     │   └─ worker/{DailyUsageWorker, DailySyncScheduler, DailySyncPolicy}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/

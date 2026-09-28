@@ -33,7 +33,8 @@
     <string name="action_cancel">Cancel</string>
 
     <!-- 3D solar system (preview) -->
-    <string name="spike_menu">3D solar system (preview)</string>
+    <string name="hero_explore">Explore ↗</string>
+    <string name="hero_explore_description">Open the 3D solar system</string>
     <string name="space_title">Solar system</string>
     <string name="space_hint_overview">Tap a planet to fly to it · drag to rotate 360° · pinch to zoom</string>
     <string name="space_hint_focused">Pinch to zoom · drag to rotate · double-tap to return to the Sun</string>
@@ -76,6 +77,15 @@
     <string name="settings_reset_confirm_body">Your rocket goes back to Earth with 0 fuel and the journey restarts today. Your daily history, colours and minutes are not deleted. This can\'t be undone.</string>
     <string name="settings_reset_confirm_action">Reset</string>
     <string name="settings_reset_done">Journey reset. The rocket is back on Earth.</string>
+    <string name="settings_section_view">Journey view</string>
+    <string name="settings_journey_3d">3D solar system</string>
+    <string name="settings_journey_3d_on">Live 3D journey on the home screen</string>
+    <string name="settings_journey_3d_off">Simple 2D card (uses less battery)</string>
+    <string name="settings_journey_3d_unsupported">This phone shows the 2D card: the 3D view needs more memory or newer graphics</string>
+    <string name="settings_section_credits">About &amp; credits</string>
+    <string name="settings_credits_textures">Planet, Sun, ring and star textures: Solar System Scope (solarsystemscope.com), licensed CC BY 4.0. Resized for the app; Ceres and Pluto use stylised stand-in textures.</string>
+    <string name="settings_credits_rocket">Rocket model: Kenney “Space Kit” (kenney.nl), CC0 public domain.</string>
+    <string name="settings_credits_engine">3D rendering: SceneView and Google Filament, Apache License 2.0.</string>
     <string name="settings_section_privacy">Privacy</string>
     <string name="settings_privacy_body">Everything stays on this phone. Scroll Journey only reads how many minutes the apps you choose were open, using Android\'s Usage Access. It never sees what you do inside them, has no account, no server, no ads and no location. Uninstalling the app deletes all of its data.</string>
     <string name="settings_version">Scroll Journey %1$s</string>

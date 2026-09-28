@@ -3,6 +3,7 @@ package com.achyutpal.scrolljourney.ui.dashboard
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DayStatus
 import com.achyutpal.scrolljourney.domain.model.Destination
+import com.achyutpal.scrolljourney.domain.model.GraphicsCapability
 import com.achyutpal.scrolljourney.domain.model.SelectedApp
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.domain.model.UserSettings
@@ -62,7 +63,7 @@ class DashboardViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.viewModel(): DashboardViewModel {
+    private fun TestScope.viewModel(graphics: GraphicsCapability = GraphicsCapability()): DashboardViewModel {
         val sync = SyncUsageHistoryUseCase(
             usageAccessRepository = access,
             appRepository = apps,
@@ -73,7 +74,7 @@ class DashboardViewModelTest {
             now = { now },
             zone = { zone },
         )
-        return DashboardViewModel(sync, history, settings, today = { today }, clock = { 99L }).also { vm ->
+        return DashboardViewModel(sync, history, settings, graphics, today = { today }, clock = { 99L }).also { vm ->
             // Keep the WhileSubscribed flow active; the unconfined dispatcher makes collection run immediately.
             backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
         }
@@ -130,5 +131,21 @@ class DashboardViewModelTest {
         vm.refresh()
         assertTrue(vm.uiState.value.accessDenied)
         assertEquals(null, vm.uiState.value.today)
+    }
+
+    @Test
+    fun `3D hero on a capable phone with the switch on`() = runTest {
+        assertEquals(true, viewModel().uiState.value.show3d)
+    }
+
+    @Test
+    fun `2D card when the Settings switch is off`() = runTest {
+        settings.state.value = settings.state.value.copy(journey3dEnabled = false)
+        assertEquals(false, viewModel().uiState.value.show3d)
+    }
+
+    @Test
+    fun `2D card on a low-RAM phone`() = runTest {
+        assertEquals(false, viewModel(GraphicsCapability(isLowRamDevice = true)).uiState.value.show3d)
     }
 }

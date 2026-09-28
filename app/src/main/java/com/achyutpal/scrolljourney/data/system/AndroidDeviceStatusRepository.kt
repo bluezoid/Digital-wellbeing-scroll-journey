@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
 import android.os.PowerManager
+import com.achyutpal.scrolljourney.domain.model.GraphicsCapability
 import com.achyutpal.scrolljourney.domain.repository.DeviceStatusRepository
 
 class AndroidDeviceStatusRepository(
@@ -18,6 +19,15 @@ class AndroidDeviceStatusRepository(
     override fun isIgnoringBatteryOptimizations(): Boolean =
         (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
             .isIgnoringBatteryOptimizations(context.packageName)
+
+    /** Read once: neither value can change while the app runs. */
+    override val graphicsCapability: GraphicsCapability by lazy {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        GraphicsCapability(
+            isLowRamDevice = activityManager.isLowRamDevice,
+            glEsVersion = activityManager.deviceConfigurationInfo.reqGlEsVersion,
+        )
+    }
 
     override val appVersionName: String =
         context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "?"

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.achyutpal.scrolljourney.ScrollJourneyApp
+import com.achyutpal.scrolljourney.domain.calculator.JourneyViewRules
 import com.achyutpal.scrolljourney.domain.model.RocketState
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.domain.model.UserSettings
@@ -35,6 +36,9 @@ data class SettingsUiState(
     val rocket: RocketState = RocketState(),
     val journeyStartDate: LocalDate? = null,
     val versionName: String = "",
+    val journey3dEnabled: Boolean = true,
+    /** False on phones that can't run the 3D scene: the switch is shown disabled. */
+    val device3dSupported: Boolean = true,
     val showResetConfirm: Boolean = false,
     val resetDone: Boolean = false,
 )
@@ -66,6 +70,8 @@ class SettingsViewModel(
             rocket = settings.rocket,
             journeyStartDate = settings.journeyStartDate,
             versionName = deviceStatusRepository.appVersionName,
+            journey3dEnabled = settings.journey3dEnabled,
+            device3dSupported = JourneyViewRules.deviceSupports3d(deviceStatusRepository.graphicsCapability),
             showResetConfirm = dialog.showResetConfirm,
             resetDone = dialog.resetDone,
         )
@@ -78,6 +84,10 @@ class SettingsViewModel(
             backgroundRestricted = deviceStatusRepository.isBackgroundRestricted(),
             ignoringBatteryOptimizations = deviceStatusRepository.isIgnoringBatteryOptimizations(),
         )
+    }
+
+    fun onJourney3dChanged(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setJourney3dEnabled(enabled) }
     }
 
     fun onResetClick() = dialogs.update { it.copy(showResetConfirm = true, resetDone = false) }

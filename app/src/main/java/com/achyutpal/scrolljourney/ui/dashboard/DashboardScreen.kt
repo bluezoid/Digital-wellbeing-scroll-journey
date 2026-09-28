@@ -34,9 +34,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -60,6 +63,8 @@ import com.achyutpal.scrolljourney.ui.common.comparisonText
 import com.achyutpal.scrolljourney.ui.common.formatDistance
 import com.achyutpal.scrolljourney.ui.common.formatMinutes
 import com.achyutpal.scrolljourney.ui.journey.RocketJourneyView
+import com.achyutpal.scrolljourney.ui.space.JourneyHero
+import com.achyutpal.scrolljourney.ui.space.JourneyHeroPlaceholder
 import com.achyutpal.scrolljourney.ui.theme.ScrollJourneyTheme
 import com.achyutpal.scrolljourney.ui.theme.color
 import com.achyutpal.scrolljourney.util.openUsageAccessSettings
@@ -74,7 +79,7 @@ import java.util.Locale
 fun DashboardScreen(
     onOpenHistory: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpen3dTest: () -> Unit,
+    onOpenJourney: () -> Unit,
     viewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -91,7 +96,7 @@ fun DashboardScreen(
         onOpenUsageAccess = { context.openUsageAccessSettings() },
         onOpenHistory = onOpenHistory,
         onOpenSettings = onOpenSettings,
-        onOpen3dTest = onOpen3dTest,
+        onOpenJourney = onOpenJourney,
     )
 }
 
@@ -103,9 +108,11 @@ private fun DashboardContent(
     onOpenUsageAccess: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpen3dTest: () -> Unit = {},
+    onOpenJourney: () -> Unit = {},
 ) {
     var menuOpen by remember { mutableStateOf(false) }
+    var heroFailed by rememberSaveable { mutableStateOf(false) }
+    var heroOnScreen by remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -128,10 +135,6 @@ private fun DashboardContent(
                             text = { Text(stringResource(R.string.settings_title)) },
                             onClick = { menuOpen = false; onOpenSettings() },
                         )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.spike_menu)) },
-                            onClick = { menuOpen = false; onOpen3dTest() },
-                        )
                     }
                 },
             )
@@ -153,7 +156,19 @@ private fun DashboardContent(
                 Text(stringResource(R.string.home_usage_error, it), color = MaterialTheme.colorScheme.error)
             }
 
-            RocketJourneyView(rocket = state.rocket, journeyStartDate = state.journeyStartDate)
+            // 3D hero when the phone and the Settings switch allow it; the flat card otherwise
+            // (or if the 3D scene fails to build). Drawing pauses while the hero is scrolled away.
+            when {
+                state.show3d == null -> JourneyHeroPlaceholder()
+                state.show3d && !heroFailed -> JourneyHero(
+                    rocket = state.rocket,
+                    active = heroOnScreen,
+                    onExplore = onOpenJourney,
+                    onFailed = { heroFailed = true },
+                    modifier = Modifier.onGloballyPositioned { heroOnScreen = it.boundsInWindow().height > 0f },
+                )
+                else -> RocketJourneyView(rocket = state.rocket, journeyStartDate = state.journeyStartDate)
+            }
 
             state.today?.let { today ->
                 TodayCard(today, state.limitMinutes, state.status)

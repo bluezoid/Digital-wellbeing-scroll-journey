@@ -24,7 +24,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -68,6 +67,8 @@ import kotlin.math.roundToInt
  * 3D solar system + the user's journey. Drag = orbit 360°, pinch = zoom, two fingers = pan.
  * Tap a planet / star = fly to it (card shows its journey status); double-tap = back to the Sun;
  * "Find my rocket" = fly to the rocket.
+ *
+ * Opened by tapping the dashboard's 3D hero ("Explore").
  *
  * Debug: adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space [--ei debug_fuel 140]
  */
@@ -156,8 +157,6 @@ fun SpaceScreen(
             ?.first?.focus
     }
 
-    var fps by remember { mutableIntStateOf(0) }
-    val frameStats = remember { FrameStats() }
     var labels by remember { mutableStateOf(emptyList<LabelSpot>()) }
     val labelGapPx = with(density) { 30.dp.toPx() }
 
@@ -215,6 +214,8 @@ fun SpaceScreen(
             cameraNode = cameraNode,
             cameraManipulator = cameraManipulator,
             childNodes = rememberNodes { addAll(scene.all) },
+            // SceneView keeps the screen awake for its activity and never undoes it; with no activity it skips that.
+            activity = null,
             onGestureListener = rememberOnGestureListener(
                 // Try the 3D hit first, then fall back to screen-space picking (small far objects).
                 onSingleTapConfirmed = { e, node -> (scene.focusFor(node) ?: focusAt(e.x, e.y))?.let(::focusOn) },
@@ -227,7 +228,6 @@ fun SpaceScreen(
                 camera.advance(clock.delta(frameTimeNanos), focusCentre(t, rocketState))
                 cameraNode.transform = FocusOrbitManipulator.cameraTransform(camera)
                 labels = computeLabels(t, rocketState)
-                frameStats.onFrame(frameTimeNanos)?.let { fps = it }
             },
         )
 
@@ -241,7 +241,6 @@ fun SpaceScreen(
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = Color.White)
             }
-            Text("FPS $fps", color = Color(0x994ADE80), style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(end = 12.dp))
         }
 
         FocusCard(
@@ -400,28 +399,6 @@ private fun rocketLine(rocket: RocketState): String {
     )
 }
 
-/** Seconds since the first frame, and the time since the previous frame, from the frame clock. */
-private class SceneClock {
-    private var start = 0L
-    private var last = 0L
-
-    /** The scene time of the most recent frame (used when handling taps between frames). */
-    var lastSeconds = 0f
-        private set
-
-    fun seconds(frameTimeNanos: Long): Float {
-        if (start == 0L) start = frameTimeNanos
-        lastSeconds = (frameTimeNanos - start) / 1_000_000_000f
-        return lastSeconds
-    }
-
-    fun delta(frameTimeNanos: Long): Float {
-        val d = if (last == 0L) 0f else (frameTimeNanos - last) / 1_000_000_000f
-        last = frameTimeNanos
-        return d
-    }
-}
-
 /** Display name for each body (reuses the journey destination names where they exist). */
 private fun SpaceBody.nameRes(): Int = when (this) {
     SpaceBody.SUN -> R.string.body_sun
@@ -438,21 +415,4 @@ private fun SpaceBody.nameRes(): Int = when (this) {
     SpaceBody.URANUS -> R.string.planet_uranus
     SpaceBody.NEPTUNE -> R.string.planet_neptune
     SpaceBody.PLUTO -> R.string.planet_pluto
-}
-
-/** Counts frames per one-second window; returns the FPS when a window completes. */
-private class FrameStats {
-    private var windowStart = 0L
-    private var frames = 0
-
-    fun onFrame(nowNanos: Long): Int? {
-        if (windowStart == 0L) windowStart = nowNanos
-        frames++
-        val elapsed = nowNanos - windowStart
-        if (elapsed < 1_000_000_000L) return null
-        val result = (frames * 1_000_000_000L / elapsed).toInt()
-        windowStart = nowNanos
-        frames = 0
-        return result
-    }
 }

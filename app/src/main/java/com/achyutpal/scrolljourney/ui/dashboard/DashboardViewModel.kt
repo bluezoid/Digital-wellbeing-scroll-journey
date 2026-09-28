@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.achyutpal.scrolljourney.ScrollJourneyApp
+import com.achyutpal.scrolljourney.domain.model.GraphicsCapability
 import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
 import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import com.achyutpal.scrolljourney.domain.usecase.SyncUsageHistoryUseCase
@@ -30,6 +31,7 @@ class DashboardViewModel(
     private val syncUsageHistory: SyncUsageHistoryUseCase,
     historyRepository: HistoryRepository,
     settingsRepository: SettingsRepository,
+    private val graphics: GraphicsCapability = GraphicsCapability(),
     private val today: () -> LocalDate = LocalDate::now,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
@@ -54,6 +56,7 @@ class DashboardViewModel(
             records = records,
             today = today(),
             updatedAtMillis = sync.updatedAtMillis,
+            device = graphics,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DashboardUiState())
 
@@ -76,6 +79,7 @@ class DashboardViewModel(
                     container.syncUsageHistoryUseCase,
                     container.historyRepository,
                     container.settingsRepository,
+                    container.deviceStatusRepository.graphicsCapability,
                 )
             }
         }

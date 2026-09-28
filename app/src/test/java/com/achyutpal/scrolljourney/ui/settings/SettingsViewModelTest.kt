@@ -3,6 +3,7 @@ package com.achyutpal.scrolljourney.ui.settings
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DayStatus
 import com.achyutpal.scrolljourney.domain.model.Destination
+import com.achyutpal.scrolljourney.domain.model.GraphicsCapability
 import com.achyutpal.scrolljourney.domain.model.SelectedApp
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.domain.model.UserSettings
@@ -124,5 +125,25 @@ class SettingsViewModelTest {
         viewModel().apply { onResetClick(); onResetConfirm() }
 
         assertEquals(day, history.records[today.minusDays(1)])
+    }
+
+    @Test
+    fun `3D switch is on by default and saves when toggled`() = runTest {
+        val vm = viewModel()
+        assertTrue(vm.uiState.value.journey3dEnabled)
+        assertTrue(vm.uiState.value.device3dSupported)
+
+        vm.onJourney3dChanged(false)
+
+        assertFalse(settings.state.value.journey3dEnabled)
+        assertFalse(vm.uiState.value.journey3dEnabled)
+    }
+
+    @Test
+    fun `phones that can't run 3D show the switch as unsupported`() = runTest {
+        val lowRam = FakeDeviceStatusRepository(graphicsCapability = GraphicsCapability(isLowRamDevice = true))
+        val vm = SettingsViewModel(settings, apps, access, lowRam, today = { today })
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
+        assertFalse(vm.uiState.value.device3dSupported)
     }
 }

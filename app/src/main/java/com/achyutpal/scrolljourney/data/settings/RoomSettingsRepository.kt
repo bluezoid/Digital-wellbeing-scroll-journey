@@ -46,6 +46,11 @@ class RoomSettingsRepository(
         dao.setDailyLimit(minutes)
     }
 
+    override suspend fun setJourney3dEnabled(enabled: Boolean) {
+        ensureRow()
+        dao.setJourney3dEnabled(enabled)
+    }
+
     override suspend fun resetJourney(journeyStart: LocalDate) {
         ensureRow()
         dao.resetJourney(journeyStart.toString())

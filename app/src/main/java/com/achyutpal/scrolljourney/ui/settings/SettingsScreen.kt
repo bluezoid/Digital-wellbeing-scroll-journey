@@ -1,6 +1,7 @@
 package com.achyutpal.scrolljourney.ui.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -25,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -38,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -81,6 +84,7 @@ fun SettingsScreen(
         onOpenUsageAccess = { context.openUsageAccessSettings() },
         onOpenAppSettings = { context.openAppDetailsSettings() },
         onResetClick = viewModel::onResetClick,
+        onJourney3dChanged = viewModel::onJourney3dChanged,
         onResetConfirm = viewModel::onResetConfirm,
         onResetDismiss = viewModel::onResetDismiss,
     )
@@ -98,6 +102,7 @@ private fun SettingsContent(
     onResetClick: () -> Unit,
     onResetConfirm: () -> Unit,
     onResetDismiss: () -> Unit,
+    onJourney3dChanged: (Boolean) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -181,6 +186,23 @@ private fun SettingsContent(
                 }
             }
 
+            Section(stringResource(R.string.settings_section_view)) {
+                val on = state.journey3dEnabled && state.device3dSupported
+                SwitchRow(
+                    title = stringResource(R.string.settings_journey_3d),
+                    subtitle = stringResource(
+                        when {
+                            !state.device3dSupported -> R.string.settings_journey_3d_unsupported
+                            on -> R.string.settings_journey_3d_on
+                            else -> R.string.settings_journey_3d_off
+                        },
+                    ),
+                    checked = on,
+                    enabled = state.device3dSupported,
+                    onCheckedChange = onJourney3dChanged,
+                )
+            }
+
             Section(stringResource(R.string.settings_section_privacy)) {
                 Text(
                     text = stringResource(R.string.settings_privacy_body),
@@ -188,6 +210,18 @@ private fun SettingsContent(
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(vertical = 8.dp),
                 )
+            }
+
+            Section(stringResource(R.string.settings_section_credits)) {
+                listOf(R.string.settings_credits_textures, R.string.settings_credits_rocket, R.string.settings_credits_engine)
+                    .forEach { credit ->
+                        Text(
+                            text = stringResource(credit),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(vertical = 6.dp),
+                        )
+                    }
             }
 
             Text(
@@ -287,6 +321,32 @@ private fun SettingRow(
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+    }
+}
+
+/** A setting with an on/off switch; the whole row toggles it. */
+@Composable
+private fun SwitchRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    enabled: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = checked, enabled = enabled, role = Role.Switch, onValueChange = onCheckedChange)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Spacer(Modifier.width(8.dp))
+        // onCheckedChange = null: the row handles the toggle, so the switch and the row act as one control.
+        Switch(checked = checked, onCheckedChange = null, enabled = enabled)
     }
 }
 

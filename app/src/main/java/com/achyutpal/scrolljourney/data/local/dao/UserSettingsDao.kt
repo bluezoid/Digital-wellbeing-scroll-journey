@@ -39,6 +39,9 @@ interface UserSettingsDao {
     @Query("UPDATE user_settings SET dailyLimitMinutes = :minutes WHERE id = 1")
     suspend fun setDailyLimit(minutes: Int)
 
+    @Query("UPDATE user_settings SET journey3dEnabled = :enabled WHERE id = 1")
+    suspend fun setJourney3dEnabled(enabled: Boolean)
+
     @Query(
         "UPDATE user_settings SET currentFuel = 0, lifetimeFuel = 0, highestReachedPlanet = 'EARTH', " +
             "journeyDistance = 0, journeyStartDate = :journeyStart WHERE id = 1",

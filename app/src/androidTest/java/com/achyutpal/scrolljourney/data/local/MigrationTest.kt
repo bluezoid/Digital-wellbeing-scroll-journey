@@ -120,6 +120,28 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun migrate4To5_addsJourney3dSwitchOnWithoutTouchingData() {
+        helper.createDatabase(TEST_DB, 4).apply {
+            execSQL(
+                "INSERT INTO user_settings (id, dailyLimitMinutes, onboardingComplete, currentFuel, lifetimeFuel, " +
+                    "highestReachedPlanet, journeyDistance, journeyStartDate) VALUES (1, 90, 1, 4, 4, 'MOON', 900, '2026-09-27')",
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(TEST_DB, 5, true)
+
+        db.query("SELECT dailyLimitMinutes, currentFuel, highestReachedPlanet, journeyStartDate, journey3dEnabled FROM user_settings").use {
+            it.moveToFirst()
+            assertEquals(90, it.getInt(0))
+            assertEquals(4, it.getInt(1))
+            assertEquals("MOON", it.getString(2))
+            assertEquals("2026-09-27", it.getString(3))
+            assertEquals(1, it.getInt(4)) // existing users get 3D on
+        }
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }

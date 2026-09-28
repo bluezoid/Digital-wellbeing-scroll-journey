@@ -1,5 +1,7 @@
 package com.achyutpal.scrolljourney.domain.repository
 
+import com.achyutpal.scrolljourney.domain.model.GraphicsCapability
+
 /**
  * Whether the phone lets the app work in the background. Some manufacturers (realme, Xiaomi, …)
  * freeze background apps aggressively, which delays the daily sync job.
@@ -12,4 +14,7 @@ interface DeviceStatusRepository {
     fun isIgnoringBatteryOptimizations(): Boolean
 
     val appVersionName: String
+
+    /** Low-RAM flag and OpenGL ES version: decides whether the 3D journey can run here. */
+    val graphicsCapability: GraphicsCapability
 }

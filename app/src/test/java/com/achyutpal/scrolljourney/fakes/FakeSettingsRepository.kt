@@ -34,6 +34,10 @@ class FakeSettingsRepository(initial: UserSettings = UserSettings()) : SettingsR
         )
     }
 
+    override suspend fun setJourney3dEnabled(enabled: Boolean) {
+        state.value = state.value.copy(journey3dEnabled = enabled)
+    }
+
     override suspend fun setDailyLimit(minutes: Int) {
         require(DailyLimitRules.isValid(minutes))
         state.value = state.value.copy(dailyLimitMinutes = minutes)

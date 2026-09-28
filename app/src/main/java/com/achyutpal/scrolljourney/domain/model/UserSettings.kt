@@ -13,6 +13,8 @@ data class UserSettings(
     val journeyDistance: Long = 0,
     /** First day that counts for fuel. Days before it (e.g. backfilled history) never give fuel. */
     val journeyStartDate: LocalDate? = null,
+    /** Show the journey as the live 3D scene (true) or the flat 2D card (false). */
+    val journey3dEnabled: Boolean = true,
 ) {
     val rocket: RocketState get() = RocketState(currentFuel, lifetimeFuel, highestReachedPlanet)
 

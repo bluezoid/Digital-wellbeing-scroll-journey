@@ -1,5 +1,7 @@
 package com.achyutpal.scrolljourney.ui.dashboard
 
+import com.achyutpal.scrolljourney.domain.calculator.JourneyViewRules
+import com.achyutpal.scrolljourney.domain.model.GraphicsCapability
 import com.achyutpal.scrolljourney.domain.calculator.StreakCalculator
 import com.achyutpal.scrolljourney.domain.model.DailyRecord
 import com.achyutpal.scrolljourney.domain.model.DailyUsageSummary
@@ -29,6 +31,8 @@ data class DashboardUiState(
     val currentStreak: Int = 0,
     val week: List<WeekDay> = emptyList(),
     val updatedAtMillis: Long? = null,
+    /** Live 3D journey hero (true) or the flat 2D card (false); null until the settings have loaded. */
+    val show3d: Boolean? = null,
 )
 
 /** Pure mapping from the three data sources to [DashboardUiState]; unit-tested without Android. */
@@ -41,6 +45,7 @@ object DashboardStateBuilder {
         records: List<DailyRecord>,
         today: LocalDate,
         updatedAtMillis: Long?,
+        device: GraphicsCapability = GraphicsCapability(),
     ): DashboardUiState {
         val success = result as? TodayUsageResult.Success
         val statusByDate = records.associate { it.date to it.status }
@@ -63,6 +68,7 @@ object DashboardStateBuilder {
             currentStreak = streak.current,
             week = week,
             updatedAtMillis = updatedAtMillis,
+            show3d = settings != null && JourneyViewRules.use3d(settings.journey3dEnabled, device),
         )
     }
 }

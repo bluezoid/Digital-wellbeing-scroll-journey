@@ -22,6 +22,7 @@ import com.achyutpal.scrolljourney.data.local.entity.UserSettingsEntity
  * - v2: + daily_usage, daily_app_usage, user_settings
  * - v3: + daily_usage.limitMinutes (the limit each day's colour was judged against)
  * - v4: + daily_usage.fuelApplied, user_settings.journeyStartDate (rocket engine)
+ * - v5: + user_settings.journey3dEnabled (3D / 2D journey view switch, default on)
  *
  * Upgrades use migrations, never a destructive wipe. Room generates "auto migrations"
  * for simple changes like new tables by comparing the two schema JSON files.
@@ -33,7 +34,7 @@ import com.achyutpal.scrolljourney.data.local.entity.UserSettingsEntity
         DailyAppUsageEntity::class,
         UserSettingsEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = ScrollJourneyDatabase.Migration1To2::class),
@@ -41,6 +42,7 @@ import com.achyutpal.scrolljourney.data.local.entity.UserSettingsEntity
         // New columns only (with defaults / nullable), so no spec is needed. The journey start
         // date of existing users is filled on their next sync, see SyncUsageHistoryUseCase.
         AutoMigration(from = 3, to = 4),
+        AutoMigration(from = 4, to = 5), // one new column with a default
     ],
 )
 abstract class ScrollJourneyDatabase : RoomDatabase() {
