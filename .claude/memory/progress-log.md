@@ -374,3 +374,4 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - **Bug found:** SceneView's `lookAt(eye, target)` passes `target - eye` into kotlin-math `lookAt`, which subtracts eye again, so it's only correct when the target is the origin. Use kotlin-math `lookTowards(eye, target - eye, up)`. Recorded in research-notes.
 - Verified on the phone via adb taps (live positions logged, then logs removed): tapping Earth flies the camera to Earth and follows it (58 FPS).
 - Tests: **154 JVM** (+OrbitCameraState 7, SpacePicking 5) and 18 on-device pass.
+- 2026-09-28: The user confirmed the tap-to-focus camera feels correct and asked about the Sun-centric orbit feel. Explained it's by design (focus-orbit); the user is fine keeping it. **3D-2 ✅.** Next: 3D-3.

@@ -4,6 +4,7 @@ Newest first. Don't re-open a settled decision unless the user asks. Record reve
 
 | Date | Decision | Why | Status |
 |---|---|---|---|
+| 2026-09-28 | 3D camera stays **focus-orbit** (orbits the Sun by default, or the tapped planet; 2-finger pan shifts the centre), not free-fly | The user asked and accepted: can't get lost, standard for planetarium apps. Free-fly could be an optional toggle later | Final |
 | 2026-09-28 | **3D plan APPROVED by the user**: SceneView 2.3.0 (Filament), Solar System Scope (CC BY 4.0) + NASA (PD) textures, rocket built from primitives, stylised scale, steps 3D-1 spike → 3D-2 solar system → 3D-3 journey → 3D-4 integration with 2D fallback, about +10–15 MB | The user approved the recommendations | Final |
 | 2026-09-28 | Show Mercury and Venus as scenery (not journey stops) | The user wants the whole solar system visible | Final |
 | 2026-09-28 | Start Phase 12 real-use validation in parallel with the 3D work (from 2026-09-28) | 3D is presentation only; tracking/fuel rules are complete | Final |
