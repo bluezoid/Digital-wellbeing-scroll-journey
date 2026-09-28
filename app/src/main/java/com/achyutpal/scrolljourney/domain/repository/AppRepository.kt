@@ -10,4 +10,7 @@ interface AppRepository {
     suspend fun getSavedSelections(): List<SelectedApp>
     fun observeEnabledApps(): Flow<List<SelectedApp>>
     suspend fun saveSelections(records: List<SelectedApp>)
+
+    /** True if [packageName] is currently installed for this user. */
+    suspend fun isInstalled(packageName: String): Boolean
 }

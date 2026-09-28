@@ -56,4 +56,21 @@ class AndroidAppRepository(
     override suspend fun saveSelections(records: List<SelectedApp>) {
         selectedAppDao.upsertAll(records.map { it.toEntity() })
     }
+
+    /**
+     * Asks for one package by name (cheap). Tracked apps are launcher apps, so the manifest's
+     * <queries> block makes them visible here; an uninstalled app throws NameNotFoundException.
+     */
+    override suspend fun isInstalled(packageName: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getApplicationInfo(packageName, PackageManager.ApplicationInfoFlags.of(0))
+            } else {
+                packageManager.getApplicationInfo(packageName, 0)
+            }
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
 }

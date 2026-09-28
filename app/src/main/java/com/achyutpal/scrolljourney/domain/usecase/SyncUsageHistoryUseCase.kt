@@ -1,5 +1,6 @@
 package com.achyutpal.scrolljourney.domain.usecase
 
+import com.achyutpal.scrolljourney.domain.calculator.AppSelectionRules
 import com.achyutpal.scrolljourney.domain.calculator.DistanceCalculator
 import com.achyutpal.scrolljourney.domain.calculator.LimitEvaluator
 import com.achyutpal.scrolljourney.domain.model.AppUsage
@@ -32,6 +33,8 @@ import java.time.ZoneId
  * recalculated and saved, not finalized, with its status so far.
  *
  * Only the currently enabled apps and the current daily limit are used, for past days too.
+ * First, tracked apps that were uninstalled are switched off (history kept), so a reinstall
+ * doesn't bring them back into the total by itself.
  */
 class SyncUsageHistoryUseCase(
     private val usageAccessRepository: UsageAccessRepository,
@@ -44,6 +47,15 @@ class SyncUsageHistoryUseCase(
     private val now: () -> Instant = Instant::now,
     private val zone: () -> ZoneId = ZoneId::systemDefault,
 ) {
+    /** Disables tracked apps that are no longer installed; returns the ones still tracked. */
+    private suspend fun trackedStillInstalled(): List<SelectedApp> {
+        val tracked = appRepository.observeEnabledApps().first()
+        val installed = tracked.associate { it.packageName to appRepository.isInstalled(it.packageName) }
+        val disabled = AppSelectionRules.disableUninstalled(tracked) { installed.getValue(it) }
+        if (disabled.isNotEmpty()) appRepository.saveSelections(disabled)
+        return tracked.filter { installed.getValue(it.packageName) }
+    }
+
     suspend operator fun invoke(): TodayUsageResult {
         if (usageAccessRepository.checkUsageAccess() != UsageAccessState.GRANTED) {
             return TodayUsageResult.AccessDenied
@@ -52,7 +64,7 @@ class SyncUsageHistoryUseCase(
             val zoneId = zone()
             val nowInstant = now()
             val today = LocalDate.ofInstant(nowInstant, zoneId)
-            val tracked = appRepository.observeEnabledApps().first()
+            val tracked = trackedStillInstalled()
             val limit = settingsRepository.getSettings().dailyLimitMinutes
 
             for (daysAgo in BACKFILL_DAYS downTo 1) {

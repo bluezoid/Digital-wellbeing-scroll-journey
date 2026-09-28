@@ -290,4 +290,29 @@ class SyncUsageHistoryUseCaseTest {
         assertEquals(listOf(0, 0), result.summary.apps.map { it.minutes })
         assertFalse(result.summary.hasAnyUsage)
     }
+
+    @Test
+    fun `an uninstalled tracked app leaves the total and is switched off, history kept`() = runTest {
+        useCase()() // yesterday etc. saved with Instagram + YouTube
+        val savedYesterday = history.records.getValue(today.minusDays(1))
+
+        apps.missingPackages = setOf(yt)
+        val result = useCase()() as TodayUsageResult.Success
+
+        assertEquals(20, result.summary.totalMinutes) // Instagram only
+        assertFalse(apps.savedRows.getValue(yt).enabled)
+        assertEquals(savedYesterday, history.records.getValue(today.minusDays(1))) // finalized history untouched
+    }
+
+    @Test
+    fun `a reinstalled app is not re-enabled automatically`() = runTest {
+        apps.missingPackages = setOf(yt)
+        useCase()()
+
+        apps.missingPackages = emptySet() // reinstalled
+        val result = useCase()() as TodayUsageResult.Success
+
+        assertFalse(apps.savedRows.getValue(yt).enabled)
+        assertEquals(20, result.summary.totalMinutes)
+    }
 }

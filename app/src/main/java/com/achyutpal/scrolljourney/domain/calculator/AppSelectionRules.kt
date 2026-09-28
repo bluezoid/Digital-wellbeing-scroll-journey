@@ -72,4 +72,11 @@ object AppSelectionRules {
 
         return forInstalled + forUninstalled
     }
+
+    /**
+     * Tracked apps that are no longer installed, switched off (spec: an uninstalled app leaves the
+     * selection but keeps its history; a later reinstall must not be re-enabled automatically).
+     */
+    fun disableUninstalled(tracked: List<SelectedApp>, isInstalled: (String) -> Boolean): List<SelectedApp> =
+        tracked.filter { it.enabled && !isInstalled(it.packageName) }.map { it.copy(enabled = false) }
 }

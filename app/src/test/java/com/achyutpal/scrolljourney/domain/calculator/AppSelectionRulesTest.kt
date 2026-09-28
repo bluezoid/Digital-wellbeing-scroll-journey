@@ -112,4 +112,15 @@ class AppSelectionRulesTest {
         )
         assertTrue(records.none { it.packageName == chrome.packageName })
     }
+
+    @Test
+    fun `uninstalled tracked apps are switched off, others untouched`() {
+        val tracked = listOf(
+            SelectedApp("a", "A", enabled = true, addedAt = 1),
+            SelectedApp("b", "B", enabled = true, addedAt = 2),
+            SelectedApp("c", "C", enabled = false, addedAt = 3), // already off: nothing to do
+        )
+        val disabled = AppSelectionRules.disableUninstalled(tracked) { it != "b" && it != "c" }
+        assertEquals(listOf(SelectedApp("b", "B", enabled = false, addedAt = 2)), disabled)
+    }
 }
