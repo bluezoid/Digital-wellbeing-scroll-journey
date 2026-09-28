@@ -18,7 +18,7 @@ import io.github.sceneview.node.SphereNode
  *   with a fading **comet tail** that follows the path already flown. Both are capped by the
  *   free space around them, so they never spill over a planet.
  * - Up close: a real low-poly rocket (Kenney "Space Kit", CC0) at a believable scale
- *   ([LENGTH] ≈ a third of Earth's radius), with a small engine glow.
+ *   ([LENGTH] ≈ a quarter of the Moon's diameter, 1/15 of Earth's), with a small engine glow.
  * The two cross-fade with zoom: you see either the model or the beacon, never both at full.
  *
  * The root is driven by a lookTowards transform, so "forward" is −Z. The tail dots are placed
@@ -66,8 +66,8 @@ class RocketModel(
             body.addChildNode(part)
         }
 
-        engineGlow = SphereNode(engine, radius = 0.028f, materialInstance = glow(1f, 0.45f, 0.1f, 0.9f, power = 3f)).apply {
-            position = Position(z = LENGTH / 2f + 0.015f)
+        engineGlow = SphereNode(engine, radius = LENGTH * 0.14f, materialInstance = glow(1f, 0.45f, 0.1f, 0.9f, power = 3f)).apply {
+            position = Position(z = LENGTH / 2f + LENGTH * 0.075f)
         }.decorative()
 
         beaconMaterial = glow(BEACON_COLOR.first, BEACON_COLOR.second, BEACON_COLOR.third, 1f, power = 3f)
@@ -125,8 +125,11 @@ class RocketModel(
     }
 
     companion object {
-        /** Rocket length in scene units (Earth's radius is 0.6). */
-        const val LENGTH = 0.2f
+        /**
+         * Rocket length in scene units: clearly smaller than every moon (Moon 0.32 across, Europa
+         * 0.30, Earth 1.2). Real scale would be invisible; this reads as "tiny craft, huge worlds".
+         */
+        const val LENGTH = 0.08f
 
         private const val MODEL_HEIGHT = 4.1f
         private val PARTS = listOf(
@@ -137,9 +140,10 @@ class RocketModel(
         )
 
         /** Camera distances: the model hides past MODEL_HIDE; the beacon fades in between FADE_START..END. */
-        private const val MODEL_HIDE_DISTANCE = 10f
-        private const val BEACON_FADE_START = 8f
-        private const val BEACON_FADE_END = 12f
+        // Scaled with LENGTH: the model stays until it's only a few pixels long.
+        private const val MODEL_HIDE_DISTANCE = 4.5f
+        private const val BEACON_FADE_START = 3.5f
+        private const val BEACON_FADE_END = 5.5f
 
         /** Beacon radius per unit of camera distance: about Moon-sized in the overview. */
         private const val BEACON_SCREEN_SIZE = 0.0025f

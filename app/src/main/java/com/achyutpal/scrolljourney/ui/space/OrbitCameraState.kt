@@ -64,8 +64,9 @@ class OrbitCameraState(
      * Fly to a body of [radius]; [overview] = the whole-system view around the Sun.
      * [viewFrom] (optional) = direction the camera should look *from*, e.g. away from a planet
      * that would otherwise block the view of the rocket.
+     * [minFocusDistance] = closest the fly-to may settle (the tiny rocket needs less than a planet).
      */
-    fun focus(radius: Float, overview: Boolean, viewFrom: SpacePoint? = null) {
+    fun focus(radius: Float, overview: Boolean, viewFrom: SpacePoint? = null, minFocusDistance: Float = MIN_FOCUS_DISTANCE) {
         panOffset = SpacePoint.ORIGIN
         if (overview) {
             minDistance = SUN_MIN_DISTANCE
@@ -73,7 +74,7 @@ class OrbitCameraState(
             pitchDegrees = OVERVIEW_PITCH
         } else {
             minDistance = radius * MIN_DISTANCE_RADII
-            desiredDistance = (radius * FOCUS_DISTANCE_RADII).coerceAtLeast(MIN_FOCUS_DISTANCE)
+            desiredDistance = (radius * FOCUS_DISTANCE_RADII).coerceAtLeast(minFocusDistance)
         }
         maxDistance = MAX_DISTANCE
         viewFrom?.let(::lookFrom)

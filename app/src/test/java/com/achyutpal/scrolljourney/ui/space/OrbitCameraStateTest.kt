@@ -88,4 +88,14 @@ class OrbitCameraStateTest {
         assertEquals(0f, eye.y, 0.01f)
         assertEquals(0f, eye.z, 0.01f)
     }
+
+    @Test
+    fun `a tiny target can settle closer than the planet minimum`() {
+        val c = OrbitCameraState()
+        c.focus(radius = 0.12f, overview = false)
+        assertEquals(OrbitCameraState.MIN_FOCUS_DISTANCE, c.desiredDistance, 1e-4f) // planets: default minimum
+
+        c.focus(radius = 0.12f, overview = false, minFocusDistance = 0.72f)
+        assertEquals(0.72f, c.desiredDistance, 1e-4f)
+    }
 }

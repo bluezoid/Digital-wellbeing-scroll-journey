@@ -108,6 +108,7 @@ fun SpaceScreen(
             SpaceFocus.Rocket -> camera.focus(
                 radius = ROCKET_FOCUS_RADIUS,
                 overview = false,
+                minFocusDistance = ROCKET_FOCUS_RADIUS * OrbitCameraState.FOCUS_DISTANCE_RADII,
                 viewFrom = rocketViewDirection(rocketState, clock.lastSeconds),
             )
         }
@@ -178,7 +179,7 @@ fun SpaceScreen(
     /** The rocket, the next stop and the last reached stop, each with a floating label. */
     fun computeLabels(t: Float, rocket: RocketState): List<LabelSpot> {
         val spots = buildList {
-            screenAbove(JourneyMap.rocketPosition(rocket, t), 0.08f)?.let { (x, y) -> add(LabelSpot(LabelKind.ROCKET, null, x, y)) }
+            screenAbove(JourneyMap.rocketPosition(rocket, t), RocketModel.LENGTH)?.let { (x, y) -> add(LabelSpot(LabelKind.ROCKET, null, x, y)) }
             rocket.nextPlanet?.let { d ->
                 screenAbove(JourneyMap.anchor(d, t), JourneyMap.radius(d) * 1.2f)?.let { (x, y) -> add(LabelSpot(LabelKind.NEXT, d, x, y)) }
             }
@@ -253,8 +254,11 @@ fun SpaceScreen(
     }
 }
 
-/** Treated as the rocket's "size" when focusing: the camera settles about 6× this away. */
-private const val ROCKET_FOCUS_RADIUS = RocketModel.LENGTH
+/**
+ * Treated as the rocket's "size" when focusing: the camera settles 6× this away (1.2 units),
+ * close enough to see the small rocket clearly, far enough to keep the big planets in view.
+ */
+private const val ROCKET_FOCUS_RADIUS = RocketModel.LENGTH * 2.5f
 
 /**
  * Look at the rocket from the side facing away from the nearest body (plus a little height and a
