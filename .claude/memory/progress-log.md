@@ -423,3 +423,4 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
   - Labels: a stop label that would cover the rocket on screen is hidden.
   - FocusCard: with 2 buttons, equal `weight(1f)`, one line, centred text, contentPadding 12 dp.
   - Installed on the realme; the phone was locked during the session, so Claude couldn't screenshot it. **The user's visual check is pending.**
+- **2026-09-28: the user verified the review fixes on the phone:** all 3 reported points are fixed and nothing new was found. **3D-3 ✅ complete.** Next: 3D-4 (plan sent to the user for approval).
