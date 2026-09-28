@@ -310,3 +310,5 @@ Append-only, newest at the bottom. One entry per work session: what was done, wh
 - Phase 11 installed. **18/18 on-device tests pass**, including the reset test. App data intact.
 - Pending: the user checks the Settings screen (reset dialog; background/usage status rows).
 - **User check passed (2026-09-28):** Settings screen OK. **Phase 11 ✅.** Next: the 3D plan (12b) presented for approval; SceneView 2.3.0 (Filament 1.56, Kotlin stdlib 2.0.21, no minCompileSdk constraint) is compatible with the current toolchain.
+- 2026-09-28: The user **approved all 3 recommendations** (3D approach, Mercury/Venus as scenery, Phase 12 validation in parallel from today). **Phase 12 validation starts 2026-09-28.**
+- The user raised a pacing concern: Earth → Mars at 7 fuel is too quick, and the journey should go **beyond Pluto** (new planets/stars) and progress slowly. Claude proposed a new destination table (slower curve, sub-stops every week or two, deep-space stars up to about a year+), awaiting approval. The rocket is at 0 fuel/EARTH, so it's a safe moment to change.
