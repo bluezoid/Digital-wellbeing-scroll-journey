@@ -466,3 +466,11 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
   4. 28 Sep finalized (GREEN vs 120, fuel +1 → rocket 1 fuel).
   5. Ask the user whether Brave opened with its data, and whether to re-tick it.
   6. Remaining Phase 12: a missed day (user picks one), the 7-day DW comparison.
+
+## 2026-09-29: Phase 12 validation, day 2 (session 4, morning)
+
+- Crash log: **no new crashes** overnight (dropbox last entry still 2026-09-28 18:51).
+- **A2 reboot, part 2 ✅:** workdb DailyUsageWorker `period_count = 2`, last enqueue 2026-09-29 00:31:48, so it ran by itself after the reboot.
+- **28 Sep finalized GREEN** (62 min vs 120: Instagram 31, Facebook 21, Chrome 10), fuelApplied, fuelDelta +1 → **rocket 1 fuel** (lifetime 1), EARTH, journeyDistance 20 600 cm. First real fuel 🚀.
+- 29 Sep live at 09:53: 291 min RED (YouTube 240, Chrome 51). Cross-checked: Android's usagestats daily bucket (00:32–09:54) says YouTube 4:00:15 (full-screen at 03:56, likely played overnight), so it's real. Chrome: events show 00:05:15 → 00:56:48 = 51 min, matching our row exactly (Android's bucket starts at 00:32, so it shows only 24:42, which is why we use queryEvents).
+- **Midnight check not exercised:** no tracked-app session spanned 00:00 (Chrome 23:41:11–23:41:30, then 00:05). Repeat tonight (a tracked app open from ~23:55 to ~00:05).
