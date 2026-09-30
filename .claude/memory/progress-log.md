@@ -477,3 +477,17 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - **Digital Wellbeing comparison ✅ (the user, 2026-09-29):** exact match. 28 Sep: Instagram 31, Facebook 21, Chrome 10 (app: same). 29 Sep so far: YouTube 4 h, Chrome 51 min (app: 240 / 51). Accuracy check day 2 of 7.
 - **Brave aftermath (2026-09-29):** Brave's `firstInstallTime` is 2026-09-29 10:03, so last night's `cmd package install-existing` restore did **not** really work, and the user had to reinstall Brave from the store (its local data was likely lost). After the reinstall the picker shows Brave **unticked**, which is correct per spec; the user can re-tick it in Settings → Tracked apps. Claude apologised.
 - **RULE: never uninstall/modify the user's real apps for testing.** For tracked-app uninstall/reinstall tests, build and install a tiny dummy launcher app instead.
+
+## 2026-09-30: History-screen crash fixed (session 5)
+
+- The user reported: dashboard → "See full history" opens History, then the app closes within ~2 s. Dropbox showed the **same native SIGSEGV as 2026-09-28 18:51** (libgltfio, fault addr 0x2a8), 6× on 2026-09-30.
+- **Symbolized** with NDK llvm-nm on the AAR's libgltfio-jni.so (BuildId c827b1e2… matches): lr = `FilamentAsset::popRenderable()+0x18`. The only Java caller in SceneView 2.3.0 is **`ModelNode.onFrame()`** (calls `model.popRenderable()` every frame).
+- **Reproduced 4/6**: open the app, scroll the dashboard so the hero is off-screen, tap "See full history". The menu → History path didn't crash (0/8).
+- Temporary `SJDBG` logs (Log.w; this realme hides Log.d) showed: the hero **kept drawing while my lifecycle said STARTED/CREATED**, and a frame ~95 ms after dispose crashed. The lifecycle *was* wired (the SceneView observed my registry).
+- **Root cause:** SceneView's `FrameCallback.doFrame` re-posts itself *before* running `onFrame`. Compose applies state changes and disposals inside Choreographer frame processing, so `removeFrameCallback` from `onPause`/`destroy()` there is defeated: the callback already ran this frame and re-posted. So the loop never stopped (the off-screen pause never worked; it even kept drawing behind other screens), and after the ModelLoader freed the assets a stray frame hit `popRenderable` on freed memory. Disposal order (reverse declaration): Scene (SceneView.destroy, filament Scene destroyed) → … → ModelLoader.destroy (`clear()` frees assets) → Engine.
+- **Fix:**
+  1. `rememberSceneLifecycle` applies every state change via an **asynchronous main-thread Message** (`Message.obtain(handler){…}.isAsynchronous = true`), i.e. between frames, where removeFrameCallback really removes the pending callback; on dispose it posts CREATED.
+  2. `RocketModel.releaseModel()` detaches the glTF parts; called from a `DisposableEffect` declared **after** the `Scene` (so disposed **before** it, while the filament Scene still exists) in both JourneyHero and SpaceScreen. The first attempt (effect declared before Scene) crashed with "Calling method on destroyed Scene".
+  3. Explore now also uses `rememberSceneLifecycle(active = true)`.
+- **Verified on the phone:** scroll → See full history **0/10 crashes** (was 8/10 at worst); 6 loops of menu→History + dashboard↔Explore + tap-then-back races: no crash. CPU: History 2.5%, dashboard hero drawing 183%, **hero scrolled away 0%**, back on screen 165%, so the off-screen pause now really works (it was a silent battery drain before).
+- Note: the user opened the app on 2026-09-30, so the "missed day" test needs another day.

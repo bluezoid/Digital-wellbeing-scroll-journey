@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -217,6 +218,8 @@ fun SpaceScreen(
             childNodes = rememberNodes { addAll(scene.all) },
             // SceneView keeps the screen awake for its activity and never undoes it; with no activity it skips that.
             activity = null,
+            // Pauses drawing before the model loader is destroyed when this screen closes (see rememberSceneLifecycle).
+            lifecycle = rememberSceneLifecycle(active = true),
             onGestureListener = rememberOnGestureListener(
                 // A single tap is confirmed ~300 ms later (in case it becomes a double tap). If the
                 // screen closed meanwhile, the engine is already destroyed: ignore the late tap.
@@ -257,6 +260,9 @@ fun SpaceScreen(
             modifier = Modifier.align(Alignment.BottomCenter),
         )
     }
+    // Declared after the Scene, so disposed before it: the rocket model leaves the scene while the
+    // scene still exists, and before the model loader frees it (see RocketModel.releaseModel).
+    DisposableEffect(scene) { onDispose { scene.rocket.releaseModel() } }
 }
 
 /**

@@ -17,6 +17,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -164,6 +165,10 @@ private fun HeroScene(
             onRocketMoved(projectAbove(cameraNode, JourneyMap.rocketPosition(rocket, t), eye, framing.target, size))
         },
     )
+    // Declared after the Scene, so disposed before it (Compose disposes in reverse order): the
+    // rocket model leaves the scene while the scene still exists, and before the model loader
+    // frees it (see RocketModel.releaseModel).
+    DisposableEffect(scene) { onDispose { scene.rocket.releaseModel() } }
 }
 
 /** Screen position just above a point, or null when it's behind the camera or off screen. */

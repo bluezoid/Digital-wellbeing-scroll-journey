@@ -33,6 +33,7 @@ class RocketModel(
     val root = Node(engine).decorative()
 
     private val body: Node = Node(engine).decorative()
+    private val parts = mutableListOf<ModelNode>()
     private val engineGlow: Node
     private val beacon: Node
     private val beaconMaterial: MaterialInstance
@@ -64,6 +65,7 @@ class RocketModel(
             ).decorative()
             part.position = Position(y = y - MODEL_HEIGHT / 2f)
             body.addChildNode(part)
+            parts += part
         }
 
         engineGlow = SphereNode(engine, radius = LENGTH * 0.14f, materialInstance = glow(1f, 0.45f, 0.1f, 0.9f, power = 3f)).apply {
@@ -117,6 +119,16 @@ class RocketModel(
                 node.scale = Scale(minOf(wanted * 0.5f * shrink, room))
             }
         }
+    }
+
+    /**
+     * Detaches the glTF model parts from the scene. Call it when the scene is closing, before the
+     * model loader frees the models: a frame that still runs afterwards then can't reach them
+     * (ModelNode.onFrame touches the native model and would crash on freed memory).
+     */
+    fun releaseModel() {
+        parts.forEach(body::removeChildNode)
+        parts.clear()
     }
 
     private fun <T : Node> T.decorative(): T = apply {
