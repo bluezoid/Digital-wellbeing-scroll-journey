@@ -53,6 +53,7 @@ import com.achyutpal.scrolljourney.R
 import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.RocketState
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
+import com.achyutpal.scrolljourney.ui.common.RestoreConfirmDialog
 import com.achyutpal.scrolljourney.ui.common.emoji
 import com.achyutpal.scrolljourney.ui.common.formatMinutes
 import com.achyutpal.scrolljourney.ui.common.nameRes
@@ -286,29 +287,7 @@ internal fun SettingsContent(
         }
     }
 
-    state.backup.pendingRestore?.let { summary ->
-        AlertDialog(
-            onDismissRequest = onRestoreDismiss,
-            title = { Text(stringResource(R.string.settings_restore_confirm_title)) },
-            text = {
-                Text(
-                    stringResource(
-                        R.string.settings_restore_confirm_body,
-                        summary.exportedOn,
-                        summary.days,
-                        stringResource(summary.destination.nameRes()),
-                        summary.currentFuel,
-                    ),
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = onRestoreConfirm) {
-                    Text(stringResource(R.string.settings_restore_confirm_action), color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = { TextButton(onClick = onRestoreDismiss) { Text(stringResource(R.string.action_cancel)) } },
-        )
-    }
+    state.backup.pendingRestore?.let { RestoreConfirmDialog(it, onConfirm = onRestoreConfirm, onDismiss = onRestoreDismiss) }
 
     if (state.showResetConfirm) {
         AlertDialog(

@@ -19,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -43,9 +44,13 @@ private val introPages = listOf(
     IntroPage("🔒", R.string.intro2_title, R.string.intro2_body),
 )
 
-/** Intro 1 → Intro 2, swipeable. [onFinished] fires from the last page's button. */
+/**
+ * Intro 1 → Intro 2, swipeable. [onFinished] fires from the last page's button.
+ * [onRestoreBackup] (if given) shows "Restore from a backup" for people moving to a new phone.
+ * [restoreNote] is a short status/error line under it.
+ */
 @Composable
-fun IntroScreen(onFinished: () -> Unit) {
+fun IntroScreen(onFinished: () -> Unit, onRestoreBackup: (() -> Unit)? = null, restoreNote: String? = null) {
     val pagerState = rememberPagerState(pageCount = { introPages.size })
     val scope = rememberCoroutineScope()
     val isLastPage = pagerState.currentPage == introPages.lastIndex
@@ -80,6 +85,20 @@ fun IntroScreen(onFinished: () -> Unit) {
                     .height(52.dp),
             ) {
                 Text(stringResource(if (isLastPage) R.string.action_continue else R.string.action_next))
+            }
+            if (onRestoreBackup != null) {
+                TextButton(onClick = onRestoreBackup, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    Text(stringResource(R.string.intro_restore_backup))
+                }
+            }
+            restoreNote?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
     }

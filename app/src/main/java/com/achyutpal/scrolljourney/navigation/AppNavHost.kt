@@ -12,17 +12,19 @@ import com.achyutpal.scrolljourney.ui.apppicker.AppPickerScreen
 import com.achyutpal.scrolljourney.ui.dailylimit.DailyLimitScreen
 import com.achyutpal.scrolljourney.ui.dashboard.DashboardScreen
 import com.achyutpal.scrolljourney.ui.history.HistoryScreen
+import com.achyutpal.scrolljourney.ui.onboarding.AfterRestore
+import com.achyutpal.scrolljourney.ui.onboarding.IntroRoute
+import com.achyutpal.scrolljourney.ui.onboarding.UsageAccessScreen
 import com.achyutpal.scrolljourney.ui.settings.SettingsScreen
 import com.achyutpal.scrolljourney.ui.space.SpaceScreen
-import com.achyutpal.scrolljourney.ui.onboarding.IntroScreen
-import com.achyutpal.scrolljourney.ui.onboarding.UsageAccessScreen
 import com.achyutpal.scrolljourney.ui.startup.StartDestination
 
 object Routes {
     const val ARG_ONBOARDING = "onboarding"
+    const val ARG_AFTER_RESTORE = "afterRestore"
 
     const val INTRO = "intro"
-    const val USAGE_ACCESS = "usage_access"
+    const val USAGE_ACCESS = "usage_access?$ARG_AFTER_RESTORE={$ARG_AFTER_RESTORE}"
     const val DASHBOARD = "dashboard"
     const val HISTORY = "history"
     const val SETTINGS = "settings"
@@ -32,6 +34,7 @@ object Routes {
     const val APP_PICKER = "app_picker?$ARG_ONBOARDING={$ARG_ONBOARDING}"
     const val DAILY_LIMIT = "daily_limit?$ARG_ONBOARDING={$ARG_ONBOARDING}"
 
+    fun usageAccess(afterRestore: Boolean) = "usage_access?$ARG_AFTER_RESTORE=$afterRestore"
     fun appPicker(onboarding: Boolean) = "app_picker?$ARG_ONBOARDING=$onboarding"
     fun dailyLimit(onboarding: Boolean) = "daily_limit?$ARG_ONBOARDING=$onboarding"
 }
@@ -49,6 +52,13 @@ private val onboardingArgument = listOf(
     },
 )
 
+private val afterRestoreArgument = listOf(
+    navArgument(Routes.ARG_AFTER_RESTORE) {
+        type = NavType.BoolType
+        defaultValue = false
+    },
+)
+
 /** Onboarding: intro → usage access → app picker → daily limit → dashboard. */
 @Composable
 fun AppNavHost(startDestination: String, debugRoute: String? = null) {
@@ -60,10 +70,25 @@ fun AppNavHost(startDestination: String, debugRoute: String? = null) {
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.INTRO) {
-            IntroScreen(onFinished = { navController.navigate(Routes.USAGE_ACCESS) })
+            IntroRoute(
+                onFinished = { navController.navigate(Routes.USAGE_ACCESS) },
+                onRestored = { next ->
+                    when (next) {
+                        AfterRestore.DASHBOARD -> navController.navigateClearingBackStack(Routes.DASHBOARD)
+                        AfterRestore.USAGE_ACCESS -> navController.navigate(Routes.usageAccess(afterRestore = true))
+                        AfterRestore.ONBOARDING -> navController.navigate(Routes.USAGE_ACCESS)
+                    }
+                },
+            )
         }
-        composable(Routes.USAGE_ACCESS) {
-            UsageAccessScreen(onGranted = { navController.navigateClearingBackStack(Routes.appPicker(onboarding = true)) })
+        composable(Routes.USAGE_ACCESS, arguments = afterRestoreArgument) { entry ->
+            val afterRestore = entry.arguments?.getBoolean(Routes.ARG_AFTER_RESTORE) ?: false
+            UsageAccessScreen(
+                onGranted = {
+                    // A restored backup already has apps and a limit: skip straight to the dashboard.
+                    navController.navigateClearingBackStack(if (afterRestore) Routes.DASHBOARD else Routes.appPicker(onboarding = true))
+                },
+            )
         }
         composable(Routes.APP_PICKER, arguments = onboardingArgument) { entry ->
             val onboarding = entry.arguments?.getBoolean(Routes.ARG_ONBOARDING) ?: true
