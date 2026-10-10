@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and older: same rule as data_extraction_rules.xml (journey database only). -->
+<full-backup-content>
+    <include domain="database" path="scroll_journey.db" />
+    <include domain="database" path="scroll_journey.db-wal" />
+    <include domain="database" path="scroll_journey.db-shm" />
+</full-backup-content>

@@ -1,5 +1,6 @@
 package com.achyutpal.scrolljourney.ui.dashboard
 
+import android.os.SystemClock
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -31,13 +32,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -68,11 +73,15 @@ import com.achyutpal.scrolljourney.ui.space.JourneyHeroPlaceholder
 import com.achyutpal.scrolljourney.ui.theme.ScrollJourneyTheme
 import com.achyutpal.scrolljourney.ui.theme.color
 import com.achyutpal.scrolljourney.util.openUsageAccessSettings
+import kotlinx.coroutines.delay
 import java.text.DateFormat
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Date
 import java.util.Locale
+
+/** How long the 3D hero keeps animating after the last touch on the dashboard. */
+private const val HERO_IDLE_AFTER_MS = 20_000L
 
 /** The main screen after onboarding. Syncs usage on every resume. */
 @Composable
@@ -114,6 +123,19 @@ internal fun DashboardContent(
     var menuOpen by remember { mutableStateOf(false) }
     var heroFailed by rememberSaveable { mutableStateOf(false) }
     var heroOnScreen by remember { mutableStateOf(true) }
+    // Battery: the live 3D hero animates for a while after the last touch, then freezes on its
+    // last frame (no drawing) until the dashboard is touched or scrolled again.
+    var lastTouch by remember { mutableLongStateOf(SystemClock.uptimeMillis()) }
+    var heroIdle by remember { mutableStateOf(false) }
+    LaunchedEffect(lastTouch) {
+        heroIdle = false
+        delay(HERO_IDLE_AFTER_MS)
+        heroIdle = true
+    }
+    LifecycleResumeEffect(Unit) {
+        lastTouch = SystemClock.uptimeMillis() // coming back to the dashboard wakes the hero
+        onPauseOrDispose { }
+    }
 
     Scaffold(
         topBar = {
@@ -145,6 +167,15 @@ internal fun DashboardContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .pointerInput(Unit) {
+                    // Observe every touch (scrolls included) without consuming it.
+                    awaitPointerEventScope {
+                        while (true) {
+                            awaitPointerEvent(PointerEventPass.Initial)
+                            lastTouch = SystemClock.uptimeMillis()
+                        }
+                    }
+                }
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -163,7 +194,7 @@ internal fun DashboardContent(
                 state.show3d == null -> JourneyHeroPlaceholder()
                 state.show3d && !heroFailed -> JourneyHero(
                     rocket = state.rocket,
-                    active = heroOnScreen,
+                    active = heroOnScreen && !heroIdle,
                     onExplore = onOpenJourney,
                     onFailed = { heroFailed = true },
                     modifier = Modifier.onGloballyPositioned { heroOnScreen = it.boundsInWindow().height > 0f },

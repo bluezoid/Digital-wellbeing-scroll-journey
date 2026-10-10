@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: what Android may copy to the user's Google account backup and during a
+     phone-to-phone transfer. Only the journey database; WorkManager's job database lives in
+     no_backup/ and is always excluded. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="scroll_journey.db" />
+        <include domain="database" path="scroll_journey.db-wal" />
+        <include domain="database" path="scroll_journey.db-shm" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="scroll_journey.db" />
+        <include domain="database" path="scroll_journey.db-wal" />
+        <include domain="database" path="scroll_journey.db-shm" />
+    </device-transfer>
+</data-extraction-rules>

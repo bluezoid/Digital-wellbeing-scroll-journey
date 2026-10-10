@@ -50,6 +50,7 @@ import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberMaterialLoader
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberNodes
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 private val HeroHeight = 280.dp
@@ -81,7 +82,10 @@ fun JourneyHero(
                 .background(Color.Black),
         ) {
             var rocketOnScreen by remember { mutableStateOf<Pair<Float, Float>?>(null) }
-            HeroScene(rocket, active, onFailed, onRocketMoved = { rocketOnScreen = it })
+            HeroScene(rocket, active, onFailed, onRocketMoved = { moved ->
+                // Only recompose when the label really moves (≥ 1 px), not on every 3D frame.
+                if (!samePlace(rocketOnScreen, moved)) rocketOnScreen = moved
+            })
 
             rocketOnScreen?.let { (x, y) -> YouLabel(x, y) }
             HeroPill(
@@ -170,6 +174,9 @@ private fun HeroScene(
     // frees it (see RocketModel.releaseModel).
     DisposableEffect(scene) { onDispose { scene.rocket.releaseModel() } }
 }
+
+private fun samePlace(a: Pair<Float, Float>?, b: Pair<Float, Float>?): Boolean =
+    if (a == null || b == null) a == b else abs(a.first - b.first) < 1f && abs(a.second - b.second) < 1f
 
 /** Screen position just above a point, or null when it's behind the camera or off screen. */
 private fun projectAbove(
