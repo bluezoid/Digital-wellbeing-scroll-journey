@@ -13,6 +13,7 @@ import com.achyutpal.scrolljourney.domain.repository.DocumentStore
 import com.achyutpal.scrolljourney.domain.repository.InvalidBackupException
 import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
+import com.achyutpal.scrolljourney.ui.widget.WidgetRefresher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,6 +45,7 @@ class RestoreBackupViewModel(
     private val documentStore: DocumentStore,
     private val settingsRepository: SettingsRepository,
     private val usageAccessRepository: UsageAccessRepository,
+    private val onDataChanged: suspend () -> Unit = {},
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RestoreUiState())
@@ -63,6 +65,7 @@ class RestoreBackupViewModel(
         _state.update { it.copy(pending = null) }
         run {
             backupRepository.restore(text)
+            onDataChanged()
             val next = when {
                 !settingsRepository.getSettings().onboardingComplete -> AfterRestore.ONBOARDING
                 usageAccessRepository.checkUsageAccess() != UsageAccessState.GRANTED -> AfterRestore.USAGE_ACCESS
@@ -100,8 +103,11 @@ class RestoreBackupViewModel(
     companion object {
         val Factory = viewModelFactory {
             initializer {
-                val c = (this[APPLICATION_KEY] as ScrollJourneyApp).container
-                RestoreBackupViewModel(c.backupRepository, c.documentStore, c.settingsRepository, c.usageAccessRepository)
+                val app = this[APPLICATION_KEY] as ScrollJourneyApp
+                val c = app.container
+                RestoreBackupViewModel(c.backupRepository, c.documentStore, c.settingsRepository, c.usageAccessRepository) {
+                    WidgetRefresher.refresh(app)
+                }
             }
         }
     }

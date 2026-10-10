@@ -19,6 +19,7 @@ import com.achyutpal.scrolljourney.domain.repository.DocumentStore
 import com.achyutpal.scrolljourney.domain.repository.InvalidBackupException
 import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
+import com.achyutpal.scrolljourney.ui.widget.WidgetRefresher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -74,6 +75,8 @@ class SettingsViewModel(
     private val backupRepository: BackupRepository,
     private val documentStore: DocumentStore,
     private val today: () -> LocalDate = LocalDate::now,
+    /** Called after data changed outside a sync (reset, restore): the app redraws the widgets. */
+    private val onDataChanged: suspend () -> Unit = {},
 ) : ViewModel() {
 
     private data class Dialogs(val showResetConfirm: Boolean = false, val resetDone: Boolean = false)
@@ -128,6 +131,7 @@ class SettingsViewModel(
         dialogs.update { it.copy(showResetConfirm = false) }
         viewModelScope.launch {
             settingsRepository.resetJourney(journeyStart = today())
+            onDataChanged()
             dialogs.update { it.copy(resetDone = true) }
         }
     }
@@ -155,7 +159,11 @@ class SettingsViewModel(
         val text = pendingRestoreText ?: return
         pendingRestoreText = null
         backup.update { it.copy(pendingRestore = null) }
-        runBackup { BackupMessage.Restored(backupRepository.restore(text)) }
+        runBackup {
+            val summary = backupRepository.restore(text)
+            onDataChanged()
+            BackupMessage.Restored(summary)
+        }
     }
 
     fun onRestoreDismiss() {
@@ -183,7 +191,8 @@ class SettingsViewModel(
     companion object {
         val Factory = viewModelFactory {
             initializer {
-                val container = (this[APPLICATION_KEY] as ScrollJourneyApp).container
+                val app = this[APPLICATION_KEY] as ScrollJourneyApp
+                val container = app.container
                 SettingsViewModel(
                     container.settingsRepository,
                     container.appRepository,
@@ -191,6 +200,7 @@ class SettingsViewModel(
                     container.deviceStatusRepository,
                     container.backupRepository,
                     container.documentStore,
+                    onDataChanged = { WidgetRefresher.refresh(app) },
                 )
             }
         }

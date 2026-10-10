@@ -26,6 +26,7 @@ import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageRepository
 import com.achyutpal.scrolljourney.domain.usecase.ApplyJourneyFuelUseCase
 import com.achyutpal.scrolljourney.domain.usecase.SyncUsageHistoryUseCase
+import com.achyutpal.scrolljourney.ui.widget.WidgetRefresher
 
 /**
  * Manual dependency injection: the single place that decides which concrete class
@@ -90,6 +91,7 @@ class AppContainer(context: Context) {
             historyRepository = historyRepository,
             settingsRepository = settingsRepository,
             applyJourneyFuel = ApplyJourneyFuelUseCase(journeyRepository, settingsRepository),
+            onSynced = { WidgetRefresher.refresh(appContext) },
         )
     }
 }

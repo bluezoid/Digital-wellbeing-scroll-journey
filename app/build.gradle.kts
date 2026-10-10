@@ -126,6 +126,9 @@ dependencies {
     // Backup file (export / import) as JSON.
     implementation(libs.kotlinx.serialization.json)
 
+    // Home-screen widgets (Jetpack Glance: Compose-style code rendered as RemoteViews by the launcher).
+    implementation(libs.androidx.glance.appwidget)
+
     // 3D: SceneView (Compose wrapper around Google's Filament rendering engine)
     implementation(libs.sceneview)
 

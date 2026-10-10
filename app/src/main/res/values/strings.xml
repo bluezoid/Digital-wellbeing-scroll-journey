@@ -197,4 +197,22 @@
         <item quantity="one">🔥 %1$d-day green streak</item>
         <item quantity="other">🔥 %1$d-day green streak</item>
     </plurals>
+
+    <!-- Home-screen widgets -->
+    <string name="widget_today_label">Scroll Journey · Today</string>
+    <string name="widget_journey_label">Scroll Journey · Journey</string>
+    <string name="widget_today_description">Today’s minutes against your daily limit</string>
+    <string name="widget_journey_description">Today, your rocket’s current leg and your green streak</string>
+    <string name="widget_status_green">Green day so far</string>
+    <string name="widget_status_yellow">Yellow day so far</string>
+    <string name="widget_status_red">Red day</string>
+    <string name="widget_of_limit">of %1$s</string>
+    <string name="widget_not_set_up">Open Scroll Journey to start your journey</string>
+    <string name="widget_no_access">Usage Access is off. Tap to fix it.</string>
+    <string name="widget_journey_line">%1$s → %2$s · ⛽ %3$d/%4$d</string>
+    <plurals name="widget_streak">
+        <item quantity="one">🔥 %d-day green streak</item>
+        <item quantity="other">🔥 %d-day green streak</item>
+    </plurals>
+    <string name="widget_no_streak">Stay under your limit to start a streak</string>
 </resources>

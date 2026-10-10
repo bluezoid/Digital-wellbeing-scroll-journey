@@ -46,6 +46,8 @@ class SyncUsageHistoryUseCase(
     private val distanceCalculator: DistanceCalculator = DistanceCalculator(),
     private val now: () -> Instant = Instant::now,
     private val zone: () -> ZoneId = ZoneId::systemDefault,
+    /** Runs after every sync attempt that reached Usage Access (the app wires it to redraw the widgets). */
+    private val onSynced: suspend () -> Unit = {},
 ) {
     /** Disables tracked apps that are no longer installed; returns the ones still tracked. */
     private suspend fun trackedStillInstalled(): List<SelectedApp> {
@@ -61,6 +63,18 @@ class SyncUsageHistoryUseCase(
      *   only needs yesterday, so it finalizes the previous day soon after midnight cheaply).
      */
     suspend operator fun invoke(backfillDays: Int = BACKFILL_DAYS): TodayUsageResult {
+        val result = sync(backfillDays)
+        try {
+            onSynced()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // A widget redraw problem must never break the sync itself.
+        }
+        return result
+    }
+
+    private suspend fun sync(backfillDays: Int): TodayUsageResult {
         if (usageAccessRepository.checkUsageAccess() != UsageAccessState.GRANTED) {
             return TodayUsageResult.AccessDenied
         }
