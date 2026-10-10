@@ -5,9 +5,9 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.edit
 import com.achyutpal.scrolljourney.MainActivity
 import com.achyutpal.scrolljourney.R
 import com.achyutpal.scrolljourney.domain.calculator.LimitReminder
@@ -33,7 +33,10 @@ class AndroidReminderGateway(private val context: Context) : ReminderGateway {
 
     override fun markSent(date: LocalDate, reminder: LimitReminder) {
         val sent = sentOn(date) + reminder
-        prefs.edit().putString(KEY_DATE, date.toString()).putStringSet(KEY_SENT, sent.map { it.name }.toSet()).apply()
+        prefs.edit {
+            putString(KEY_DATE, date.toString())
+            putStringSet(KEY_SENT, sent.map { it.name }.toSet())
+        }
     }
 
     override fun canNotify(): Boolean = NotificationManagerCompat.from(context).areNotificationsEnabled()
@@ -80,7 +83,6 @@ class AndroidReminderGateway(private val context: Context) : ReminderGateway {
         private const val KEY_SENT = "sent"
 
         fun ensureChannel(context: Context) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 context.getString(R.string.reminder_channel_name),

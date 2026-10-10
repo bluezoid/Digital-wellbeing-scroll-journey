@@ -235,9 +235,10 @@ internal fun SettingsContent(
                 )
                 val message = when (val m = state.backup.message) {
                     null -> if (state.backup.busy) stringResource(R.string.settings_backup_working) to MaterialTheme.colorScheme.onSurfaceVariant else null
-                    is BackupMessage.Exported -> stringResource(R.string.settings_export_done, m.days) to StatusGreen
-                    is BackupMessage.Restored -> stringResource(
-                        R.string.settings_restore_done,
+                    is BackupMessage.Exported -> pluralStringResource(R.plurals.settings_export_done, m.days, m.days) to StatusGreen
+                    is BackupMessage.Restored -> pluralStringResource(
+                        R.plurals.settings_restore_done,
+                        m.summary.days,
                         m.summary.days,
                         stringResource(m.summary.destination.nameRes()),
                         m.summary.currentFuel,

@@ -1,7 +1,7 @@
 package com.achyutpal.scrolljourney.data.backup
 
 import android.content.ContentResolver
-import android.net.Uri
+import androidx.core.net.toUri
 import com.achyutpal.scrolljourney.domain.repository.DocumentStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -15,12 +15,12 @@ class AndroidDocumentStore(private val resolver: ContentResolver) : DocumentStor
 
     override suspend fun write(uri: String, text: String) = withContext(Dispatchers.IO) {
         // "wt" = write + truncate, so overwriting an existing file doesn't leave old bytes at the end.
-        val stream = resolver.openOutputStream(Uri.parse(uri), "wt") ?: throw IOException("can't open the file")
+        val stream = resolver.openOutputStream(uri.toUri(), "wt") ?: throw IOException("can't open the file")
         stream.bufferedWriter().use { it.write(text) }
     }
 
     override suspend fun read(uri: String): String = withContext(Dispatchers.IO) {
-        val stream = resolver.openInputStream(Uri.parse(uri)) ?: throw IOException("can't open the file")
+        val stream = resolver.openInputStream(uri.toUri()) ?: throw IOException("can't open the file")
         val text = stream.bufferedReader().use { it.readText() }
         // A real backup is a few hundred KB; refuse anything absurdly large.
         if (text.length > MAX_CHARS) throw IOException("file too large")

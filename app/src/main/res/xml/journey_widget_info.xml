@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Medium widget: 4×2 by default, resizable. Updated by the app (updatePeriodMillis 0). -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="UnusedAttribute"
     android:description="@string/widget_journey_description"
     android:initialLayout="@layout/glance_default_loading_layout"
     android:minWidth="250dp"

@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -138,7 +139,7 @@ private fun HeroScene(
     val clock = remember { SceneClock() }
     val cameraNode = rememberCameraNode(engine)
     var size by remember { mutableStateOf(IntSize.Zero) }
-    var yaw by remember { mutableStateOf(HeroCamera.START_YAW_DEGREES) }
+    var yaw by remember { mutableFloatStateOf(HeroCamera.START_YAW_DEGREES) }
 
     Scene(
         modifier = Modifier.fillMaxWidth().height(HeroHeight).onSizeChanged { size = it },

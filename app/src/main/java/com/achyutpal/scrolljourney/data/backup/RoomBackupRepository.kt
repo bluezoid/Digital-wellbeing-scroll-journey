@@ -44,7 +44,7 @@ class RoomBackupRepository(
     }
 
     private fun BackupFile.summary() = BackupSummary(
-        exportedOn = runCatching { LocalDate.ofInstant(Instant.parse(exportedAt), zone()).toString() }
+        exportedOn = runCatching { Instant.parse(exportedAt).atZone(zone()).toLocalDate().toString() }
             .getOrDefault(exportedAt.take(10)),
         days = days.size,
         destination = Destination.valueOf(settings.highestReachedPlanet),

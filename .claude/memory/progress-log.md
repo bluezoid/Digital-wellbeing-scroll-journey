@@ -558,3 +558,9 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - **Verified on the phone:** the debug-only shortcut `adb shell am start -n com.achyutpal.scrolljourney.debug/com.achyutpal.scrolljourney.MainActivity --es debug_reminder near|reached` posts a sample → shade shows "Almost at your daily limit / 1h 36m of your 2h 00m used. 24m left for a green day 🚀" with the rocket icon. **realme hides notifications from an app under the instrumentation runner** → the device test assumes (skips) in that case. realme also blocks `adb shell pm grant` (GRANT_RUNTIME_PERMISSIONS) and `appops set`; grant via the system screens instead.
 - The user's release app was updated in place: DB v5 → v6 migrated with data intact; POST_NOTIFICATIONS granted (USER_SET).
 - Tests: **224 JVM**, **53 on-device** ✅.
+
+## 2026-10-10: P4 step 1, lint clean ✅
+
+- **Real bug found by lint (NewApi):** `LocalDate.ofInstant` is API 34+, used in `SyncUsageHistoryUseCase` (core sync!) and `RoomBackupRepository`. It worked on the realme only thanks to a Mainline ART update; it would crash on Android 8–12 phones without it. → `instant.atZone(zone).toLocalDate()`.
+- Also fixed: Glance `Notice()` composable returning Boolean → plain `noticeFor()`; RocketJourneyView offset → lambda overload (no recomposition per animation frame); KTX (`toUri`, `prefs.edit {}`); obsolete SDK check; `mutableFloatStateOf` for the hero yaw; 3 "days" strings → **plurals** (`settings_export_done`, `settings_restore_done`, `settings_restore_confirm_body`, used via pluralStringResource; count is arg 1); 5 unused strings deleted; reviewed counts marked `tools:ignore="PluralsCandidate"`; widget-info newer attributes `tools:ignore="UnusedAttribute"`.
+- `app/lint.xml`: ignores GradleDependency / NewerVersionAvailable / AndroidGradlePluginVersion (versions pinned on purpose, documented). **Result: "No issues found."** Run: `./gradlew lintDebug` → `app/build/reports/lint-results-debug.txt`.

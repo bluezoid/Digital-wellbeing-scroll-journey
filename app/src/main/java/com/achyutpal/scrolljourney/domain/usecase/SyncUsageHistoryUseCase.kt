@@ -81,7 +81,7 @@ class SyncUsageHistoryUseCase(
         return try {
             val zoneId = zone()
             val nowInstant = now()
-            val today = LocalDate.ofInstant(nowInstant, zoneId)
+            val today = nowInstant.atZone(zoneId).toLocalDate() // LocalDate.ofInstant needs API 34
             val tracked = trackedStillInstalled()
             val limit = settingsRepository.getSettings().dailyLimitMinutes
 

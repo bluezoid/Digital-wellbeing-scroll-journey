@@ -3,8 +3,8 @@ package com.achyutpal.scrolljourney.util
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.provider.Settings
+import androidx.core.net.toUri
 
 /**
  * Opens the system Usage Access screen.
@@ -15,7 +15,7 @@ import android.provider.Settings
  */
 /** Opens this app's page in Android Settings (battery / background activity live there). */
 fun Context.openAppDetailsSettings() {
-    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri())
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     try {
         startActivity(intent)
@@ -26,7 +26,7 @@ fun Context.openAppDetailsSettings() {
 
 fun Context.openUsageAccessSettings() {
     val candidates = listOf(
-        Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:$packageName")),
+        Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, "package:$packageName".toUri()),
         Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS),
         Intent(Settings.ACTION_SETTINGS),
     )

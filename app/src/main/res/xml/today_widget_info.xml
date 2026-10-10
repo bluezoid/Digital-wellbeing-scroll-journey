@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Small widget: 2×1 by default, resizable horizontally. Updated by the app (updatePeriodMillis 0). -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="UnusedAttribute"
     android:description="@string/widget_today_description"
     android:initialLayout="@layout/glance_default_loading_layout"
     android:minWidth="110dp"

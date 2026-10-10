@@ -1,12 +1,14 @@
 package com.achyutpal.scrolljourney.util
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 
 /**
  * Android 13+ asks the user before an app may post notifications (POST_NOTIFICATIONS, a runtime
@@ -14,6 +16,7 @@ import androidx.core.content.ContextCompat
  * whenever the user turns reminders on in Settings.
  */
 object NotificationPermission {
+    @SuppressLint("InlinedApi") // a plain string; only requested on Android 13+ (see needsRequest)
     const val PERMISSION = Manifest.permission.POST_NOTIFICATIONS
 
     fun needsRequest(context: Context): Boolean =
@@ -25,7 +28,7 @@ object NotificationPermission {
         if (!needsRequest(context)) return false
         val prefs = context.getSharedPreferences("notification_permission", Context.MODE_PRIVATE)
         if (prefs.getBoolean("asked", false)) return false
-        prefs.edit().putBoolean("asked", true).apply()
+        prefs.edit { putBoolean("asked", true) }
         return true
     }
 }

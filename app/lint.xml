@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android Lint configuration. Errors fail the build (default). -->
+<lint>
+    <!-- Library versions are pinned on purpose: the newest stable releases of the current major
+         lines (AGP 8.13 / compileSdk 36). Newer majors (AGP 9, core 1.19 → compileSdk 37) are a
+         planned migration, not a lint fix. See .claude/memory/tech-stack.md. -->
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+</lint>

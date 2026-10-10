@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.achyutpal.scrolljourney.R
@@ -181,7 +182,8 @@ private fun CurrentLeg(from: Destination, to: Destination, progress: Float) {
                 text = "🚀",
                 fontSize = 24.sp,
                 modifier = Modifier
-                    .offset(x = trackWidth * animatedProgress)
+                    // Lambda offset: the animation moves the rocket without recomposing every frame.
+                    .offset { IntOffset((trackWidth * animatedProgress).roundToPx(), 0) }
                     .size(RocketSize)
                     .rotate(45f), // the emoji points up-right; turn it to face the next planet
             )

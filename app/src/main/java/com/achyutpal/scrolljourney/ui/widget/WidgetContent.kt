@@ -73,17 +73,11 @@ private fun WidgetCard(content: @Composable () -> Unit) {
     ) { content() }
 }
 
-/** "Usage Access is off" / "Open the app to start": shown instead of numbers. */
-@Composable
-private fun Notice(snapshot: WidgetSnapshot): Boolean {
-    val context = LocalContext.current
-    val message = when (snapshot.state) {
-        WidgetSnapshot.State.READY -> return false
-        WidgetSnapshot.State.NOT_SET_UP -> context.getString(R.string.widget_not_set_up)
-        WidgetSnapshot.State.NO_ACCESS -> context.getString(R.string.widget_no_access)
-    }
-    Text(message, style = text(TextMuted, 13))
-    return true
+/** "Usage Access is off" / "Open the app to start", shown instead of numbers; null when READY. */
+private fun noticeFor(context: Context, snapshot: WidgetSnapshot): String? = when (snapshot.state) {
+    WidgetSnapshot.State.READY -> null
+    WidgetSnapshot.State.NOT_SET_UP -> context.getString(R.string.widget_not_set_up)
+    WidgetSnapshot.State.NO_ACCESS -> context.getString(R.string.widget_no_access)
 }
 
 @Composable
@@ -99,7 +93,7 @@ private fun StatusDot(status: DayStatus, size: Int = 12) {
 fun TodayWidgetContent(snapshot: WidgetSnapshot) {
     val context = LocalContext.current
     WidgetCard {
-        if (Notice(snapshot)) return@WidgetCard
+        noticeFor(context, snapshot)?.let { Text(it, style = text(TextMuted, 13)); return@WidgetCard }
         Row(verticalAlignment = Alignment.CenterVertically) {
             StatusDot(snapshot.status)
             Spacer(GlanceModifier.width(10.dp))
@@ -119,7 +113,7 @@ fun TodayWidgetContent(snapshot: WidgetSnapshot) {
 fun JourneyWidgetContent(snapshot: WidgetSnapshot) {
     val context = LocalContext.current
     WidgetCard {
-        if (Notice(snapshot)) return@WidgetCard
+        noticeFor(context, snapshot)?.let { Text(it, style = text(TextMuted, 13)); return@WidgetCard }
         Column(modifier = GlanceModifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 StatusDot(snapshot.status, size = 10)

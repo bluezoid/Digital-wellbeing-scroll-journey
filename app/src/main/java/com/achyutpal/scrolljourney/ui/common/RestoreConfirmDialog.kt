@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.achyutpal.scrolljourney.R
 import com.achyutpal.scrolljourney.domain.repository.BackupSummary
@@ -17,10 +18,11 @@ fun RestoreConfirmDialog(summary: BackupSummary, onConfirm: () -> Unit, onDismis
         title = { Text(stringResource(R.string.settings_restore_confirm_title)) },
         text = {
             Text(
-                stringResource(
-                    R.string.settings_restore_confirm_body,
-                    summary.exportedOn,
+                pluralStringResource(
+                    R.plurals.settings_restore_confirm_body,
                     summary.days,
+                    summary.days,
+                    summary.exportedOn,
                     stringResource(summary.destination.nameRes()),
                     summary.currentFuel,
                 ),

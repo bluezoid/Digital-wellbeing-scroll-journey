@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">Scroll Journey</string>
 
     <!-- Onboarding: intro pages -->
@@ -25,7 +25,6 @@
     <string name="home_revoked_body">Enable it to continue tracking your selected apps.</string>
     <string name="home_today_title">Today</string>
     <string name="home_updated_at">Updated at %1$s</string>
-    <string name="home_total_label">in your tracked apps since midnight</string>
     <string name="home_no_usage">No usage recorded yet today.</string>
     <string name="home_usage_error">Couldn’t read usage: %1$s</string>
     <string name="action_refresh">Refresh</string>
@@ -42,12 +41,12 @@
     <string name="space_rocket_title">🚀 Your rocket</string>
     <string name="space_rocket_line">%1$s → %2$s · fuel %3$d / %4$d</string>
     <string name="space_status_reached">✓ Reached · stop %1$d of %2$d</string>
-    <string name="space_status_next">🎯 Next stop (%1$d of %2$d) · %3$d more fuel · needs %4$d</string>
-    <string name="space_status_locked">🔒 Stop %1$d of %2$d · needs %3$d fuel · %4$d to go</string>
+    <string name="space_status_next" tools:ignore="PluralsCandidate">🎯 Next stop (%1$d of %2$d) · %3$d more fuel · needs %4$d</string>
+    <string name="space_status_locked" tools:ignore="PluralsCandidate">🔒 Stop %1$d of %2$d · needs %3$d fuel · %4$d to go</string>
     <string name="space_not_a_stop">Scenery: not a stop on your route</string>
     <string name="space_find_rocket">🚀 Find my rocket</string>
     <string name="space_label_you">🚀 YOU</string>
-    <string name="space_label_next">%1$s · next · %2$d fuel</string>
+    <string name="space_label_next" tools:ignore="PluralsCandidate">%1$s · next · %2$d fuel</string>
     <string name="space_label_reached">✓ %1$s</string>
     <string name="space_back_to_sun">Solar system</string>
     <string name="body_sun">Sun</string>
@@ -93,11 +92,24 @@
     <string name="settings_import">Import data</string>
     <string name="settings_import_subtitle">Restore from a backup file (replaces data on this phone)</string>
     <string name="settings_backup_working">Working…</string>
-    <string name="settings_export_done">Backup saved: %1$d days of history.</string>
-    <string name="settings_restore_done">Restored %1$d days. Your rocket is at %2$s with %3$d fuel.</string>
+    <plurals name="settings_export_done">
+        <item quantity="one">Backup saved: %1$d day of history.</item>
+        <item quantity="other">Backup saved: %1$d days of history.</item>
+    </plurals>
+    <plurals name="settings_restore_done">
+        <item quantity="one">Restored %1$d day. Your rocket is at %2$s with %3$d fuel.</item>
+        <item quantity="other">Restored %1$d days. Your rocket is at %2$s with %3$d fuel.</item>
+    </plurals>
     <string name="settings_backup_failed">Couldn’t use that file: %1$s.</string>
     <string name="settings_restore_confirm_title">Restore this backup?</string>
-    <string name="settings_restore_confirm_body">Backup from %1$s: %2$d days of history, rocket at %3$s with %4$d fuel.\n\nThis replaces all data on this phone.</string>
+    <plurals name="settings_restore_confirm_body">
+        <item quantity="one">Backup from %2$s: %1$d day of history, rocket at %3$s with %4$d fuel.
+
+This replaces all data on this phone.</item>
+        <item quantity="other">Backup from %2$s: %1$d days of history, rocket at %3$s with %4$d fuel.
+
+This replaces all data on this phone.</item>
+    </plurals>
     <string name="settings_restore_confirm_action">Restore</string>
     <string name="settings_backup_hint">Keep a backup before changing phones or reinstalling: uninstalling the app deletes its data.</string>
     <string name="settings_section_privacy">Privacy</string>
@@ -111,21 +123,18 @@
     <string name="history_best_streak">best green streak</string>
     <string name="history_previous_month">Previous month</string>
     <string name="history_next_month">Next month</string>
-    <string name="history_green_count">%1$d green</string>
-    <string name="history_yellow_count">%1$d yellow</string>
-    <string name="history_red_count">%1$d red</string>
+    <string name="history_green_count" tools:ignore="PluralsCandidate">%1$d green</string>
+    <string name="history_yellow_count" tools:ignore="PluralsCandidate">%1$d yellow</string>
+    <string name="history_red_count" tools:ignore="PluralsCandidate">%1$d red</string>
     <string name="history_distance">📏 %1$s estimated</string>
     <string name="history_no_data">No usage data for this day. Android keeps about a week of history, and days before you installed the app may be missing.</string>
     <string name="streak_none">No green streak right now. Stay under your limit today to start one.</string>
-    <string name="rocket_fuel_label">⛽ %1$d fuel</string>
-    <string name="home_change_limit">Change daily limit</string>
+    <string name="rocket_fuel_label" tools:ignore="PluralsCandidate">⛽ %1$d fuel</string>
     <string name="home_limit_of">of %1$s limit</string>
     <string name="status_green">Green day</string>
     <string name="status_yellow">Yellow day</string>
     <string name="status_red">Red day</string>
     <string name="status_so_far">" so far"</string>
-    <string name="home_recent_title">Last 7 days</string>
-    <string name="home_recent_distance">≈ %1$s estimated scroll distance</string>
 
     <string name="home_recent_fuel">%1$s fuel</string>
 
@@ -170,14 +179,13 @@
     <string name="landmark_mount_everest">Mount Everest</string>
     <string name="home_recent_live">today, live</string>
     <string name="home_recent_limit">limit %1$s</string>
-    <string name="home_change_apps">Change apps</string>
 
     <!-- App picker -->
     <string name="app_picker_title">Choose apps to track</string>
     <string name="app_picker_body">Minutes in these apps count toward your daily limit.</string>
     <string name="app_picker_search">Search apps</string>
     <string name="app_picker_empty">No apps found. Android may be hiding installed apps from Scroll Journey.</string>
-    <string name="app_picker_continue">Continue (%1$d selected)</string>
+    <string name="app_picker_continue" tools:ignore="PluralsCandidate">Continue (%1$d selected)</string>
 
     <!-- Daily limit -->
     <string name="limit_title">Set your daily limit</string>
