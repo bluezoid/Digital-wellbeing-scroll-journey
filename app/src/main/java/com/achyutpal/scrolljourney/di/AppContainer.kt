@@ -7,6 +7,8 @@ import com.achyutpal.scrolljourney.data.apps.AndroidAppRepository
 import com.achyutpal.scrolljourney.data.apps.AppIconSource
 import com.achyutpal.scrolljourney.data.backup.AndroidDocumentStore
 import com.achyutpal.scrolljourney.data.backup.RoomBackupRepository
+import com.achyutpal.scrolljourney.data.diagnostics.AndroidDiagnosticsRepository
+import com.achyutpal.scrolljourney.data.diagnostics.CrashLog
 import com.achyutpal.scrolljourney.data.history.RoomHistoryRepository
 import com.achyutpal.scrolljourney.data.journey.RoomJourneyRepository
 import com.achyutpal.scrolljourney.data.local.ScrollJourneyDatabase
@@ -19,6 +21,7 @@ import com.achyutpal.scrolljourney.data.usage.AndroidUsageRepository
 import com.achyutpal.scrolljourney.domain.repository.AppRepository
 import com.achyutpal.scrolljourney.domain.repository.BackupRepository
 import com.achyutpal.scrolljourney.domain.repository.DeviceStatusRepository
+import com.achyutpal.scrolljourney.domain.repository.DiagnosticsRepository
 import com.achyutpal.scrolljourney.domain.repository.DocumentStore
 import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
 import com.achyutpal.scrolljourney.domain.repository.JourneyRepository
@@ -74,6 +77,15 @@ class AppContainer(context: Context) {
 
     val deviceStatusRepository: DeviceStatusRepository by lazy {
         AndroidDeviceStatusRepository(appContext)
+    }
+
+    val crashLog: CrashLog by lazy { CrashLog(appContext) }
+
+    val diagnosticsRepository: DiagnosticsRepository by lazy {
+        AndroidDiagnosticsRepository(
+            appContext, settingsRepository, appRepository, historyRepository,
+            usageAccessRepository, deviceStatusRepository, crashLog,
+        )
     }
 
     val reminderGateway: ReminderGateway by lazy { AndroidReminderGateway(appContext) }

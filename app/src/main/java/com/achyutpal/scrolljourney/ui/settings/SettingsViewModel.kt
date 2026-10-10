@@ -15,6 +15,7 @@ import com.achyutpal.scrolljourney.domain.repository.AppRepository
 import com.achyutpal.scrolljourney.domain.repository.BackupRepository
 import com.achyutpal.scrolljourney.domain.repository.BackupSummary
 import com.achyutpal.scrolljourney.domain.repository.DeviceStatusRepository
+import com.achyutpal.scrolljourney.domain.repository.DiagnosticsRepository
 import com.achyutpal.scrolljourney.domain.repository.DocumentStore
 import com.achyutpal.scrolljourney.domain.repository.InvalidBackupException
 import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
@@ -51,6 +52,8 @@ data class SettingsUiState(
     val showResetConfirm: Boolean = false,
     val resetDone: Boolean = false,
     val backup: BackupState = BackupState(),
+    /** Diagnostics text ready to hand to the system share sheet (consumed by the screen). */
+    val diagnosticsToShare: String? = null,
 )
 
 /** Export / import progress and results. */
@@ -76,12 +79,17 @@ class SettingsViewModel(
     private val deviceStatusRepository: DeviceStatusRepository,
     private val backupRepository: BackupRepository,
     private val documentStore: DocumentStore,
+    private val diagnosticsRepository: DiagnosticsRepository,
     private val today: () -> LocalDate = LocalDate::now,
     /** Called after data changed outside a sync (reset, restore): the app redraws the widgets. */
     private val onDataChanged: suspend () -> Unit = {},
 ) : ViewModel() {
 
-    private data class Dialogs(val showResetConfirm: Boolean = false, val resetDone: Boolean = false)
+    private data class Dialogs(
+        val showResetConfirm: Boolean = false,
+        val resetDone: Boolean = false,
+        val diagnosticsToShare: String? = null,
+    )
 
     private val device = MutableStateFlow(DeviceStatus())
     private val dialogs = MutableStateFlow(Dialogs())
@@ -110,6 +118,7 @@ class SettingsViewModel(
             showResetConfirm = dialog.showResetConfirm,
             resetDone = dialog.resetDone,
             backup = backupState,
+            diagnosticsToShare = dialog.diagnosticsToShare,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState())
 
@@ -130,6 +139,16 @@ class SettingsViewModel(
     fun onRemindersChanged(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setRemindersEnabled(enabled) }
     }
+
+    fun onShareDiagnostics() {
+        viewModelScope.launch {
+            val text = runCatching { diagnosticsRepository.report() }
+                .getOrElse { "Scroll Journey diagnostics failed: ${it.message}" }
+            dialogs.update { it.copy(diagnosticsToShare = text) }
+        }
+    }
+
+    fun onDiagnosticsShared() = dialogs.update { it.copy(diagnosticsToShare = null) }
 
     fun onResetClick() = dialogs.update { it.copy(showResetConfirm = true, resetDone = false) }
 
@@ -208,6 +227,7 @@ class SettingsViewModel(
                     container.deviceStatusRepository,
                     container.backupRepository,
                     container.documentStore,
+                    container.diagnosticsRepository,
                     onDataChanged = { WidgetRefresher.refresh(app) },
                 )
             }

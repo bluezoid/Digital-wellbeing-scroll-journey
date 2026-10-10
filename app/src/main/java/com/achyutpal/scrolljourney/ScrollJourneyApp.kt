@@ -15,6 +15,7 @@ class ScrollJourneyApp : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        container.crashLog.install(appVersion = container.deviceStatusRepository.appVersionName)
         DailySyncScheduler.schedule(this)
     }
 }

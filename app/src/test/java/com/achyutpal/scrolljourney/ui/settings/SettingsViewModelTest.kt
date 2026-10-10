@@ -9,6 +9,7 @@ import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.domain.model.UserSettings
 import com.achyutpal.scrolljourney.fakes.FakeAppRepository
 import com.achyutpal.scrolljourney.fakes.FakeBackupRepository
+import com.achyutpal.scrolljourney.fakes.FakeDiagnosticsRepository
 import com.achyutpal.scrolljourney.fakes.FakeDocumentStore
 import com.achyutpal.scrolljourney.fakes.FakeDeviceStatusRepository
 import com.achyutpal.scrolljourney.fakes.FakeHistoryRepository
@@ -64,7 +65,7 @@ class SettingsViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.viewModel() = SettingsViewModel(settings, apps, access, device, backups, documents, today = { today }).also { vm ->
+    private fun TestScope.viewModel() = SettingsViewModel(settings, apps, access, device, backups, documents, FakeDiagnosticsRepository(), today = { today }).also { vm ->
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
     }
 
@@ -146,7 +147,7 @@ class SettingsViewModelTest {
     @Test
     fun `phones that can't run 3D show the switch as unsupported`() = runTest {
         val lowRam = FakeDeviceStatusRepository(graphicsCapability = GraphicsCapability(isLowRamDevice = true))
-        val vm = SettingsViewModel(settings, apps, access, lowRam, backups, documents, today = { today })
+        val vm = SettingsViewModel(settings, apps, access, lowRam, backups, documents, FakeDiagnosticsRepository(), today = { today })
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
         assertFalse(vm.uiState.value.device3dSupported)
     }
@@ -205,5 +206,13 @@ class SettingsViewModelTest {
         vm.onExport("content://d")
         assertEquals(BackupMessage.Failed("disk full"), vm.uiState.value.backup.message)
     }
-}
 
+    @Test
+    fun `share diagnostics hands the report to the screen once`() = runTest {
+        val vm = viewModel()
+        vm.onShareDiagnostics()
+        assertEquals("diagnostics", vm.uiState.value.diagnosticsToShare)
+        vm.onDiagnosticsShared()
+        assertEquals(null, vm.uiState.value.diagnosticsToShare)
+    }
+}

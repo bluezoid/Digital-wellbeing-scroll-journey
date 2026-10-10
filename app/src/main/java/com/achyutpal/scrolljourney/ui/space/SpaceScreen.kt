@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +51,7 @@ import com.achyutpal.scrolljourney.domain.model.Destination
 import com.achyutpal.scrolljourney.domain.model.RocketState
 import com.achyutpal.scrolljourney.ui.common.emoji
 import com.achyutpal.scrolljourney.ui.common.nameRes
+import com.achyutpal.scrolljourney.ui.theme.LocalBrightStatusColors
 import com.achyutpal.scrolljourney.ui.theme.StatusGreen
 import io.github.sceneview.Scene
 import io.github.sceneview.math.Position
@@ -205,61 +207,64 @@ fun SpaceScreen(
         return placed
     }
 
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
-        Scene(
-            modifier = Modifier.fillMaxSize().onSizeChanged { viewSize = it },
-            engine = engine,
-            materialLoader = materialLoader,
-            modelLoader = modelLoader,
-            environmentLoader = environmentLoader,
-            environment = environment,
-            mainLightNode = null, // the Sun's point light replaces the default overhead light
-            cameraNode = cameraNode,
-            cameraManipulator = cameraManipulator,
-            childNodes = rememberNodes { addAll(scene.all) },
-            // SceneView keeps the screen awake for its activity and never undoes it; with no activity it skips that.
-            activity = null,
-            // Pauses drawing before the model loader is destroyed when this screen closes (see rememberSceneLifecycle).
-            lifecycle = rememberSceneLifecycle(active = true),
-            onGestureListener = rememberOnGestureListener(
-                // A single tap is confirmed ~300 ms later (in case it becomes a double tap). If the
-                // screen closed meanwhile, the engine is already destroyed: ignore the late tap.
-                // Try the 3D hit first, then fall back to screen-space picking (small far objects).
-                onSingleTapConfirmed = { e, node ->
-                    if (engine.isValid) (scene.focusFor(node) ?: focusAt(e.x, e.y))?.let(::focusOn)
+    // Always-dark space background: keep the bright status colours even in light theme.
+    CompositionLocalProvider(LocalBrightStatusColors provides true) {
+        Box(Modifier.fillMaxSize().background(Color.Black)) {
+            Scene(
+                modifier = Modifier.fillMaxSize().onSizeChanged { viewSize = it },
+                engine = engine,
+                materialLoader = materialLoader,
+                modelLoader = modelLoader,
+                environmentLoader = environmentLoader,
+                environment = environment,
+                mainLightNode = null, // the Sun's point light replaces the default overhead light
+                cameraNode = cameraNode,
+                cameraManipulator = cameraManipulator,
+                childNodes = rememberNodes { addAll(scene.all) },
+                // SceneView keeps the screen awake for its activity and never undoes it; with no activity it skips that.
+                activity = null,
+                // Pauses drawing before the model loader is destroyed when this screen closes (see rememberSceneLifecycle).
+                lifecycle = rememberSceneLifecycle(active = true),
+                onGestureListener = rememberOnGestureListener(
+                    // A single tap is confirmed ~300 ms later (in case it becomes a double tap). If the
+                    // screen closed meanwhile, the engine is already destroyed: ignore the late tap.
+                    // Try the 3D hit first, then fall back to screen-space picking (small far objects).
+                    onSingleTapConfirmed = { e, node ->
+                        if (engine.isValid) (scene.focusFor(node) ?: focusAt(e.x, e.y))?.let(::focusOn)
+                    },
+                    onDoubleTap = { _, _ -> if (engine.isValid) focusOn(SpaceFocus.Overview) },
+                ),
+                onFrame = frame@{ frameTimeNanos ->
+                    if (!engine.isValid) return@frame
+                    val t = clock.seconds(frameTimeNanos)
+                    scene.update(t, rocketState, camera.eye())
+                    // Follow the focus as it moves, easing the camera there after a tap.
+                    camera.advance(clock.delta(frameTimeNanos), focusCentre(t, rocketState))
+                    cameraNode.transform = FocusOrbitManipulator.cameraTransform(camera)
+                    labels = computeLabels(t, rocketState)
                 },
-                onDoubleTap = { _, _ -> if (engine.isValid) focusOn(SpaceFocus.Overview) },
-            ),
-            onFrame = frame@{ frameTimeNanos ->
-                if (!engine.isValid) return@frame
-                val t = clock.seconds(frameTimeNanos)
-                scene.update(t, rocketState, camera.eye())
-                // Follow the focus as it moves, easing the camera there after a tap.
-                camera.advance(clock.delta(frameTimeNanos), focusCentre(t, rocketState))
-                cameraNode.transform = FocusOrbitManipulator.cameraTransform(camera)
-                labels = computeLabels(t, rocketState)
-            },
-        )
+            )
 
-        labels.forEach { spot -> FloatingLabel(spot, rocketState) }
+            labels.forEach { spot -> FloatingLabel(spot, rocketState) }
 
-        Row(
-            modifier = Modifier.statusBarsPadding().padding(8.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = Color.White)
+            Row(
+                modifier = Modifier.statusBarsPadding().padding(8.dp).fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back), tint = Color.White)
+                }
             }
-        }
 
-        FocusCard(
-            focus = focus,
-            rocket = rocketState,
-            onFindRocket = { focusOn(SpaceFocus.Rocket) },
-            onOverview = { focusOn(SpaceFocus.Overview) },
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
+            FocusCard(
+                focus = focus,
+                rocket = rocketState,
+                onFindRocket = { focusOn(SpaceFocus.Rocket) },
+                onOverview = { focusOn(SpaceFocus.Overview) },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
     }
     // Declared after the Scene, so disposed before it: the rocket model leaves the scene while the
     // scene still exists, and before the model loader frees it (see RocketModel.releaseModel).

@@ -1,5 +1,6 @@
 package com.achyutpal.scrolljourney.ui.settings
 
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -34,6 +35,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -93,6 +95,18 @@ fun SettingsScreen(
         viewModel.refreshDeviceStatus()
     }
 
+    // Hand the diagnostics text to the system share sheet (WhatsApp, email…), once.
+    LaunchedEffect(state.diagnosticsToShare) {
+        state.diagnosticsToShare?.let { text ->
+            val send = Intent(Intent.ACTION_SEND)
+                .setType("text/plain")
+                .putExtra(Intent.EXTRA_SUBJECT, "Scroll Journey diagnostics")
+                .putExtra(Intent.EXTRA_TEXT, text)
+            context.startActivity(Intent.createChooser(send, null))
+            viewModel.onDiagnosticsShared()
+        }
+    }
+
     SettingsContent(
         state = state,
         onBack = onBack,
@@ -113,6 +127,7 @@ fun SettingsScreen(
             if (on && NotificationPermission.needsRequest(context)) notificationPermission.launch(NotificationPermission.PERMISSION)
         },
         onOpenNotificationSettings = { context.openAppNotificationSettings() },
+        onShareDiagnostics = viewModel::onShareDiagnostics,
     )
 }
 
@@ -136,6 +151,7 @@ internal fun SettingsContent(
     onRestoreDismiss: () -> Unit = {},
     onRemindersChanged: (Boolean) -> Unit = {},
     onOpenNotificationSettings: () -> Unit = {},
+    onShareDiagnostics: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -286,6 +302,14 @@ internal fun SettingsContent(
                     checked = on,
                     enabled = state.device3dSupported,
                     onCheckedChange = onJourney3dChanged,
+                )
+            }
+
+            Section(stringResource(R.string.settings_section_help)) {
+                SettingRow(
+                    title = stringResource(R.string.settings_share_diagnostics),
+                    subtitle = stringResource(R.string.settings_share_diagnostics_subtitle),
+                    onClick = onShareDiagnostics,
                 )
             }
 

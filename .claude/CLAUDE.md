@@ -23,7 +23,8 @@ It is the entry point to the project's memory. **Read it first, then open only t
   - P2: drift-free nightly job (one-time chain at 00:30) + **15-min refresh**; stale future-day cleanup; 3D hero idle pause (0% CPU after 20 s); Auto Backup rules.
   - P3: **home-screen widgets** (Glance: Today 2×1, Journey 4×2) + **limit reminder notifications** (80% / reached; DB v6).
   - P4: lint clean (fixed an API 34-only crash), accessibility, rotation supported, plurals, credits.
-- **The user's phone runs the release build** (data restored from backup, verified). 224 JVM + 53 on-device tests ✅.
+- **The user's phone runs the release build** (data restored from backup, verified). 226 JVM + 54 on-device tests ✅ (device suite also passes on an Android 16 emulator).
+- **Ready to share as a beta (2026-10-11):** share package in `../scroll-journey-share/` (universal + arm64 APKs + HOW-TO-INSTALL.txt). Testers report problems via Settings → Share diagnostics. **Next update: bump versionCode.**
 - Phase 12 leftovers to observe in real use: a midnight-spanning session, a missed day, more DW comparisons.
 - Debug shortcuts (debug build `com.achyutpal.scrolljourney.debug` only): `--es debug_route space|settings…`, `--ei debug_fuel N`, `--es debug_reminder near|reached`.
 - **Never run `connectedAndroidTest`**. Device tests: `adb install -r -t app-debug-androidTest.apk; adb shell am instrument -w com.achyutpal.scrolljourney.debug.test/androidx.test.runner.AndroidJUnitRunner` (UI tests need the phone unlocked). realme blocks `appops set`, `pm grant`, `settings put` over adb; use the system screens.
@@ -75,6 +76,7 @@ navigate_scrolling/
     │   ├─ data/backup/{BackupFile, BackupCodec, RoomBackupRepository, AndroidDocumentStore}, data/local/dao/BackupDao, domain/repository/{BackupRepository, DocumentStore}
     │   ├─ data/reminder/AndroidReminderGateway, domain/{calculator/ReminderPolicy, repository/ReminderGateway, usecase/CheckLimitRemindersUseCase}
     │   ├─ ui/widget/{WidgetSnapshot, WidgetContent, JourneyWidgets}  (Glance home-screen widgets)
+    │   ├─ data/diagnostics/{CrashLog, DiagnosticsReport, AndroidDiagnosticsRepository}, domain/repository/DiagnosticsRepository
     │   ├─ ui/onboarding/{IntroRoute, RestoreBackupViewModel}, ui/common/RestoreConfirmDialog, util/NotificationPermission
     │   ├─ util/UsageAccessSettings.kt (+ openAppDetailsSettings)
     │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, dashboard, history, settings, space (Explore)
