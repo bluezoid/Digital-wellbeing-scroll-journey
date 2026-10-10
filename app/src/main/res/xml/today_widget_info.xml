@@ -11,6 +11,7 @@
     android:maxResizeHeight="110dp"
     android:targetCellWidth="2"
     android:targetCellHeight="1"
+    android:previewImage="@drawable/widget_today_preview_image"
     android:previewLayout="@layout/widget_today_preview"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
