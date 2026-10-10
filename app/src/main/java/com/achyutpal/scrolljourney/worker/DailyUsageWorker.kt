@@ -23,6 +23,7 @@ class DailyUsageWorker(
         val container = (applicationContext as ScrollJourneyApp).container
         if (!container.settingsRepository.getSettings().onboardingComplete) {
             Log.d(TAG, "onboarding not finished, nothing to sync")
+            DailySyncScheduler.scheduleNextNight(applicationContext)
             return Result.success()
         }
 
@@ -30,7 +31,11 @@ class DailyUsageWorker(
         val outcome = DailySyncPolicy.outcomeFor(result)
         Log.d(TAG, "sync result=${result::class.simpleName} outcome=$outcome attempt=$runAttemptCount")
         return when (outcome) {
-            DailySyncPolicy.Outcome.SUCCESS -> Result.success()
+            DailySyncPolicy.Outcome.SUCCESS -> {
+                DailySyncScheduler.scheduleNextNight(applicationContext)
+                Result.success()
+            }
+            // The retry keeps this run in the chain; the next night is appended once it succeeds.
             DailySyncPolicy.Outcome.RETRY -> Result.retry()
         }
     }

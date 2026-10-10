@@ -38,4 +38,7 @@ interface DailyUsageDao {
 
     @Query("SELECT * FROM daily_usage ORDER BY date DESC LIMIT :limit")
     fun observeRecent(limit: Int): Flow<List<DailyUsageEntity>>
+
+    @Query("DELETE FROM daily_usage WHERE date > :today AND finalized = 0")
+    suspend fun deleteLiveAfter(today: String): Int
 }

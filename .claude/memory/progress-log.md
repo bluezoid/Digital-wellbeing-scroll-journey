@@ -528,3 +528,11 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - Version **1.0.0 (versionCode 10000**, scheme major·10000 + minor·100 + patch).
 - **ABI splits**: arm64-v8a / armeabi-v7a / x86_64 + universal. Release arm64 = **12.4 MB** (the universal debug was 44.6 MB). Verified: apksigner v2 with our cert, not debuggable, targetSdk 36.
 - **Intro "Restore from a backup"** (`ui/onboarding/{IntroRoute, RestoreBackupViewModel}` + shared `ui/common/RestoreConfirmDialog`): picker → confirm → restore → AfterRestore {USAGE_ACCESS (route `usage_access?afterRestore=true` → dashboard once granted), DASHBOARD, ONBOARDING}. +5 VM tests → **209 JVM tests ✅**.
+
+## 2026-10-10: P2 step 1, background jobs re-designed ✅
+
+- **Nightly job** `nightly-sync`: a **one-time** DailyUsageWorker aimed at the next 00:30; on success it calls `DailySyncScheduler.scheduleNextNight()` = `enqueueUniqueWork(APPEND_OR_REPLACE)`: the next run is BLOCKED until this one ends, then its delay starts, so it lands on the next 00:30 → **no drift** (the 24 h periodic job drifted 00:30 → 23:32). On RETRY the run stays in the chain. App start: `enqueueUniqueWork(KEEP)` (never postpones) and `cancelUniqueWork("daily-usage-sync")` (the legacy periodic job).
+- **Refresh job** `usage-refresh`: periodic **30 min** `UsageRefreshWorker` → `syncUsageHistoryUseCase(backfillDays = 1)` (yesterday + today; finalizes yesterday soon after midnight). Always Result.success (no retry storm). The hook point for the widget/reminder.
+- `SyncUsageHistoryUseCase(backfillDays = 7)` parameter; every sync first calls `historyRepository.deleteLiveDaysAfter(today)` (removes non-finalized future rows left by a manual date change; finalized rows are kept). DAO `deleteLiveAfter`.
+- Tests: +2 JVM (211) and on-device `DailySyncSchedulerTest` (3, WorkManagerTestInitHelper + SynchronousExecutor: 20:00 → 4 h 30 m delay, KEEP doesn't duplicate/postpone, the next night is BLOCKED with a 23–24 h delay). Worker + data device tests 24/24 ✅ (run with `-e package …` while the phone was locked; Compose UI tests need it unlocked).
+- Phone state: the old debug app was **uninstalled**, the **release 1.0.0** is installed (at intro, data not yet restored; the user was asked to unlock or to restore it themselves), and "SJ Dev" (.debug) is installed side by side for tests.

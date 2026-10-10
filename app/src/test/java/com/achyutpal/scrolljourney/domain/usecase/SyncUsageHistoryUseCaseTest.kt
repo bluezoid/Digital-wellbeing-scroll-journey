@@ -315,4 +315,26 @@ class SyncUsageHistoryUseCaseTest {
         assertFalse(apps.savedRows.getValue(yt).enabled)
         assertEquals(20, result.summary.totalMinutes)
     }
+
+    @Test
+    fun `the 30-minute refresh only brings yesterday up to date`() = runTest {
+        useCase()(backfillDays = 1)
+
+        assertEquals(true, history.records[today.minusDays(1)]?.finalized)
+        assertNull(history.records[today.minusDays(2)]) // the full week is left to the nightly job
+        assertEquals(false, history.records[today]?.finalized)
+    }
+
+    @Test
+    fun `stale live days after today are removed, finalized ones kept`() = runTest {
+        // The phone's date was set a week ahead and back: a "live" future day was saved then.
+        history.saveDay(DailyRecord(today.plusDays(7), 40, status = DayStatus.GREEN, finalized = false), emptyList())
+        history.saveDay(DailyRecord(today.plusDays(8), 10, status = DayStatus.GREEN, finalized = true), emptyList())
+
+        useCase()()
+
+        assertNull(history.records[today.plusDays(7)])
+        assertEquals(true, history.records[today.plusDays(8)]?.finalized)
+    }
 }
+

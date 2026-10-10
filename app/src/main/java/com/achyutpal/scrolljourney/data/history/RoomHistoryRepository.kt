@@ -49,6 +49,10 @@ class RoomHistoryRepository(
     override suspend fun getAppMinutes(date: LocalDate): List<DayAppMinutes> =
         dailyAppUsageDao.getForDate(date.toString()).map { DayAppMinutes(it.packageName, it.minutes) }
 
+    override suspend fun deleteLiveDaysAfter(today: LocalDate) {
+        dailyUsageDao.deleteLiveAfter(today.toString())
+    }
+
     override suspend fun getRange(start: LocalDate, end: LocalDate): List<DailyRecord> =
         dailyUsageDao.getRange(start.toString(), end.toString()).map { it.toDomain() }
 

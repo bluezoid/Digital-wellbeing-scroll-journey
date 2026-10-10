@@ -24,6 +24,12 @@ interface HistoryRepository {
     suspend fun getAppMinutes(date: LocalDate): List<DayAppMinutes>
 
     /** Days in [start, end] inclusive, oldest first. */
+    /**
+     * Removes unfinished ("live") days dated after [today]. They only exist if the phone's date was
+     * set forward and back again; finalized days are never removed.
+     */
+    suspend fun deleteLiveDaysAfter(today: LocalDate)
+
     suspend fun getRange(start: LocalDate, end: LocalDate): List<DailyRecord>
 
     /** Most recent [limit] saved days, newest first. */

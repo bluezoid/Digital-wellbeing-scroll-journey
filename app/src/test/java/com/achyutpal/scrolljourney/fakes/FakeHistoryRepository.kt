@@ -49,6 +49,10 @@ class FakeHistoryRepository(initial: List<DailyRecord> = emptyList()) : HistoryR
     override suspend fun getAppMinutes(date: LocalDate): List<DayAppMinutes> =
         appRows[date].orEmpty().map { DayAppMinutes(it.packageName, it.minutes) }.sortedByDescending { it.minutes }
 
+    override suspend fun deleteLiveDaysAfter(today: LocalDate) {
+        days.value = days.value.filterNot { (date, record) -> date > today && !record.finalized }
+    }
+
     override suspend fun getRange(start: LocalDate, end: LocalDate) =
         days.value.values.filter { it.date in start..end }.sortedBy { it.date }
 

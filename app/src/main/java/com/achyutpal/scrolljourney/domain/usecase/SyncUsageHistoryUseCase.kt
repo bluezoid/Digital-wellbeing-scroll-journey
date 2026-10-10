@@ -56,7 +56,11 @@ class SyncUsageHistoryUseCase(
         return tracked.filter { installed.getValue(it.packageName) }
     }
 
-    suspend operator fun invoke(): TodayUsageResult {
+    /**
+     * @param backfillDays how many finished days to bring up to date (the 30-minute widget refresh
+     *   only needs yesterday, so it finalizes the previous day soon after midnight cheaply).
+     */
+    suspend operator fun invoke(backfillDays: Int = BACKFILL_DAYS): TodayUsageResult {
         if (usageAccessRepository.checkUsageAccess() != UsageAccessState.GRANTED) {
             return TodayUsageResult.AccessDenied
         }
@@ -67,7 +71,8 @@ class SyncUsageHistoryUseCase(
             val tracked = trackedStillInstalled()
             val limit = settingsRepository.getSettings().dailyLimitMinutes
 
-            for (daysAgo in BACKFILL_DAYS downTo 1) {
+            historyRepository.deleteLiveDaysAfter(today)
+            for (daysAgo in backfillDays.coerceIn(0, BACKFILL_DAYS) downTo 1) {
                 syncPastDay(today.minusDays(daysAgo.toLong()), tracked, limit, zoneId)
             }
 
