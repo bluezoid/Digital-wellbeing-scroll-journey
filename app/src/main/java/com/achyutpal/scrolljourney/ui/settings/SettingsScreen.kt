@@ -1,7 +1,8 @@
 package com.achyutpal.scrolljourney.ui.settings
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -76,6 +78,14 @@ fun SettingsScreen(
         onPauseOrDispose { }
     }
 
+    // The system "Save as" / "Open" screens (Storage Access Framework): no storage permission needed.
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
+        uri?.let { viewModel.onExport(it.toString()) }
+    }
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { viewModel.onImportPicked(it.toString()) }
+    }
+
     SettingsContent(
         state = state,
         onBack = onBack,
@@ -87,6 +97,10 @@ fun SettingsScreen(
         onJourney3dChanged = viewModel::onJourney3dChanged,
         onResetConfirm = viewModel::onResetConfirm,
         onResetDismiss = viewModel::onResetDismiss,
+        onExportClick = { exportLauncher.launch(viewModel.suggestedBackupName()) },
+        onImportClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+        onRestoreConfirm = viewModel::onRestoreConfirm,
+        onRestoreDismiss = viewModel::onRestoreDismiss,
     )
 }
 
@@ -104,6 +118,10 @@ internal fun SettingsContent(
     onResetConfirm: () -> Unit,
     onResetDismiss: () -> Unit,
     onJourney3dChanged: (Boolean) -> Unit = {},
+    onExportClick: () -> Unit = {},
+    onImportClick: () -> Unit = {},
+    onRestoreConfirm: () -> Unit = {},
+    onRestoreDismiss: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -187,6 +205,39 @@ internal fun SettingsContent(
                 }
             }
 
+            Section(stringResource(R.string.settings_section_backup)) {
+                SettingRow(
+                    title = stringResource(R.string.settings_export),
+                    subtitle = stringResource(R.string.settings_export_subtitle),
+                    onClick = onExportClick,
+                    enabled = !state.backup.busy,
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                SettingRow(
+                    title = stringResource(R.string.settings_import),
+                    subtitle = stringResource(R.string.settings_import_subtitle),
+                    onClick = onImportClick,
+                    enabled = !state.backup.busy,
+                )
+                val message = when (val m = state.backup.message) {
+                    null -> if (state.backup.busy) stringResource(R.string.settings_backup_working) to MaterialTheme.colorScheme.onSurfaceVariant else null
+                    is BackupMessage.Exported -> stringResource(R.string.settings_export_done, m.days) to StatusGreen
+                    is BackupMessage.Restored -> stringResource(
+                        R.string.settings_restore_done,
+                        m.summary.days,
+                        stringResource(m.summary.destination.nameRes()),
+                        m.summary.currentFuel,
+                    ) to StatusGreen
+                    is BackupMessage.Failed -> stringResource(R.string.settings_backup_failed, m.reason) to MaterialTheme.colorScheme.error
+                }
+                Text(
+                    text = message?.first ?: stringResource(R.string.settings_backup_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = message?.second ?: MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                )
+            }
+
             Section(stringResource(R.string.settings_section_view)) {
                 val on = state.journey3dEnabled && state.device3dSupported
                 SwitchRow(
@@ -233,6 +284,30 @@ internal fun SettingsContent(
             )
             Spacer(Modifier.height(16.dp))
         }
+    }
+
+    state.backup.pendingRestore?.let { summary ->
+        AlertDialog(
+            onDismissRequest = onRestoreDismiss,
+            title = { Text(stringResource(R.string.settings_restore_confirm_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.settings_restore_confirm_body,
+                        summary.exportedOn,
+                        summary.days,
+                        stringResource(summary.destination.nameRes()),
+                        summary.currentFuel,
+                    ),
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = onRestoreConfirm) {
+                    Text(stringResource(R.string.settings_restore_confirm_action), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = onRestoreDismiss) { Text(stringResource(R.string.action_cancel)) } },
+        )
     }
 
     if (state.showResetConfirm) {
@@ -299,11 +374,12 @@ private fun SettingRow(
     subtitle: String? = null,
     titleColor: Color = MaterialTheme.colorScheme.onSurface,
     valueColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    enabled: Boolean = true,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

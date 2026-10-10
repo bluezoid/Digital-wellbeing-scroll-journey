@@ -5,6 +5,8 @@ import androidx.room.Room
 import com.achyutpal.scrolljourney.data.apps.AndroidAppIconSource
 import com.achyutpal.scrolljourney.data.apps.AndroidAppRepository
 import com.achyutpal.scrolljourney.data.apps.AppIconSource
+import com.achyutpal.scrolljourney.data.backup.AndroidDocumentStore
+import com.achyutpal.scrolljourney.data.backup.RoomBackupRepository
 import com.achyutpal.scrolljourney.data.history.RoomHistoryRepository
 import com.achyutpal.scrolljourney.data.journey.RoomJourneyRepository
 import com.achyutpal.scrolljourney.data.local.ScrollJourneyDatabase
@@ -14,7 +16,9 @@ import com.achyutpal.scrolljourney.data.usage.AndroidUsageAccessRepository
 import com.achyutpal.scrolljourney.data.usage.AndroidUsageDataSource
 import com.achyutpal.scrolljourney.data.usage.AndroidUsageRepository
 import com.achyutpal.scrolljourney.domain.repository.AppRepository
+import com.achyutpal.scrolljourney.domain.repository.BackupRepository
 import com.achyutpal.scrolljourney.domain.repository.DeviceStatusRepository
+import com.achyutpal.scrolljourney.domain.repository.DocumentStore
 import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
 import com.achyutpal.scrolljourney.domain.repository.JourneyRepository
 import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
@@ -67,6 +71,12 @@ class AppContainer(context: Context) {
     val deviceStatusRepository: DeviceStatusRepository by lazy {
         AndroidDeviceStatusRepository(appContext)
     }
+
+    val backupRepository: BackupRepository by lazy {
+        RoomBackupRepository(database.backupDao(), appVersion = deviceStatusRepository.appVersionName)
+    }
+
+    val documentStore: DocumentStore by lazy { AndroidDocumentStore(appContext.contentResolver) }
 
     val journeyRepository: JourneyRepository by lazy {
         RoomJourneyRepository(database)

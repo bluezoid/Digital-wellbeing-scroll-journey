@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.migration.AutoMigrationSpec
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.achyutpal.scrolljourney.data.local.dao.BackupDao
 import com.achyutpal.scrolljourney.data.local.dao.DailyAppUsageDao
 import com.achyutpal.scrolljourney.data.local.dao.DailyUsageDao
 import com.achyutpal.scrolljourney.data.local.dao.SelectedAppDao
@@ -50,6 +51,7 @@ abstract class ScrollJourneyDatabase : RoomDatabase() {
     abstract fun dailyUsageDao(): DailyUsageDao
     abstract fun dailyAppUsageDao(): DailyAppUsageDao
     abstract fun userSettingsDao(): UserSettingsDao
+    abstract fun backupDao(): BackupDao
 
     /**
      * v1 users already finished onboarding if they saved at least one app, so create

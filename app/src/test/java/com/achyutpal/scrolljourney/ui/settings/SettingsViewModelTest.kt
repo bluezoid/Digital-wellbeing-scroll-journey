@@ -8,6 +8,8 @@ import com.achyutpal.scrolljourney.domain.model.SelectedApp
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.domain.model.UserSettings
 import com.achyutpal.scrolljourney.fakes.FakeAppRepository
+import com.achyutpal.scrolljourney.fakes.FakeBackupRepository
+import com.achyutpal.scrolljourney.fakes.FakeDocumentStore
 import com.achyutpal.scrolljourney.fakes.FakeDeviceStatusRepository
 import com.achyutpal.scrolljourney.fakes.FakeHistoryRepository
 import com.achyutpal.scrolljourney.fakes.FakeSettingsRepository
@@ -53,6 +55,8 @@ class SettingsViewModelTest {
     )
     private val access = FakeUsageAccessRepository(UsageAccessState.GRANTED)
     private val device = FakeDeviceStatusRepository(restricted = true)
+    private val backups = FakeBackupRepository()
+    private val documents = FakeDocumentStore()
 
     @Before
     fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -60,7 +64,7 @@ class SettingsViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.viewModel() = SettingsViewModel(settings, apps, access, device, today = { today }).also { vm ->
+    private fun TestScope.viewModel() = SettingsViewModel(settings, apps, access, device, backups, documents, today = { today }).also { vm ->
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
     }
 
@@ -142,8 +146,64 @@ class SettingsViewModelTest {
     @Test
     fun `phones that can't run 3D show the switch as unsupported`() = runTest {
         val lowRam = FakeDeviceStatusRepository(graphicsCapability = GraphicsCapability(isLowRamDevice = true))
-        val vm = SettingsViewModel(settings, apps, access, lowRam, today = { today })
+        val vm = SettingsViewModel(settings, apps, access, lowRam, backups, documents, today = { today })
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.uiState.collect {} }
         assertFalse(vm.uiState.value.device3dSupported)
     }
+
+    @Test
+    fun `export writes the backup to the chosen file`() = runTest {
+        val vm = viewModel()
+        assertEquals("scroll-journey-backup-2026-09-28.json", vm.suggestedBackupName())
+
+        vm.onExport("content://downloads/1")
+
+        assertEquals("BACKUP:20", documents.files["content://downloads/1"])
+        assertEquals(BackupMessage.Exported(days = 20), vm.uiState.value.backup.message)
+        assertFalse(vm.uiState.value.backup.busy)
+    }
+
+    @Test
+    fun `import asks for confirmation before restoring`() = runTest {
+        documents.files["content://b"] = "BACKUP:14"
+        val vm = viewModel()
+
+        vm.onImportPicked("content://b")
+        assertEquals(14, vm.uiState.value.backup.pendingRestore?.days)
+        assertEquals(null, backups.restored) // nothing changed yet
+
+        vm.onRestoreConfirm()
+        assertEquals("BACKUP:14", backups.restored)
+        assertEquals(null, vm.uiState.value.backup.pendingRestore)
+        assertEquals(14, (vm.uiState.value.backup.message as BackupMessage.Restored).summary.days)
+    }
+
+    @Test
+    fun `cancelling the restore changes nothing`() = runTest {
+        documents.files["content://b"] = "BACKUP:14"
+        val vm = viewModel()
+        vm.onImportPicked("content://b")
+        vm.onRestoreDismiss()
+        vm.onRestoreConfirm() // no pending backup any more: ignored
+        assertEquals(null, backups.restored)
+        assertEquals(null, vm.uiState.value.backup.pendingRestore)
+    }
+
+    @Test
+    fun `an invalid file shows why instead of crashing`() = runTest {
+        documents.files["content://x"] = "a holiday photo"
+        val vm = viewModel()
+        vm.onImportPicked("content://x")
+        assertEquals(BackupMessage.Failed("not a Scroll Journey backup"), vm.uiState.value.backup.message)
+        assertEquals(null, vm.uiState.value.backup.pendingRestore)
+    }
+
+    @Test
+    fun `file access errors become a message`() = runTest {
+        documents.failWith = java.io.IOException("disk full")
+        val vm = viewModel()
+        vm.onExport("content://d")
+        assertEquals(BackupMessage.Failed("disk full"), vm.uiState.value.backup.message)
+    }
 }
+
