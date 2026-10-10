@@ -491,3 +491,13 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
   3. Explore now also uses `rememberSceneLifecycle(active = true)`.
 - **Verified on the phone:** scroll → See full history **0/10 crashes** (was 8/10 at worst); 6 loops of menu→History + dashboard↔Explore + tap-then-back races: no crash. CPU: History 2.5%, dashboard hero drawing 183%, **hero scrolled away 0%**, back on screen 165%, so the off-screen pause now really works (it was a silent battery drain before).
 - Note: the user opened the app on 2026-09-30, so the "missed day" test needs another day.
+
+## 2026-10-10: 10-day real-use check (session 6)
+
+- The user asked to take the app **beyond MVP to production level**.
+- Phone check: no crashes in dropbox (it only keeps a few days) or the crash buffer; installed build = 2026-09-30 22:15 (the History crash fix).
+- **All days 2026-09-27 → 10-09 saved, finalized and fuelled exactly once**; fuel deltas sum to +6 → **rocket reached the MOON** (currentFuel 6, lifetime 8, journeyDistance 186 400 cm).
+- **Worker ran 10× by itself**, but its time drifted from ~00:30 to **23:32** (last run 2026-10-09 23:32), i.e. before midnight, so it no longer finalizes "yesterday" promptly. To fix in production (realign after midnight).
+- Tracked apps now YouTube + Chrome: **Instagram and Facebook are uninstalled** → auto-disabled by the 2026-09-29 fix (history kept) ✅. Brave unticked (the user didn't re-tick it).
+- To verify with the user: 2026-10-04 = 755 min (Instagram 752) RED, which looks extreme; compare with Digital Wellbeing if it still has that day. 2026-10-03/07/08/09 = 0 min (plausible with only YouTube/Chrome tracked).
+- Midnight split and missed day still not explicitly confirmed by the user.
