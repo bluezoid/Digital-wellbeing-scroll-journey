@@ -215,4 +215,17 @@
         <item quantity="other">🔥 %d-day green streak</item>
     </plurals>
     <string name="widget_no_streak">Stay under your limit to start a streak</string>
+
+    <!-- Limit reminders (notifications) -->
+    <string name="reminder_channel_name">Limit reminders</string>
+    <string name="reminder_channel_description">When you are close to or over your daily limit</string>
+    <string name="reminder_near_title">Almost at your daily limit</string>
+    <string name="reminder_near_text">%1$s of your %2$s used. %3$s left for a green day 🚀</string>
+    <string name="reminder_reached_title">Daily limit reached</string>
+    <string name="reminder_reached_text">%1$s used today. Stop before %2$s to keep it yellow instead of red.</string>
+    <string name="settings_section_reminders">Reminders</string>
+    <string name="settings_reminders">Limit reminders</string>
+    <string name="settings_reminders_on">A notice at 80% of your limit and when you reach it</string>
+    <string name="settings_reminders_off">Off: no notifications</string>
+    <string name="settings_reminders_blocked">Notifications are blocked for this app. Tap to allow them.</string>
 </resources>

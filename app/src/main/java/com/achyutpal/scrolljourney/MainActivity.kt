@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.achyutpal.scrolljourney.domain.calculator.LimitReminder
 import com.achyutpal.scrolljourney.navigation.AppNavHost
 import com.achyutpal.scrolljourney.navigation.toRoute
 import com.achyutpal.scrolljourney.ui.space.SpaceViewModel
@@ -34,6 +35,13 @@ class MainActivity : ComponentActivity() {
         if (isDebuggable && intent.hasExtra(EXTRA_DEBUG_FUEL)) {
             SpaceViewModel.debugFuelOverride = intent.getIntExtra(EXTRA_DEBUG_FUEL, 0)
         }
+        // Debug builds only: `--es debug_reminder near|reached` posts a sample limit reminder.
+        if (isDebuggable) {
+            intent.getStringExtra(EXTRA_DEBUG_REMINDER)?.let { kind ->
+                val reminder = if (kind == "reached") LimitReminder.REACHED else LimitReminder.NEAR
+                (application as ScrollJourneyApp).container.reminderGateway.show(reminder, minutes = 96, limitMinutes = 120)
+            }
+        }
 
         setContent {
             ScrollJourneyTheme {
@@ -48,5 +56,6 @@ class MainActivity : ComponentActivity() {
     private companion object {
         const val EXTRA_DEBUG_ROUTE = "debug_route"
         const val EXTRA_DEBUG_FUEL = "debug_fuel"
+        const val EXTRA_DEBUG_REMINDER = "debug_reminder"
     }
 }

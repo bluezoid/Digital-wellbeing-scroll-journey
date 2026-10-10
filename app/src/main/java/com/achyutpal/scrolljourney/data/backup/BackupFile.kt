@@ -34,6 +34,7 @@ data class BackupFile(
         val journeyDistance: Long,
         val journeyStartDate: String? = null,
         val journey3dEnabled: Boolean = true,
+        val remindersEnabled: Boolean = true,
     )
 
     @Serializable
@@ -64,7 +65,7 @@ data class BackupFile(
 
 fun UserSettingsEntity.toRow() = BackupFile.SettingsRow(
     dailyLimitMinutes, onboardingComplete, currentFuel, lifetimeFuel, highestReachedPlanet.name,
-    journeyDistance, journeyStartDate, journey3dEnabled,
+    journeyDistance, journeyStartDate, journey3dEnabled, remindersEnabled,
 )
 
 fun BackupFile.SettingsRow.toEntity() = UserSettingsEntity(
@@ -76,6 +77,7 @@ fun BackupFile.SettingsRow.toEntity() = UserSettingsEntity(
     journeyDistance = journeyDistance,
     journeyStartDate = journeyStartDate,
     journey3dEnabled = journey3dEnabled,
+    remindersEnabled = remindersEnabled,
 )
 
 fun SelectedAppEntity.toRow() = BackupFile.AppRow(packageName, appName, enabled, addedAt)

@@ -15,6 +15,8 @@ data class UserSettings(
     val journeyStartDate: LocalDate? = null,
     /** Show the journey as the live 3D scene (true) or the flat 2D card (false). */
     val journey3dEnabled: Boolean = true,
+    /** Near-limit / limit-reached notifications. */
+    val remindersEnabled: Boolean = true,
 ) {
     val rocket: RocketState get() = RocketState(currentFuel, lifetimeFuel, highestReachedPlanet)
 

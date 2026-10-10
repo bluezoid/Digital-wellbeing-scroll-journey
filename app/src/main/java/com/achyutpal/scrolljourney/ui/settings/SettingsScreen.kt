@@ -59,7 +59,9 @@ import com.achyutpal.scrolljourney.ui.common.formatMinutes
 import com.achyutpal.scrolljourney.ui.common.nameRes
 import com.achyutpal.scrolljourney.ui.theme.ScrollJourneyTheme
 import com.achyutpal.scrolljourney.ui.theme.StatusGreen
+import com.achyutpal.scrolljourney.util.NotificationPermission
 import com.achyutpal.scrolljourney.util.openAppDetailsSettings
+import com.achyutpal.scrolljourney.util.openAppNotificationSettings
 import com.achyutpal.scrolljourney.util.openUsageAccessSettings
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -86,6 +88,10 @@ fun SettingsScreen(
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { viewModel.onImportPicked(it.toString()) }
     }
+    // Android 13+: turning reminders on asks for the notification permission first.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        viewModel.refreshDeviceStatus()
+    }
 
     SettingsContent(
         state = state,
@@ -102,6 +108,11 @@ fun SettingsScreen(
         onImportClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
         onRestoreConfirm = viewModel::onRestoreConfirm,
         onRestoreDismiss = viewModel::onRestoreDismiss,
+        onRemindersChanged = { on ->
+            viewModel.onRemindersChanged(on)
+            if (on && NotificationPermission.needsRequest(context)) notificationPermission.launch(NotificationPermission.PERMISSION)
+        },
+        onOpenNotificationSettings = { context.openAppNotificationSettings() },
     )
 }
 
@@ -123,6 +134,8 @@ internal fun SettingsContent(
     onImportClick: () -> Unit = {},
     onRestoreConfirm: () -> Unit = {},
     onRestoreDismiss: () -> Unit = {},
+    onRemindersChanged: (Boolean) -> Unit = {},
+    onOpenNotificationSettings: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -237,6 +250,25 @@ internal fun SettingsContent(
                     color = message?.second ?: MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
                 )
+            }
+
+            Section(stringResource(R.string.settings_section_reminders)) {
+                val blocked = state.remindersEnabled && !state.device.notificationsAllowed
+                SwitchRow(
+                    title = stringResource(R.string.settings_reminders),
+                    subtitle = stringResource(if (state.remindersEnabled) R.string.settings_reminders_on else R.string.settings_reminders_off),
+                    checked = state.remindersEnabled,
+                    enabled = true,
+                    onCheckedChange = onRemindersChanged,
+                )
+                if (blocked) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                    SettingRow(
+                        title = stringResource(R.string.settings_reminders_blocked),
+                        titleColor = MaterialTheme.colorScheme.error,
+                        onClick = onOpenNotificationSettings,
+                    )
+                }
             }
 
             Section(stringResource(R.string.settings_section_view)) {

@@ -142,6 +142,28 @@ class MigrationTest {
         }
     }
 
+    @Test
+    fun migrate5To6_addsRemindersSwitchOnWithoutTouchingData() {
+        helper.createDatabase(TEST_DB, 5).apply {
+            execSQL(
+                "INSERT INTO user_settings (id, dailyLimitMinutes, onboardingComplete, currentFuel, lifetimeFuel, " +
+                    "highestReachedPlanet, journeyDistance, journeyStartDate, journey3dEnabled) " +
+                    "VALUES (1, 120, 1, 6, 8, 'MOON', 186400, '2026-09-27', 0)",
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(TEST_DB, 6, true)
+
+        db.query("SELECT currentFuel, highestReachedPlanet, journey3dEnabled, remindersEnabled FROM user_settings").use {
+            it.moveToFirst()
+            assertEquals(6, it.getInt(0))
+            assertEquals("MOON", it.getString(1))
+            assertEquals(0, it.getInt(2)) // the user's 3D choice is kept
+            assertEquals(1, it.getInt(3)) // reminders on for existing users
+        }
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }

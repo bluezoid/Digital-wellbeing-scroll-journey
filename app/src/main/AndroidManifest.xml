@@ -31,6 +31,9 @@
         </intent>
     </queries>
 
+    <!-- Android 13+: needed to show limit reminders (asked at runtime). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".ScrollJourneyApp"
         android:allowBackup="true"

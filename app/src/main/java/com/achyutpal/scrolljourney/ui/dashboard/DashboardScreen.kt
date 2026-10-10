@@ -1,6 +1,8 @@
 package com.achyutpal.scrolljourney.ui.dashboard
 
 import android.os.SystemClock
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -72,6 +74,7 @@ import com.achyutpal.scrolljourney.ui.space.JourneyHero
 import com.achyutpal.scrolljourney.ui.space.JourneyHeroPlaceholder
 import com.achyutpal.scrolljourney.ui.theme.ScrollJourneyTheme
 import com.achyutpal.scrolljourney.ui.theme.color
+import com.achyutpal.scrolljourney.util.NotificationPermission
 import com.achyutpal.scrolljourney.util.openUsageAccessSettings
 import kotlinx.coroutines.delay
 import java.text.DateFormat
@@ -97,6 +100,12 @@ fun DashboardScreen(
     LifecycleResumeEffect(Unit) {
         viewModel.refresh()
         onPauseOrDispose { }
+    }
+
+    // Android 13+: ask once (per install) to allow the limit reminders.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    LaunchedEffect(Unit) {
+        if (NotificationPermission.shouldAskOnce(context)) notificationPermission.launch(NotificationPermission.PERMISSION)
     }
 
     DashboardContent(

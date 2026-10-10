@@ -15,6 +15,9 @@ interface DeviceStatusRepository {
 
     val appVersionName: String
 
+    /** False if notifications are blocked for the app (or not yet allowed on Android 13+). */
+    fun areNotificationsEnabled(): Boolean
+
     /** Low-RAM flag and OpenGL ES version: decides whether the 3D journey can run here. */
     val graphicsCapability: GraphicsCapability
 }

@@ -10,6 +10,7 @@ import com.achyutpal.scrolljourney.data.backup.RoomBackupRepository
 import com.achyutpal.scrolljourney.data.history.RoomHistoryRepository
 import com.achyutpal.scrolljourney.data.journey.RoomJourneyRepository
 import com.achyutpal.scrolljourney.data.local.ScrollJourneyDatabase
+import com.achyutpal.scrolljourney.data.reminder.AndroidReminderGateway
 import com.achyutpal.scrolljourney.data.settings.RoomSettingsRepository
 import com.achyutpal.scrolljourney.data.system.AndroidDeviceStatusRepository
 import com.achyutpal.scrolljourney.data.usage.AndroidUsageAccessRepository
@@ -21,10 +22,12 @@ import com.achyutpal.scrolljourney.domain.repository.DeviceStatusRepository
 import com.achyutpal.scrolljourney.domain.repository.DocumentStore
 import com.achyutpal.scrolljourney.domain.repository.HistoryRepository
 import com.achyutpal.scrolljourney.domain.repository.JourneyRepository
+import com.achyutpal.scrolljourney.domain.repository.ReminderGateway
 import com.achyutpal.scrolljourney.domain.repository.SettingsRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageAccessRepository
 import com.achyutpal.scrolljourney.domain.repository.UsageRepository
 import com.achyutpal.scrolljourney.domain.usecase.ApplyJourneyFuelUseCase
+import com.achyutpal.scrolljourney.domain.usecase.CheckLimitRemindersUseCase
 import com.achyutpal.scrolljourney.domain.usecase.SyncUsageHistoryUseCase
 import com.achyutpal.scrolljourney.ui.widget.WidgetRefresher
 
@@ -73,6 +76,12 @@ class AppContainer(context: Context) {
         AndroidDeviceStatusRepository(appContext)
     }
 
+    val reminderGateway: ReminderGateway by lazy { AndroidReminderGateway(appContext) }
+
+    val checkLimitReminders: CheckLimitRemindersUseCase by lazy {
+        CheckLimitRemindersUseCase(settingsRepository, historyRepository, reminderGateway)
+    }
+
     val backupRepository: BackupRepository by lazy {
         RoomBackupRepository(database.backupDao(), appVersion = deviceStatusRepository.appVersionName)
     }
@@ -91,7 +100,10 @@ class AppContainer(context: Context) {
             historyRepository = historyRepository,
             settingsRepository = settingsRepository,
             applyJourneyFuel = ApplyJourneyFuelUseCase(journeyRepository, settingsRepository),
-            onSynced = { WidgetRefresher.refresh(appContext) },
+            onSynced = {
+                WidgetRefresher.refresh(appContext)
+                checkLimitReminders()
+            },
         )
     }
 }

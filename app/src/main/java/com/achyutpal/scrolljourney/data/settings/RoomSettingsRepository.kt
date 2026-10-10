@@ -51,6 +51,11 @@ class RoomSettingsRepository(
         dao.setJourney3dEnabled(enabled)
     }
 
+    override suspend fun setRemindersEnabled(enabled: Boolean) {
+        ensureRow()
+        dao.setRemindersEnabled(enabled)
+    }
+
     override suspend fun resetJourney(journeyStart: LocalDate) {
         ensureRow()
         dao.resetJourney(journeyStart.toString())

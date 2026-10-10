@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
 import android.os.PowerManager
+import androidx.core.app.NotificationManagerCompat
 import com.achyutpal.scrolljourney.domain.model.GraphicsCapability
 import com.achyutpal.scrolljourney.domain.repository.DeviceStatusRepository
 
@@ -28,6 +29,9 @@ class AndroidDeviceStatusRepository(
             glEsVersion = activityManager.deviceConfigurationInfo.reqGlEsVersion,
         )
     }
+
+    override fun areNotificationsEnabled(): Boolean =
+        NotificationManagerCompat.from(context).areNotificationsEnabled()
 
     override val appVersionName: String =
         context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "?"

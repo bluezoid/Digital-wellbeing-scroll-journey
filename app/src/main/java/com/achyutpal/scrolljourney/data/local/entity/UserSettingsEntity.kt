@@ -21,6 +21,8 @@ data class UserSettingsEntity(
     val journeyStartDate: String?,
     /** Added in DB v5; existing users get 3D switched on. */
     @ColumnInfo(defaultValue = "1") val journey3dEnabled: Boolean = true,
+    /** Added in DB v6; existing users get reminders on. */
+    @ColumnInfo(defaultValue = "1") val remindersEnabled: Boolean = true,
 ) {
     companion object {
         const val SINGLETON_ID = 1
@@ -36,6 +38,7 @@ fun UserSettingsEntity.toDomain() = UserSettings(
     journeyDistance = journeyDistance,
     journeyStartDate = journeyStartDate?.let(LocalDate::parse),
     journey3dEnabled = journey3dEnabled,
+    remindersEnabled = remindersEnabled,
 )
 
 fun UserSettings.toEntity() = UserSettingsEntity(
@@ -47,4 +50,5 @@ fun UserSettings.toEntity() = UserSettingsEntity(
     journeyDistance = journeyDistance,
     journeyStartDate = journeyStartDate?.toString(),
     journey3dEnabled = journey3dEnabled,
+    remindersEnabled = remindersEnabled,
 )

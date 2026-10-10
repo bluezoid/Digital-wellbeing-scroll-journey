@@ -34,6 +34,7 @@ data class DeviceStatus(
     val usageAccess: UsageAccessState = UsageAccessState.UNKNOWN,
     val backgroundRestricted: Boolean = false,
     val ignoringBatteryOptimizations: Boolean = false,
+    val notificationsAllowed: Boolean = true,
 )
 
 data class SettingsUiState(
@@ -44,6 +45,7 @@ data class SettingsUiState(
     val journeyStartDate: LocalDate? = null,
     val versionName: String = "",
     val journey3dEnabled: Boolean = true,
+    val remindersEnabled: Boolean = true,
     /** False on phones that can't run the 3D scene: the switch is shown disabled. */
     val device3dSupported: Boolean = true,
     val showResetConfirm: Boolean = false,
@@ -103,6 +105,7 @@ class SettingsViewModel(
             journeyStartDate = settings.journeyStartDate,
             versionName = deviceStatusRepository.appVersionName,
             journey3dEnabled = settings.journey3dEnabled,
+            remindersEnabled = settings.remindersEnabled,
             device3dSupported = JourneyViewRules.deviceSupports3d(deviceStatusRepository.graphicsCapability),
             showResetConfirm = dialog.showResetConfirm,
             resetDone = dialog.resetDone,
@@ -116,11 +119,16 @@ class SettingsViewModel(
             usageAccess = usageAccessRepository.checkUsageAccess(),
             backgroundRestricted = deviceStatusRepository.isBackgroundRestricted(),
             ignoringBatteryOptimizations = deviceStatusRepository.isIgnoringBatteryOptimizations(),
+            notificationsAllowed = deviceStatusRepository.areNotificationsEnabled(),
         )
     }
 
     fun onJourney3dChanged(enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setJourney3dEnabled(enabled) }
+    }
+
+    fun onRemindersChanged(enabled: Boolean) {
+        viewModelScope.launch { settingsRepository.setRemindersEnabled(enabled) }
     }
 
     fun onResetClick() = dialogs.update { it.copy(showResetConfirm = true, resetDone = false) }

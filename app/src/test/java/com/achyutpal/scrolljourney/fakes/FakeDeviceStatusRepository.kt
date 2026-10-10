@@ -11,4 +11,6 @@ class FakeDeviceStatusRepository(
 ) : DeviceStatusRepository {
     override fun isBackgroundRestricted() = restricted
     override fun isIgnoringBatteryOptimizations() = ignoringBatteryOptimizations
+    var notificationsEnabled: Boolean = true
+    override fun areNotificationsEnabled() = notificationsEnabled
 }

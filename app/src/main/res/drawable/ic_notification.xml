@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status-bar icon: the app's rocket as a white silhouette (Android tints it; colours are ignored).
+     The window is a hole (evenOdd), so the rocket still reads at 24 dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="60"
+    android:viewportHeight="60">
+    <group
+        android:translateX="-24"
+        android:translateY="-25">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M50,70 L54,82 L58,70 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M46,58 L38,70 L46,68 Z" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M62,58 L70,70 L62,68 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:fillType="evenOdd"
+            android:pathData="M54,28 C62,36 63,50 62,70 L46,70 C45,50 46,36 54,28 Z M54,44 m-4,0 a4,4 0,1 1,8 0 a4,4 0,1 1,-8 0" />
+    </group>
+</vector>

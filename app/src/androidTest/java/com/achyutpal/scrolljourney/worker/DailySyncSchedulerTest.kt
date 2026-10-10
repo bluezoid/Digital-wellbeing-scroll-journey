@@ -43,8 +43,9 @@ class DailySyncSchedulerTest {
         assertEquals(TimeUnit.MINUTES.toMillis(4 * 60 + 30), nightly.initialDelayMillis) // 20:00 → 00:30
 
         val refresh = unique(DailySyncScheduler.REFRESH_WORK).single()
-        assertEquals(WorkInfo.State.ENQUEUED, refresh.state)
-        assertEquals(TimeUnit.MINUTES.toMillis(30), refresh.periodicityInfo?.repeatIntervalMillis)
+        // No start delay: the test WorkManager may already be running its first refresh.
+        assertTrue(refresh.state in setOf(WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING))
+        assertEquals(TimeUnit.MINUTES.toMillis(15), refresh.periodicityInfo?.repeatIntervalMillis)
     }
 
     @Test

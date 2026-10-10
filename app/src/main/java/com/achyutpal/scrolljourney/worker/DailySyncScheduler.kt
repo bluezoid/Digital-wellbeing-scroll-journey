@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit
  * - **Nightly** ([NIGHTLY_WORK]): a one-time job aimed at ~00:30 that finalizes yesterday and the
  *   last week. Each run appends the next one, re-aimed at 00:30, so it can't drift (a 24 h
  *   periodic job drifted from 00:30 to 23:32 in real use).
- * - **Refresh** ([REFRESH_WORK]): every 30 min, syncs just yesterday + today, so the widget and the
- *   near-limit reminder stay current without opening the app.
+ * - **Refresh** ([REFRESH_WORK]): every 15 min, syncs just yesterday + today, so the widget and the
+ *   limit reminders stay current without opening the app.
  */
 object DailySyncScheduler {
 
@@ -30,7 +30,7 @@ object DailySyncScheduler {
     /** The earlier 24 h periodic job (drifted); cancelled on start. */
     private const val LEGACY_PERIODIC_WORK = "daily-usage-sync"
 
-    const val REFRESH_MINUTES = 30L
+    const val REFRESH_MINUTES = 15L // Android's minimum for periodic work
 
     /** On every app start: make sure both jobs exist, without disturbing their current timing. */
     fun schedule(context: Context, now: ZonedDateTime = ZonedDateTime.now()) {
