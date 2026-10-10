@@ -4,6 +4,7 @@ Newest first. Don't re-open a settled decision unless the user asks. Record reve
 
 | Date | Decision | Why | Status |
 |---|---|---|---|
+| 2026-10-10 | **Production plan P1–P4 FULLY APPROVED** ("I am approving you fully"): P1 release build (SDK/library upgrade, R8 + keep rules, own release key, signed APK) + **data export/import**; P2 battery/robustness (3D hero 30 fps cap + idle pause, worker re-aligned after midnight, time-zone/date/reboot edge cases); P3 **Glance widget, small 2×1 + medium 4×2**; P4 polish (lint, accessibility, start-up, OSS licences, final UI review); plus the **near-limit reminder notification** | The user approved everything and asked Claude to perform whatever is needed | Final |
 | 2026-10-10 | **Goal: production-quality app, but NO Play Store release for now** (the user has no developer account). Store-only work (listing, Data safety, closed testing) is out of scope; distribution = signed release APK installed directly. **A home-screen widget is required** | The user's explicit direction | Final |
 | 2026-10-10 | The user uninstalled Instagram and Facebook on purpose (personal reason); their auto-disable is correct | The user confirmed | Final |
 | 2026-09-28 | Rocket length 0.2 → **0.08** scene units (about 1/4 of the Moon); Find my rocket settles 1.2 units away | The user found the rocket too big next to the Moon; real scale would be invisible, so "clearly smaller than every moon" is the rule | Final |
