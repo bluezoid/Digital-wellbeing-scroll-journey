@@ -3,7 +3,7 @@
 
     <!-- Onboarding: intro pages -->
     <string name="intro1_title">Where will your scrolling take you?</string>
-    <string name="intro1_body">Pick the social apps that eat your day and set a daily limit. Every day you stay under it fuels a rocket on its way from Earth to Pluto.</string>
+    <string name="intro1_body">Pick the social apps that eat your day and set a daily limit. Every day you stay under it fuels a rocket from Earth past the planets, out to the stars and on to the centre of the galaxy.</string>
     <string name="intro2_title">Everything stays on your phone</string>
     <string name="intro2_body">No account, no server, no location. Scroll Journey only reads how many minutes you spend in the apps you choose.</string>
     <string name="action_next">Next</string>
@@ -32,9 +32,10 @@
     <string name="action_back">Back</string>
     <string name="action_cancel">Cancel</string>
 
-    <!-- 3D solar system (preview) -->
+    <!-- 3D solar system (Explore screen and dashboard hero) -->
     <string name="hero_explore">Explore ↗</string>
     <string name="hero_explore_description">Open the 3D solar system</string>
+    <string name="hero_content_description" tools:ignore="PluralsCandidate">Live 3D view of your rocket travelling from %1$s to %2$s, %3$d of %4$d fuel</string>
     <string name="space_title">Solar system</string>
     <string name="space_hint_overview">Tap a planet to fly to it · drag to rotate 360° · pinch to zoom</string>
     <string name="space_hint_focused">Pinch to zoom · drag to rotate · double-tap to return to the Sun</string>
@@ -85,6 +86,7 @@
     <string name="settings_section_credits">About &amp; credits</string>
     <string name="settings_credits_textures">Planet, Sun, ring and star textures: Solar System Scope (solarsystemscope.com), licensed CC BY 4.0. Resized for the app; Ceres and Pluto use stylised stand-in textures.</string>
     <string name="settings_credits_rocket">Rocket model: Kenney “Space Kit” (kenney.nl), CC0 public domain.</string>
+    <string name="settings_credits_libraries">Built with Android Jetpack (Compose, Room, WorkManager, Navigation, Lifecycle, Glance) and Kotlin with kotlinx coroutines and serialization, Apache License 2.0.</string>
     <string name="settings_credits_engine">3D rendering: SceneView and Google Filament, Apache License 2.0.</string>
     <string name="settings_section_backup">Backup &amp; restore</string>
     <string name="settings_export">Export data</string>

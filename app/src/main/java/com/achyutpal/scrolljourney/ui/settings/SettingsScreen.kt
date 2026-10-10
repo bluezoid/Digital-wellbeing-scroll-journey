@@ -299,7 +299,7 @@ internal fun SettingsContent(
             }
 
             Section(stringResource(R.string.settings_section_credits)) {
-                listOf(R.string.settings_credits_textures, R.string.settings_credits_rocket, R.string.settings_credits_engine)
+                listOf(R.string.settings_credits_textures, R.string.settings_credits_rocket, R.string.settings_credits_engine, R.string.settings_credits_libraries)
                     .forEach { credit ->
                         Text(
                             text = stringResource(credit),

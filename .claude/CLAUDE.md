@@ -18,11 +18,16 @@ It is the entry point to the project's memory. **Read it first, then open only t
 
 ## Current status (update this every session)
 
-- **Phases 0–11 ✅.** Phase 12 validation 🔄 since 2026-09-28: force-stop ✅, reboot ✅, uninstall/reinstall ✅ (after a fix), Compose UI tests ✅ (26), DW accuracy ✅ (exact, 2 days), late-tap crash fixed, **History/teardown native crash fixed 2026-09-30** (SceneView frame loop; see progress-log). Pending: midnight split, missed day (redo, the app was opened on 09-30), rest of the 7-day DW comparison.
-- **3D (Phase 12b) ✅ COMPLETE (2026-09-28):** 3D-1…3D-4 done; the user confirmed the final rocket size ("absolutely perfect").
-- **Next:** after the user's 3D-4 check → 3D (12b) done; continue Phase 12 real-use validation (reboot, missed day, 23:59→00:01, uninstall/reinstall), then the Later items in roadmap.md.
-- Debug: `adb shell am start -n com.achyutpal.scrolljourney/.MainActivity --es debug_route space [--ei debug_fuel N]`.
-- **Never run `connectedAndroidTest`** (it uninstalls the app). Wrap adb calls in `timeout`. See progress-log for the manual on-device test commands, the schema-bump gotcha, and how to prove worker runs (workdb period_count).
+- **Goal (2026-10-10): production-quality app, no Play Store for now.** Production plan P1–P4 fully approved and **done 2026-10-10**:
+  - P1: Android 36 / AGP 8.13 / Kotlin 2.2 upgrade; **signed R8 release build 1.0.0** (key OUTSIDE the repo in `../scroll-journey-keys/`, must be backed up by the user); debug = separate app `.debug` "SJ Dev"; **backup export/import** (JSON via the system file picker) + "Restore from a backup" on the intro.
+  - P2: drift-free nightly job (one-time chain at 00:30) + **15-min refresh**; stale future-day cleanup; 3D hero idle pause (0% CPU after 20 s); Auto Backup rules.
+  - P3: **home-screen widgets** (Glance: Today 2×1, Journey 4×2) + **limit reminder notifications** (80% / reached; DB v6).
+  - P4: lint clean (fixed an API 34-only crash), accessibility, rotation supported, plurals, credits.
+- **The user's phone runs the release build** (data restored from backup, verified). 224 JVM + 53 on-device tests ✅.
+- Phase 12 leftovers to observe in real use: a midnight-spanning session, a missed day, more DW comparisons.
+- Debug shortcuts (debug build `com.achyutpal.scrolljourney.debug` only): `--es debug_route space|settings…`, `--ei debug_fuel N`, `--es debug_reminder near|reached`.
+- **Never run `connectedAndroidTest`**. Device tests: `adb install -r -t app-debug-androidTest.apk; adb shell am instrument -w com.achyutpal.scrolljourney.debug.test/androidx.test.runner.AndroidJUnitRunner` (UI tests need the phone unlocked). realme blocks `appops set`, `pm grant`, `settings put` over adb; use the system screens.
+- Release: `./gradlew assembleRelease` → `app/build/outputs/apk/release/app-arm64-v8a-release.apk` (install with `adb install -r`; same key = in-place update, data kept).
 
 ## Memory index: read on demand
 
@@ -63,10 +68,14 @@ navigate_scrolling/
     │   ├─ domain/usecase/{SyncUsageHistoryUseCase, ApplyJourneyFuelUseCase, TodayUsageResult}.kt
     │   ├─ domain/repository/{Usage,History,Settings,Journey}Repository.kt, domain/model/{DayStatus,Destination,RocketState,UserSettings,DailyRecord,ForegroundUsage}.kt
     │   ├─ data/usage/{AndroidUsageAccessRepository, UsageDataSource, AndroidUsageRepository}.kt
-    │   ├─ data/local/ScrollJourneyDatabase.kt (v5)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
+    │   ├─ data/local/ScrollJourneyDatabase.kt (v6)  entity/{SelectedApp,DailyUsage,DailyAppUsage,UserSettings}Entity  dao/*
     │   ├─ data/history/RoomHistoryRepository.kt, data/settings/RoomSettingsRepository.kt, data/journey/RoomJourneyRepository.kt
     │   ├─ data/apps/{AndroidAppRepository, AppIconSource}.kt
     │   ├─ data/system/AndroidDeviceStatusRepository.kt, domain/repository/DeviceStatusRepository.kt
+    │   ├─ data/backup/{BackupFile, BackupCodec, RoomBackupRepository, AndroidDocumentStore}, data/local/dao/BackupDao, domain/repository/{BackupRepository, DocumentStore}
+    │   ├─ data/reminder/AndroidReminderGateway, domain/{calculator/ReminderPolicy, repository/ReminderGateway, usecase/CheckLimitRemindersUseCase}
+    │   ├─ ui/widget/{WidgetSnapshot, WidgetContent, JourneyWidgets}  (Glance home-screen widgets)
+    │   ├─ ui/onboarding/{IntroRoute, RestoreBackupViewModel}, ui/common/RestoreConfirmDialog, util/NotificationPermission
     │   ├─ util/UsageAccessSettings.kt (+ openAppDetailsSettings)
     │   ├─ navigation/AppNavHost.kt     routes: intro, usage_access, app_picker?onboarding=, daily_limit?onboarding=, dashboard, history, settings, space (Explore)
     │   └─ ui/{theme (+StatusColors), startup/StartupViewModel, onboarding/{IntroScreen, UsageAccessScreen}, permission/UsageAccessViewModel,
@@ -75,7 +84,7 @@ navigate_scrolling/
     │   ├─ ui/space/{SpaceScreen (Explore), JourneyHero (dashboard hero), HeroCamera, SceneLifecycle, SceneClock, SolarSystemScene,
     │   │           SolarSystemLayout, JourneyMap, JourneyStatus, RocketModel, SpaceGeometry, OrbitCameraState,
     │   │           FocusOrbitManipulator, SpacePicking, SpaceViewModel}.kt  (3D)
-    │   └─ worker/{DailyUsageWorker, DailySyncScheduler, DailySyncPolicy}
+    │   └─ worker/{DailyUsageWorker (nightly chain), UsageRefreshWorker (15 min), DailySyncScheduler, DailySyncPolicy}
     ├─ schemas/                  Room schema JSON per DB version (committed)
     ├─ test/.../                 JVM unit tests + fakes/
     └─ androidTest/.../data/local/   on-device Room + migration tests

@@ -2,7 +2,6 @@ package com.achyutpal.scrolljourney.ui.space
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,8 +9,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -343,6 +344,7 @@ private fun FocusCard(
     Column(
         modifier = modifier
             .padding(16.dp)
+            .widthIn(max = 560.dp) // landscape / tablets: don't cover the whole scene
             .fillMaxWidth()
             .background(Color(0xCC0B1026), RoundedCornerShape(16.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),

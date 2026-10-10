@@ -564,3 +564,12 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - **Real bug found by lint (NewApi):** `LocalDate.ofInstant` is API 34+, used in `SyncUsageHistoryUseCase` (core sync!) and `RoomBackupRepository`. It worked on the realme only thanks to a Mainline ART update; it would crash on Android 8–12 phones without it. → `instant.atZone(zone).toLocalDate()`.
 - Also fixed: Glance `Notice()` composable returning Boolean → plain `noticeFor()`; RocketJourneyView offset → lambda overload (no recomposition per animation frame); KTX (`toUri`, `prefs.edit {}`); obsolete SDK check; `mutableFloatStateOf` for the hero yaw; 3 "days" strings → **plurals** (`settings_export_done`, `settings_restore_done`, `settings_restore_confirm_body`, used via pluralStringResource; count is arg 1); 5 unused strings deleted; reviewed counts marked `tools:ignore="PluralsCandidate"`; widget-info newer attributes `tools:ignore="UnusedAttribute"`.
 - `app/lint.xml`: ignores GradleDependency / NewerVersionAvailable / AndroidGradlePluginVersion (versions pinned on purpose, documented). **Result: "No issues found."** Run: `./gradlew lintDebug` → `app/build/reports/lint-results-debug.txt`.
+
+## 2026-10-10: P4 step 2, polish ✅
+
+- Intro text: the rocket goes "from Earth past the planets, out to the stars and on to the centre of the galaxy" (was "…to Pluto"). Credits: + "Built with Android Jetpack (…) and Kotlin (…), Apache License 2.0".
+- Accessibility: the 3D hero announces "Live 3D view of your rocket travelling from Moon to Mars, 6 of 12 fuel" (semantics contentDescription) plus the "Open the 3D solar system" click label.
+- **Rotation supported, not locked** (lint LockedOrientationActivity; Android 16 ignores fixed orientations on large screens). Tested on the phone with `adb shell wm user-rotation lock 0|1` (realme blocks `settings put system …`): 4 rotations on the dashboard + 3 in Explore, no crash, same process; the hero and Explore rebuild cleanly. The Explore info card is capped at 560 dp width (landscape/tablets).
+- **Cold start ≈ 280 ms** (`am start -W`, release, 3 runs) → no baseline profile needed for now.
+- Lint: "No issues found". 224 JVM tests ✅.
+- Not testable over adb on this realme: font scale (settings put blocked). Compose text uses sp, so it scales.

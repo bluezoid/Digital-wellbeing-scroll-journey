@@ -32,6 +32,8 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -101,9 +103,11 @@ fun JourneyHero(
             )
             // On top of the scene: takes the tap, lets drags through to the dashboard scroll.
             val exploreLabel = stringResource(R.string.hero_explore_description)
+            val description = heroDescription(rocket)
             Box(
                 Modifier
                     .matchParentSize()
+                    .semantics { contentDescription = description } // what a screen reader announces
                     .clickable(onClickLabel = exploreLabel, role = Role.Button, onClick = onExplore),
             )
         }
@@ -229,6 +233,13 @@ private fun HeroPill(text: String, color: Color, modifier: Modifier = Modifier) 
             .border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(50))
             .padding(horizontal = 12.dp, vertical = 5.dp),
     )
+}
+
+@Composable
+private fun heroDescription(rocket: RocketState): String {
+    val from = stringResource(rocket.highestReachedPlanet.nameRes())
+    val next = rocket.nextPlanet ?: return stringResource(R.string.rocket_journey_complete)
+    return stringResource(R.string.hero_content_description, from, stringResource(next.nameRes()), rocket.currentFuel, next.fuelRequired)
 }
 
 @Composable
