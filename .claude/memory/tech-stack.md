@@ -72,3 +72,6 @@ The package name isn't chosen yet; ask the user when creating the project.
 ## Not in the MVP
 
 Firebase, Crashlytics, Play Billing/RevenueCat, Glance widget, Lottie, Vico charts, Hilt, Maps, Location.
+
+## Versions after the 2026-10-10 upgrade (authoritative; older numbers above are history)
+compileSdk/targetSdk 36, minSdk 26, AGP 8.13.2, Gradle 8.14.3, Kotlin 2.2.21, KSP 2.2.21-2.0.5, Compose BOM 2026.03.00, Room 2.8.4, WorkManager 2.10.5, Navigation 2.9.5, Lifecycle 2.9.4, SceneView 2.3.0 (Filament 1.56), kotlinx-serialization-core constrained to 1.8.1. JVM target 17 via `kotlin { compilerOptions { } }`.

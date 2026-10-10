@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "com.achyutpal.scrolljourney"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.achyutpal.scrolljourney"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
 
@@ -37,11 +37,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
     buildFeatures {
         compose = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
 
@@ -51,6 +54,12 @@ ksp {
 }
 
 dependencies {
+    constraints {
+        // Lifecycle brings 1.7.3, but room-testing (migration tests) needs 1.8.x, and test code
+        // must use the app's version: align the app on 1.8.1 (backwards compatible).
+        implementation(libs.kotlinx.serialization.core)
+    }
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
@@ -61,6 +70,8 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    // Basic icons (back, menu, refresh, chevrons); no longer pulled in by material3 itself.
+    implementation(libs.androidx.compose.material.icons.core)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // Declares an empty test activity in debug builds for Compose UI tests (createComposeRule).
     debugImplementation(libs.androidx.compose.ui.test.manifest)

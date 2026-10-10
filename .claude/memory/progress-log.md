@@ -502,3 +502,10 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - To verify with the user: 2026-10-04 = 755 min (Instagram 752) RED, which looks extreme; compare with Digital Wellbeing if it still has that day. 2026-10-03/07/08/09 = 0 min (plausible with only YouTube/Chrome tracked).
 - Midnight split and missed day still not explicitly confirmed by the user.
 - 2026-10-10: The user: production level, no Play Store (no developer account), wants the **widget**; uninstalled Instagram/Facebook on purpose; asked where data is stored / whether SQLite is better (answered: Room *is* SQLite, in private app storage). Revised production plan proposed, awaiting approval.
+
+## 2026-10-10: P1 step 1, toolchain upgrade ✅
+
+- **compileSdk/targetSdk 34 → 36**; AGP 8.7.2 → **8.13.2**; Gradle 8.10.2 → **8.14.3**; Kotlin 2.1.0 → **2.2.21**; KSP → 2.2.21-2.0.5; core-ktx 1.17.0; lifecycle 2.9.4; activity-compose 1.11.0; Compose BOM 2026.03.00 (UI 1.10.5, Material3 1.4); navigation 2.9.5; Room 2.8.4; WorkManager 2.10.5; coroutines 1.10.2; androidx test ext 1.3.0 / runner 1.7.0. **SceneView stays 2.3.0** (4.x is a rewrite; 2.3.0's quirks are handled). Build-tools 35 were auto-installed.
+  - Why not the very latest: AGP 9.x / core 1.19 need compileSdk 37 + AGP 9 (a big migration); the chosen set is the newest stable on the current major lines, checked via each AAR's `aar-metadata.properties` (minCompileSdk / minAndroidGradlePluginVersion).
+- Fixes needed: `kotlinOptions` → `kotlin { compilerOptions { jvmTarget = JVM_17 } }`; added **material-icons-core** (Material3 1.4 no longer pulls it in); **constraint kotlinx-serialization-core 1.8.1** (lifecycle brings 1.7.3, room-testing needs 1.8.x, and AGP forces test code onto the app's version → AbstractMethodError in MigrationTest).
+- Results: 192 JVM tests ✅, **45/45 on-device tests ✅**; installed in place over the user's app, data intact (20 days, rocket 6 fuel at MOON, Moon → Mars leg shown). Android 15+ edge-to-edge enforcement can't be seen on the Android 13 realme; screens already use enableEdgeToEdge + Scaffold insets.
