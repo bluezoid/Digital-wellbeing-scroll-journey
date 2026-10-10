@@ -501,3 +501,4 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - Tracked apps now YouTube + Chrome: **Instagram and Facebook are uninstalled** → auto-disabled by the 2026-09-29 fix (history kept) ✅. Brave unticked (the user didn't re-tick it).
 - To verify with the user: 2026-10-04 = 755 min (Instagram 752) RED, which looks extreme; compare with Digital Wellbeing if it still has that day. 2026-10-03/07/08/09 = 0 min (plausible with only YouTube/Chrome tracked).
 - Midnight split and missed day still not explicitly confirmed by the user.
+- 2026-10-10: The user: production level, no Play Store (no developer account), wants the **widget**; uninstalled Instagram/Facebook on purpose; asked where data is stored / whether SQLite is better (answered: Room *is* SQLite, in private app storage). Revised production plan proposed, awaiting approval.

@@ -4,6 +4,8 @@ Newest first. Don't re-open a settled decision unless the user asks. Record reve
 
 | Date | Decision | Why | Status |
 |---|---|---|---|
+| 2026-10-10 | **Goal: production-quality app, but NO Play Store release for now** (the user has no developer account). Store-only work (listing, Data safety, closed testing) is out of scope; distribution = signed release APK installed directly. **A home-screen widget is required** | The user's explicit direction | Final |
+| 2026-10-10 | The user uninstalled Instagram and Facebook on purpose (personal reason); their auto-disable is correct | The user confirmed | Final |
 | 2026-09-28 | Rocket length 0.2 → **0.08** scene units (about 1/4 of the Moon); Find my rocket settles 1.2 units away | The user found the rocket too big next to the Moon; real scale would be invisible, so "clearly smaller than every moon" is the rule | Final |
 | 2026-09-28 | **3D-4 APPROVED:** the dashboard hero is **watch-only** live 3D (tap → full-screen Explore); a **Settings switch "3D solar system", default On** (DB v5 column); automatic 2D card on low-RAM / GLES < 3.0 phones or if the scene fails to build; 3D drawing paused when off-screen; credits in Settings; the preview menu item and FPS label removed | A drag-to-rotate scene inside a vertically scrolling dashboard would fight the scroll; the switch lets users save battery; CC BY 4.0 requires visible credit | Final |
 | 2026-09-28 | Pass `activity = null` to SceneView's `Scene` | SceneView 2.3.0 sets FLAG_KEEP_SCREEN_ON on resume and never clears it: the screen would never time out while the dashboard is open | Final |
