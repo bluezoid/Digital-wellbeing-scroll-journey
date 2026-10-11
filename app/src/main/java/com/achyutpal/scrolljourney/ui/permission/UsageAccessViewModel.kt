@@ -24,8 +24,14 @@ class UsageAccessViewModel(
     private val _state = MutableStateFlow(UsageAccessState.UNKNOWN)
     val state: StateFlow<UsageAccessState> = _state.asStateFlow()
 
+    /** Android blocks the switch as a "restricted setting" (app installed from a file). */
+    private val _restricted = MutableStateFlow(false)
+    val restricted: StateFlow<Boolean> = _restricted.asStateFlow()
+
     fun refresh() {
-        _state.value = repository.checkUsageAccess()
+        val access = repository.checkUsageAccess()
+        _state.value = access
+        _restricted.value = access != UsageAccessState.GRANTED && repository.isBlockedByRestrictedSettings()
     }
 
     companion object {

@@ -11,11 +11,16 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -29,6 +34,7 @@ import com.achyutpal.scrolljourney.R
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
 import com.achyutpal.scrolljourney.ui.permission.UsageAccessViewModel
 import com.achyutpal.scrolljourney.ui.theme.ScrollJourneyTheme
+import com.achyutpal.scrolljourney.util.openAppDetailsSettings
 import com.achyutpal.scrolljourney.util.openUsageAccessSettings
 
 /**
@@ -43,6 +49,7 @@ fun UsageAccessScreen(
     viewModel: UsageAccessViewModel = viewModel(factory = UsageAccessViewModel.Factory),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val restricted by viewModel.restricted.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Re-check every time the screen comes back to the foreground (e.g. returning from Settings).
@@ -57,7 +64,9 @@ fun UsageAccessScreen(
 
     UsageAccessContent(
         state = state,
+        restricted = restricted,
         onOpenSettings = { context.openUsageAccessSettings() },
+        onOpenAppInfo = { context.openAppDetailsSettings() },
     )
 }
 
@@ -66,7 +75,12 @@ fun UsageAccessScreen(
 internal fun UsageAccessContent(
     state: UsageAccessState,
     onOpenSettings: () -> Unit,
+    restricted: Boolean = false,
+    onOpenAppInfo: () -> Unit = {},
 ) {
+    // Shown when Android blocks the switch ("restricted setting"), detected or reported by the user.
+    var showRestrictedHelp by rememberSaveable { mutableStateOf(false) }
+    val restrictedHelp = restricted || showRestrictedHelp
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier
@@ -90,25 +104,27 @@ internal fun UsageAccessContent(
             )
             Spacer(Modifier.height(24.dp))
 
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+            if (restrictedHelp) RestrictedSettingsCard(onOpenAppInfo) else {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
-                    listOf(
-                        R.string.usage_access_step1,
-                        R.string.usage_access_step2,
-                        R.string.usage_access_step3,
-                        R.string.usage_access_step4,
-                    ).forEach { step ->
-                        Text(
-                            text = stringResource(step),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        listOf(
+                            R.string.usage_access_step1,
+                            R.string.usage_access_step2,
+                            R.string.usage_access_step3,
+                            R.string.usage_access_step4,
+                        ).forEach { step ->
+                            Text(
+                                text = stringResource(step),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
                     }
                 }
             }
@@ -123,13 +139,54 @@ internal fun UsageAccessContent(
             }
 
             Spacer(Modifier.height(32.dp))
-            Button(
-                onClick = onOpenSettings,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-            ) {
-                Text(stringResource(R.string.action_open_settings))
+            if (restrictedHelp) {
+                // Order matters: the app-info step must come first, so it's the main button.
+                Button(onClick = onOpenAppInfo, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                    Text(stringResource(R.string.restricted_open_app_info))
+                }
+                Spacer(Modifier.height(8.dp))
+                OutlinedButton(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                    Text(stringResource(R.string.action_open_settings))
+                }
+            } else {
+                Button(
+                    onClick = onOpenSettings,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                ) {
+                    Text(stringResource(R.string.action_open_settings))
+                }
+                if (state == UsageAccessState.REVOKED) {
+                    TextButton(onClick = { showRestrictedHelp = true }, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.restricted_help_link))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The 3 steps to lift Android's "restricted setting" block on the Usage Access switch. */
+@Composable
+private fun RestrictedSettingsCard(onOpenAppInfo: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = "🔐 " + stringResource(R.string.restricted_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = stringResource(R.string.restricted_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            listOf(R.string.restricted_step1, R.string.restricted_step2, R.string.restricted_step3).forEach { step ->
+                Text(text = stringResource(step), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }

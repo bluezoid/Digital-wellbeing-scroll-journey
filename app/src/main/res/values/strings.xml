@@ -19,6 +19,13 @@
     <string name="usage_access_step4">4. Come back. We’ll detect it automatically</string>
     <string name="usage_access_not_yet">Usage Access is still off.</string>
     <string name="action_open_settings">Open settings</string>
+    <string name="restricted_title">One extra step on this phone</string>
+    <string name="restricted_body">Android protects Usage Access for apps installed from a file. Allow it once:</string>
+    <string name="restricted_step1">1. Tap “Open app info” below</string>
+    <string name="restricted_step2">2. Find “Allow restricted settings”: in the ⋮ menu at the top right, or under Permissions on some phones</string>
+    <string name="restricted_step3">3. Come back here and tap “Open settings”</string>
+    <string name="restricted_open_app_info">Open app info</string>
+    <string name="restricted_help_link">It says “Restricted setting”?</string>
 
     <!-- Post-onboarding placeholder -->
     <string name="home_revoked_title">Usage Access is disabled</string>

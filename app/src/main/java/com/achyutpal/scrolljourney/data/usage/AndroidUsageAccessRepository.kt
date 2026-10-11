@@ -51,7 +51,24 @@ class AndroidUsageAccessRepository(
         return if (granted) UsageAccessState.GRANTED else UsageAccessState.REVOKED
     }
 
+    /**
+     * Android 13+ marks apps installed from a file (WhatsApp, Files, a browser) with the app op
+     * "access_restricted_settings" = blocked until the user taps "Allow restricted settings" on
+     * the app's info page. Until then the Usage Access switch is greyed out. Reading our own op
+     * by name needs no permission; a phone that doesn't know the op simply reports "not blocked".
+     */
+    override fun isBlockedByRestrictedSettings(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+        val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+        val mode = runCatching {
+            appOps.unsafeCheckOpRawNoThrow(OP_ACCESS_RESTRICTED_SETTINGS, Process.myUid(), context.packageName)
+        }.getOrElse { return false }
+        Log.d(TAG, "restricted settings op mode=$mode")
+        return mode == AppOpsManager.MODE_ERRORED || mode == AppOpsManager.MODE_IGNORED
+    }
+
     private companion object {
         const val TAG = "UsageAccess"
+        const val OP_ACCESS_RESTRICTED_SETTINGS = "android:access_restricted_settings"
     }
 }

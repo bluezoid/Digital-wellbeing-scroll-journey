@@ -58,6 +58,30 @@ class OnboardingScreensTest {
         assertEquals(listOf("open"), calls.log)
     }
 
+    @Test
+    fun restrictedPhoneShowsTheGuidedStepsWithAppInfoFirst() {
+        themed {
+            UsageAccessContent(
+                state = UsageAccessState.REVOKED,
+                restricted = true,
+                onOpenSettings = calls.record("settings"),
+                onOpenAppInfo = calls.record("appInfo"),
+            )
+        }
+        rule.onNodeWithText(str(R.string.restricted_title), substring = true).assertIsDisplayed()
+        rule.onNodeWithText(str(R.string.restricted_open_app_info)).performClick()
+        rule.onNodeWithText(str(R.string.action_open_settings)).performClick()
+        assertEquals(listOf("appInfo", "settings"), calls.log)
+    }
+
+    @Test
+    fun helpLinkRevealsTheRestrictedStepsWhenNotDetected() {
+        themed { UsageAccessContent(state = UsageAccessState.REVOKED, onOpenSettings = {}, restricted = false) }
+        rule.onNodeWithText(str(R.string.restricted_title), substring = true).assertDoesNotExist()
+        rule.onNodeWithText(str(R.string.restricted_help_link)).performClick()
+        rule.onNodeWithText(str(R.string.restricted_title), substring = true).assertIsDisplayed()
+    }
+
     // --- App picker ----------------------------------------------------------------------
 
     private val toggled = mutableListOf<String>()
