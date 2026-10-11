@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.achyutpal.scrolljourney.R
 import com.achyutpal.scrolljourney.domain.model.UsageAccessState
@@ -59,7 +60,7 @@ class OnboardingScreensTest {
     }
 
     @Test
-    fun restrictedPhoneShowsTheGuidedStepsWithAppInfoFirst() {
+    fun restrictedPhoneShowsTheGuidedStepsWithBothButtons() {
         themed {
             UsageAccessContent(
                 state = UsageAccessState.REVOKED,
@@ -69,9 +70,9 @@ class OnboardingScreensTest {
             )
         }
         rule.onNodeWithText(str(R.string.restricted_title), substring = true).assertIsDisplayed()
-        rule.onNodeWithText(str(R.string.restricted_open_app_info)).performClick()
-        rule.onNodeWithText(str(R.string.action_open_settings)).performClick()
-        assertEquals(listOf("appInfo", "settings"), calls.log)
+        rule.onNodeWithText(str(R.string.action_open_settings)).performScrollTo().performClick()
+        rule.onNodeWithText(str(R.string.restricted_open_app_info)).performScrollTo().performClick()
+        assertEquals(listOf("settings", "appInfo"), calls.log)
     }
 
     @Test

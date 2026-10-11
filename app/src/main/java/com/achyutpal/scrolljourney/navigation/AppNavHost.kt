@@ -122,6 +122,8 @@ fun AppNavHost(startDestination: String, debugRoute: String? = null) {
                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 onOpenJourney = { navController.navigate(Routes.SPACE) },
+                // Apps and limit are already set: once access is back, return to the dashboard.
+                onFixUsageAccess = { navController.navigate(Routes.usageAccess(afterRestore = true)) },
             )
         }
         composable(Routes.HISTORY) {

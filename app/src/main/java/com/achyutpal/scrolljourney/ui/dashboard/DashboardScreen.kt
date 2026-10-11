@@ -75,7 +75,6 @@ import com.achyutpal.scrolljourney.ui.space.JourneyHeroPlaceholder
 import com.achyutpal.scrolljourney.ui.theme.ScrollJourneyTheme
 import com.achyutpal.scrolljourney.ui.theme.color
 import com.achyutpal.scrolljourney.util.NotificationPermission
-import com.achyutpal.scrolljourney.util.openUsageAccessSettings
 import kotlinx.coroutines.delay
 import java.text.DateFormat
 import java.time.LocalDate
@@ -92,6 +91,8 @@ fun DashboardScreen(
     onOpenHistory: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenJourney: () -> Unit,
+    /** Usage Access was switched off: the guided screen (it also explains Android's "restricted setting" block). */
+    onFixUsageAccess: () -> Unit,
     viewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -111,7 +112,7 @@ fun DashboardScreen(
     DashboardContent(
         state = state,
         onRefresh = viewModel::refresh,
-        onOpenUsageAccess = { context.openUsageAccessSettings() },
+        onOpenUsageAccess = onFixUsageAccess,
         onOpenHistory = onOpenHistory,
         onOpenSettings = onOpenSettings,
         onOpenJourney = onOpenJourney,

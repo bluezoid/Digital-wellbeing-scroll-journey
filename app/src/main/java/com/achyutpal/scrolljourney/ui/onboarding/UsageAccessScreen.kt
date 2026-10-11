@@ -1,12 +1,16 @@
 package com.achyutpal.scrolljourney.ui.onboarding
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -82,84 +86,88 @@ internal fun UsageAccessContent(
     var showRestrictedHelp by rememberSaveable { mutableStateOf(false) }
     val restrictedHelp = restricted || showRestrictedHelp
     Scaffold { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(text = "📊", fontSize = 56.sp)
-            Spacer(Modifier.height(24.dp))
-            Text(
-                text = stringResource(R.string.usage_access_title),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Spacer(Modifier.height(12.dp))
-            Text(
-                text = stringResource(R.string.usage_access_body),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(24.dp))
+        // Scrolls when the restricted steps don't fit (small screens, big fonts); centred otherwise.
+        BoxWithConstraints(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .heightIn(min = maxHeight)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Text(text = "📊", fontSize = 56.sp)
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    text = stringResource(R.string.usage_access_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.usage_access_body),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(24.dp))
 
-            if (restrictedHelp) RestrictedSettingsCard(onOpenAppInfo) else {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                if (restrictedHelp) RestrictedSettingsCard() else {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        listOf(
-                            R.string.usage_access_step1,
-                            R.string.usage_access_step2,
-                            R.string.usage_access_step3,
-                            R.string.usage_access_step4,
-                        ).forEach { step ->
-                            Text(
-                                text = stringResource(step),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            listOf(
+                                R.string.usage_access_step1,
+                                R.string.usage_access_step2,
+                                R.string.usage_access_step3,
+                                R.string.usage_access_step4,
+                            ).forEach { step ->
+                                Text(
+                                    text = stringResource(step),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            if (state == UsageAccessState.REVOKED) {
-                Spacer(Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.usage_access_not_yet),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-
-            Spacer(Modifier.height(32.dp))
-            if (restrictedHelp) {
-                // Order matters: the app-info step must come first, so it's the main button.
-                Button(onClick = onOpenAppInfo, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-                    Text(stringResource(R.string.restricted_open_app_info))
-                }
-                Spacer(Modifier.height(8.dp))
-                OutlinedButton(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth().height(52.dp)) {
-                    Text(stringResource(R.string.action_open_settings))
-                }
-            } else {
-                Button(
-                    onClick = onOpenSettings,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                ) {
-                    Text(stringResource(R.string.action_open_settings))
-                }
                 if (state == UsageAccessState.REVOKED) {
-                    TextButton(onClick = { showRestrictedHelp = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(R.string.restricted_help_link))
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.usage_access_not_yet),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+
+                Spacer(Modifier.height(32.dp))
+                if (restrictedHelp) {
+                    // Android only offers "Allow restricted settings" after the switch was tried once,
+                    // so the settings step comes first and stays the main button.
+                    Button(onClick = onOpenSettings, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                        Text(stringResource(R.string.action_open_settings))
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(onClick = onOpenAppInfo, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+                        Text(stringResource(R.string.restricted_open_app_info))
+                    }
+                } else {
+                    Button(
+                        onClick = onOpenSettings,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                    ) {
+                        Text(stringResource(R.string.action_open_settings))
+                    }
+                    if (state == UsageAccessState.REVOKED) {
+                        TextButton(onClick = { showRestrictedHelp = true }, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.restricted_help_link))
+                        }
                     }
                 }
             }
@@ -169,7 +177,7 @@ internal fun UsageAccessContent(
 
 /** The 3 steps to lift Android's "restricted setting" block on the Usage Access switch. */
 @Composable
-private fun RestrictedSettingsCard(onOpenAppInfo: () -> Unit) {
+private fun RestrictedSettingsCard() {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.fillMaxWidth(),

@@ -594,7 +594,7 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - The user's Android 16 phone (APK installed from a file) showed Usage Access as a **"restricted setting"**: the toggle stays greyed until "Allow restricted settings" is tapped on the app-info page (ColorOS 16: Settings > Apps > App management > Scroll Journey > Permissions > Allow restricted permission). adb installs (the realme) are never restricted, which is why it was never seen.
 - `UsageAccessRepository.isBlockedByRestrictedSettings()`: API 33+ reads our own app op **`android:access_restricted_settings`** with `AppOpsManager.unsafeCheckOpRawNoThrow` (MODE_ERRORED/IGNORED = blocked; unknown op / exception = not blocked). UsageAccessViewModel exposes `restricted` (only while access is off).
 - UsageAccessScreen: when restricted, a **🔐 "One extra step on this phone"** card replaces the normal steps (1. Open app info, 2. find "Allow restricted settings" in ⋮ or under Permissions, 3. come back → Open settings); the main button = **Open app info** (`openAppDetailsSettings`), secondary = Open settings. Not detected → a "It says 'Restricted setting'?" link reveals the same card.
-- Tests: +2 JVM (228), +2 UI tests. To verify on the emulator: `adb shell appops set <pkg> ACCESS_RESTRICTED_SETTINGS deny|allow`.
+- Tests: +2 JVM (228), +2 UI tests. (Detection method later replaced, see "Fix 2 corrected" below.)
 
 ## 2026-10-11: Fix 3/4, deep space and the Galactic Centre ✅
 
@@ -605,3 +605,27 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - Star halos softened (alpha 0.55, power 7); the next/reached rims around the galaxy hug its core instead of drawing a planet-sized circle.
 - New debug shortcut: `--es debug_focus <DESTINATION>` (debug build only) opens Explore focused on that stop.
 - Verified on the realme: Galactic Centre (next and reached), Vega, Sirius, Proxima, Kuiper Belt. 231 JVM tests ✅.
+
+## 2026-10-11: Fix 4/4, widget redesign + Week widget ✅
+
+- `WidgetSnapshot` now also carries: the last 7 days (`week`, oldest first; today = live status; a past day not finalized yet is judged like the nightly job will; no record = null), `minutesLeft`/`minutesOver`, `todayDistance`, `bestStreak`, `updatedAt` (render time = right after a sync). +2 JVM tests.
+- `WidgetRing`: widgets are RemoteViews and can't draw shapes, so the progress ring is painted into a 160 px bitmap and shown with Glance `Image(ImageProvider(bitmap))`.
+- **SizeMode.Responsive** (Glance lays out once per listed size; the launcher picks the closest as the widget is resized): Today 110×40 / 110×90; Journey 180×110, 250×110, 180×160, 250×160.
+- Today 2×1: ring with %, minutes in the status colour, "Xm left" / "Xm over". Journey 3×2/4×2: ring with minutes, status pill, "left / of limit", 7-day dot strip (weekday letters, today ringed white), leg "🌙 Moon → 🔴 Mars" + "⛽ 7/12" + orange fuel bar, footer streak · distance · "↻ HH:MM" (12/24 h per the phone). **New Week 4×1 widget** (`WeekWidget` + receiver + `week_widget_info.xml`): 7 dots + 🔥 streak + today's minutes. `WidgetRefresher` updates all three.
+- Widget-picker previews: real crops of the widgets on the realme (`drawable-nodpi/widget_*_preview_image.png`, rounded corners, also used by the `widget_*_preview` layouts). Old preview drawables removed.
+- Verified on the realme with the **release** build (widgets placed on an empty home page through the launcher via adb): all three render; opening/closing the app 3× refreshed them ("↻ 11:48") and the Journey widget kept all lines (the R8 merge bug is gone).
+
+## 2026-10-11: Fix 2 corrected, restricted settings verified on Android 16 ✅
+
+- The emulator showed that reading our own `android:access_restricted_settings` op throws **SecurityException** (needs MANAGE_APPOPS), so the 1st detection never fired. Now: **`getInstallSourceInfo(pkg).packageSource` is LOCAL_FILE or DOWNLOADED_FILE** (API 33+) = may be blocked. adb installs = UNSPECIFIED (never shown).
+- **Real sideload test** on the `sj_api36` emulator: pushed the APK to Download, opened it in Files, allowed Files to install, installed with the system installer → `packageSource=3` (LOCAL_FILE), the 🔐 card appeared automatically, and the toggle said "Controlled by Restricted Setting".
+- **Stock Android 16 detail:** app info has NO ⋮ menu until the user has tried the greyed switch once ("App was denied access" dialog → Close). Then ⋮ → "Allow restricted settings" → the switch works. Steps and buttons reordered to match: main button **Open settings**, second **Open app info**; 3 steps (try the switch, app info ⋮ / Permissions → Allow + PIN, switch on).
+- The Usage Access screen now **scrolls** (BoxWithConstraints + `heightIn(min = maxHeight)` keeps it centred when it fits): on the realme's font size the card pushed "Open app info" off screen (found by the device test).
+- The dashboard's "Usage Access is disabled" card now opens the guided Usage Access screen (returns to the dashboard once granted) instead of system settings.
+
+## 2026-10-11: Release 1.0.1 ✅
+
+- versionCode 10001 / versionName 1.0.1. 233 JVM + **56/56 device tests** ✅, lint "No issues found", 0 R8 class merges (all 3 widget classes and receivers kept).
+- The user's realme updated in place to the 1.0.1 release (data kept). The three widgets placed during testing were left on the realme's second home page.
+- Share package `../scroll-journey-share/`: `ScrollJourney-1.0.1-arm64.apk` (13 MB, recommended), `ScrollJourney-1.0.1.apk` (universal, 35 MB), `HOW-TO-INSTALL.txt` (restricted-setting steps + what's new). 1.0.0 APKs removed.
+- **Next update: bump versionCode to 10002.**

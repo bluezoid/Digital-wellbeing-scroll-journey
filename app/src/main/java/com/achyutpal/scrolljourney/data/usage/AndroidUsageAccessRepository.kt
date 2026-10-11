@@ -3,6 +3,7 @@ package com.achyutpal.scrolljourney.data.usage
 import android.Manifest
 import android.app.AppOpsManager
 import android.content.Context
+import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Process
@@ -52,23 +53,23 @@ class AndroidUsageAccessRepository(
     }
 
     /**
-     * Android 13+ marks apps installed from a file (WhatsApp, Files, a browser) with the app op
-     * "access_restricted_settings" = blocked until the user taps "Allow restricted settings" on
-     * the app's info page. Until then the Usage Access switch is greyed out. Reading our own op
-     * by name needs no permission; a phone that doesn't know the op simply reports "not blocked".
+     * Android 13+ greys out the Usage Access switch ("restricted setting") for apps installed from
+     * an APK file (WhatsApp, Files, a browser) until the user taps "Allow restricted settings" on
+     * the app's info page. The block itself (an app op) can't be read without a system permission,
+     * so we use the rule Android applies: the install source is a local or downloaded file.
+     * Once the user has allowed it the source doesn't change, so this means "may be blocked";
+     * the screen still offers the normal "Open settings" button.
      */
     override fun isBlockedByRestrictedSettings(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
-        val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = runCatching {
-            appOps.unsafeCheckOpRawNoThrow(OP_ACCESS_RESTRICTED_SETTINGS, Process.myUid(), context.packageName)
+        val source = runCatching {
+            context.packageManager.getInstallSourceInfo(context.packageName).packageSource
         }.getOrElse { return false }
-        Log.d(TAG, "restricted settings op mode=$mode")
-        return mode == AppOpsManager.MODE_ERRORED || mode == AppOpsManager.MODE_IGNORED
+        Log.d(TAG, "install source=$source")
+        return source == PackageInstaller.PACKAGE_SOURCE_LOCAL_FILE || source == PackageInstaller.PACKAGE_SOURCE_DOWNLOADED_FILE
     }
 
     private companion object {
         const val TAG = "UsageAccess"
-        const val OP_ACCESS_RESTRICTED_SETTINGS = "android:access_restricted_settings"
     }
 }

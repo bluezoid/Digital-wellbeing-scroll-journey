@@ -12,8 +12,8 @@ interface UsageAccessRepository {
     fun checkUsageAccess(): UsageAccessState
 
     /**
-     * True if Android currently blocks the Usage Access switch for this app as a "restricted
-     * setting" (Android 13+, apps installed from an APK file). False if not, or if unknown.
+     * True if Android may block the Usage Access switch for this app as a "restricted setting"
+     * (Android 13+, app installed from an APK file). False if not, or if unknown.
      */
     fun isBlockedByRestrictedSettings(): Boolean
 }

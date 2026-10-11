@@ -23,10 +23,11 @@ It is the entry point to the project's memory. **Read it first, then open only t
   - P2: drift-free nightly job (one-time chain at 00:30) + **15-min refresh**; stale future-day cleanup; 3D hero idle pause (0% CPU after 20 s); Auto Backup rules.
   - P3: **home-screen widgets** (Glance: Today 2×1, Journey 4×2) + **limit reminder notifications** (80% / reached; DB v6).
   - P4: lint clean (fixed an API 34-only crash), accessibility, rotation supported, plurals, credits.
-- **The user's phone runs the release build** (data restored from backup, verified). 226 JVM + 54 on-device tests ✅ (device suite also passes on an Android 16 emulator).
-- **Ready to share as a beta (2026-10-11):** share package in `../scroll-journey-share/` (universal + arm64 APKs + HOW-TO-INSTALL.txt). Testers report problems via Settings → Share diagnostics. **Next update: bump versionCode.**
+- **The user's realme runs the 1.0.1 release build** (three test widgets left on its 2nd home page). 233 JVM + 56 on-device tests ✅.
+- **1.0.1 released (2026-10-11)** after the user's Android 16 feedback: widget R8-merge fix, prettier responsive widgets + new Week 4×1 widget, deep-space/Galactic Centre fix (galaxy = glow-dot spiral), guided "restricted setting" help (detected by install source; verified with a real sideload on Android 16). Share package in `../scroll-journey-share/` (arm64 recommended + universal + HOW-TO-INSTALL.txt). Testers report problems via Settings → Share diagnostics. **Next update: versionCode 10002.**
 - Phase 12 leftovers to observe in real use: a midnight-spanning session, a missed day, more DW comparisons.
-- Debug shortcuts (debug build `com.achyutpal.scrolljourney.debug` only): `--es debug_route space|settings…`, `--ei debug_fuel N`, `--es debug_reminder near|reached`.
+- Debug shortcuts (debug build `com.achyutpal.scrolljourney.debug` only): `--es debug_route space|settings|usage_access…`, `--ei debug_fuel N`, `--es debug_reminder near|reached`, `--es debug_focus <DESTINATION>` (Explore focused on a stop).
+- Sideload test (restricted settings) only works on the emulator: push the APK to /sdcard/Download and install it from the Files app (adb installs are never restricted).
 - **Never run `connectedAndroidTest`**. Device tests: `adb install -r -t app-debug-androidTest.apk; adb shell am instrument -w com.achyutpal.scrolljourney.debug.test/androidx.test.runner.AndroidJUnitRunner` (UI tests need the phone unlocked). realme blocks `appops set`, `pm grant`, `settings put` over adb; use the system screens.
 - Release: `./gradlew assembleRelease` → `app/build/outputs/apk/release/app-arm64-v8a-release.apk` (install with `adb install -r`; same key = in-place update, data kept).
 
@@ -75,7 +76,7 @@ navigate_scrolling/
     │   ├─ data/system/AndroidDeviceStatusRepository.kt, domain/repository/DeviceStatusRepository.kt
     │   ├─ data/backup/{BackupFile, BackupCodec, RoomBackupRepository, AndroidDocumentStore}, data/local/dao/BackupDao, domain/repository/{BackupRepository, DocumentStore}
     │   ├─ data/reminder/AndroidReminderGateway, domain/{calculator/ReminderPolicy, repository/ReminderGateway, usecase/CheckLimitRemindersUseCase}
-    │   ├─ ui/widget/{WidgetSnapshot, WidgetContent, JourneyWidgets}  (Glance home-screen widgets)
+    │   ├─ ui/widget/{WidgetSnapshot, WidgetContent, WidgetRing, JourneyWidgets}  (Glance widgets: Today 2×1, Journey 3×2/4×2, Week 4×1)
     │   ├─ data/diagnostics/{CrashLog, DiagnosticsReport, AndroidDiagnosticsRepository}, domain/repository/DiagnosticsRepository
     │   ├─ ui/onboarding/{IntroRoute, RestoreBackupViewModel}, ui/common/RestoreConfirmDialog, util/NotificationPermission
     │   ├─ util/UsageAccessSettings.kt (+ openAppDetailsSettings)

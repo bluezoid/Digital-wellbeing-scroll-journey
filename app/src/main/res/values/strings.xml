@@ -20,10 +20,10 @@
     <string name="usage_access_not_yet">Usage Access is still off.</string>
     <string name="action_open_settings">Open settings</string>
     <string name="restricted_title">One extra step on this phone</string>
-    <string name="restricted_body">Android protects Usage Access for apps installed from a file. Allow it once:</string>
-    <string name="restricted_step1">1. Tap “Open app info” below</string>
-    <string name="restricted_step2">2. Find “Allow restricted settings”: in the ⋮ menu at the top right, or under Permissions on some phones</string>
-    <string name="restricted_step3">3. Come back here and tap “Open settings”</string>
+    <string name="restricted_body">Android protects Usage Access for apps installed from a file. Allow it once (about 30 seconds):</string>
+    <string name="restricted_step1">1. Tap “Open settings” and try the switch. Android says it’s restricted: close that message.</string>
+    <string name="restricted_step2">2. Tap “Open app info”, then the ⋮ menu at the top right (on some phones: Permissions) → “Allow restricted settings”. Confirm with your PIN.</string>
+    <string name="restricted_step3">3. Come back, tap “Open settings” again and turn the switch on.</string>
     <string name="restricted_open_app_info">Open app info</string>
     <string name="restricted_help_link">It says “Restricted setting”?</string>
 
@@ -218,19 +218,28 @@
     <string name="widget_today_label">Scroll Journey · Today</string>
     <string name="widget_journey_label">Scroll Journey · Journey</string>
     <string name="widget_today_description">Today’s minutes against your daily limit</string>
-    <string name="widget_journey_description">Today, your rocket’s current leg and your green streak</string>
+    <string name="widget_journey_description">Today’s ring, your last 7 days, your rocket’s current leg and your streak</string>
     <string name="widget_status_green">Green day so far</string>
     <string name="widget_status_yellow">Yellow day so far</string>
     <string name="widget_status_red">Red day</string>
     <string name="widget_of_limit">of %1$s</string>
     <string name="widget_not_set_up">Open Scroll Journey to start your journey</string>
     <string name="widget_no_access">Usage Access is off. Tap to fix it.</string>
-    <string name="widget_journey_line">%1$s → %2$s · ⛽ %3$d/%4$d</string>
+    <string name="widget_week_label">Scroll Journey · Week</string>
+    <string name="widget_week_description">Your last 7 days, your green streak and today’s minutes</string>
+    <string name="widget_left">%1$s left</string>
+    <string name="widget_over">%1$s over</string>
+    <string name="widget_leg">%1$s → %2$s</string>
+    <string name="widget_fuel">⛽ %1$d/%2$d</string>
+    <string name="widget_distance_today">%1$s today</string>
+    <string name="widget_updated">↻ %1$s</string>
+    <string name="widget_streak_short">🔥 %1$d</string>
+    <string name="widget_today_short">%1$s today</string>
     <plurals name="widget_streak">
         <item quantity="one">🔥 %d-day green streak</item>
         <item quantity="other">🔥 %d-day green streak</item>
     </plurals>
-    <string name="widget_no_streak">Stay under your limit to start a streak</string>
+    <string name="widget_no_streak">Green today starts a streak</string>
 
     <!-- Limit reminders (notifications) -->
     <string name="reminder_channel_name">Limit reminders</string>
