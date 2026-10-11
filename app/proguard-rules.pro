@@ -19,3 +19,9 @@
 # Readable stack traces in crash logs (line numbers kept, file names hidden).
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# Home-screen widgets: Glance tells widget types apart by their class. R8 once merged the two
+# look-alike widget classes into one, so refreshing one widget redrew the other with the wrong
+# layout. Keeping them (and their names) prevents merging and renaming.
+-keep class * extends androidx.glance.appwidget.GlanceAppWidget { *; }
+-keep class * extends androidx.glance.appwidget.GlanceAppWidgetReceiver { *; }

@@ -582,3 +582,9 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - Fixed the restore dialog's missing blank line (real newlines in XML → `\n\n`).
 - **Share package** at `~/Desktop/saasbuild/Android/scroll-journey-share/`: `ScrollJourney-1.0.0.apk` (universal, 35 MB, signed), `ScrollJourney-1.0.0-arm64.apk` (13 MB), `HOW-TO-INSTALL.txt` (install, Usage Access, battery "Unrestricted" for OEMs, backup, diagnostics, updates). The user's realme was updated to the same build.
 - Lint "No issues found"; 226 JVM tests ✅. **For the next update: bump versionCode** (e.g. 1.0.1 = 10001) so testers' phones accept it as an update.
+
+## 2026-10-11: Fix 1/4, widget class merge ✅
+
+- The user (personal Android 16 phone): the 3×2 Journey widget dropped its journey line a few seconds after a refresh. **Cause (proven in mapping.txt): R8 horizontal class merging merged `TodayWidget` and `JourneyWidget` into one class (`p7.d` with `$r8$classId`).** Glance identifies widget types by class, so `TodayWidget().updateAll()` also redrew Journey widgets with the Today layout. Release-only.
+- Fix in `proguard-rules.pro`: `-keep class * extends GlanceAppWidget { *; }` and `… GlanceAppWidgetReceiver { *; }` → mapping now shows both classes kept with their own names; 0 class merges.
+- **Lesson:** look-alike classes looked up by class identity (Glance widgets, anything resolved by class name/reflection) need keep rules; check `mapping.txt` for `$r8$classId` after adding such classes.
