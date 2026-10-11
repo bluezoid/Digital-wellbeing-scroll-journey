@@ -77,7 +77,13 @@ enum class SpaceBody(
         const val SATURN_RING_INNER = 1.8f
         const val SATURN_RING_OUTER = 3.3f
         const val SATURN_RING_TILT_DEGREES = 27f
-        const val STARFIELD_RADIUS = 500f
+        /** The star background sphere. Far bigger than the furthest stop (≈ 430) so the camera can
+         *  never reach its edge, even when looking at the Galactic Centre from the far side. */
+        const val STARFIELD_RADIUS = 3000f
+
+        /** Camera draw range (SceneView's default far plane is only 1000). */
+        const val CAMERA_NEAR = 0.02f
+        const val CAMERA_FAR = 10_000f
 
         /** Bodies that orbit the Sun directly (get an orbit path drawn). */
         val sunOrbiters: List<SpaceBody> get() = entries.filter { it != SUN && it.parent == null }

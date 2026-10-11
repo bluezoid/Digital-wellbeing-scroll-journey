@@ -80,6 +80,18 @@ class OrbitCameraState(
         viewFrom?.let(::lookFrom)
     }
 
+    /**
+     * Fly to something whose glow reaches [extent] from its centre (deep-space stars, the galaxy):
+     * the camera settles outside the glow with all of it in view, and can't be pinched inside it.
+     */
+    fun focusOnExtent(extent: Float, viewFrom: SpacePoint? = null) {
+        panOffset = SpacePoint.ORIGIN
+        viewFrom?.let(::lookFrom)
+        minDistance = extent * EXTENT_MIN_RADII
+        desiredDistance = extent * EXTENT_FOCUS_RADII
+        maxDistance = maxOf(MAX_DISTANCE, extent * EXTENT_MAX_RADII)
+    }
+
     /** Set yaw/pitch so the camera sits in [direction] from the target (the inverse of eye()). */
     private fun lookFrom(direction: SpacePoint) {
         val len = length(direction)
@@ -128,6 +140,9 @@ class OrbitCameraState(
         const val MAX_DISTANCE = 140f
         const val MAX_PITCH = 85f
         const val MIN_DISTANCE_RADII = 1.8f
+        const val EXTENT_MIN_RADII = 1.25f
+        const val EXTENT_FOCUS_RADII = 3.6f
+        const val EXTENT_MAX_RADII = 8f
         const val FOCUS_DISTANCE_RADII = 6f
         const val MIN_FOCUS_DISTANCE = 1.6f
         const val ORBIT_DEGREES_PER_PIXEL = 0.25f

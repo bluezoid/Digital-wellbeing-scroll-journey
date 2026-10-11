@@ -35,6 +35,8 @@ class MainActivity : ComponentActivity() {
         if (isDebuggable && intent.hasExtra(EXTRA_DEBUG_FUEL)) {
             SpaceViewModel.debugFuelOverride = intent.getIntExtra(EXTRA_DEBUG_FUEL, 0)
         }
+        // Debug builds only: `--es debug_focus <DESTINATION>` flies the 3D camera to that stop.
+        if (isDebuggable) SpaceViewModel.debugFocusOverride = intent.getStringExtra(EXTRA_DEBUG_FOCUS)
         // Debug builds only: `--es debug_reminder near|reached` posts a sample limit reminder.
         if (isDebuggable) {
             intent.getStringExtra(EXTRA_DEBUG_REMINDER)?.let { kind ->
@@ -57,5 +59,6 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_DEBUG_ROUTE = "debug_route"
         const val EXTRA_DEBUG_FUEL = "debug_fuel"
         const val EXTRA_DEBUG_REMINDER = "debug_reminder"
+        const val EXTRA_DEBUG_FOCUS = "debug_focus"
     }
 }

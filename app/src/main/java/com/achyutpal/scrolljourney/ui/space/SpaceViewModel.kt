@@ -32,6 +32,10 @@ class SpaceViewModel(
         @Volatile
         var debugFuelOverride: Int? = null
 
+        /** Debug builds only (`--es debug_focus GALACTIC_CENTRE`): fly the camera to that stop on open. */
+        @Volatile
+        var debugFocusOverride: String? = null
+
         fun previewRocket(fuel: Int) = RocketState(
             currentFuel = fuel,
             lifetimeFuel = fuel,

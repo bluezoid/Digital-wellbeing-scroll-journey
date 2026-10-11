@@ -595,3 +595,13 @@ The user approved the 3D-4 plan ("go"): a watch-only hero where a tap opens Expl
 - `UsageAccessRepository.isBlockedByRestrictedSettings()`: API 33+ reads our own app op **`android:access_restricted_settings`** with `AppOpsManager.unsafeCheckOpRawNoThrow` (MODE_ERRORED/IGNORED = blocked; unknown op / exception = not blocked). UsageAccessViewModel exposes `restricted` (only while access is off).
 - UsageAccessScreen: when restricted, a **🔐 "One extra step on this phone"** card replaces the normal steps (1. Open app info, 2. find "Allow restricted settings" in ⋮ or under Permissions, 3. come back → Open settings); the main button = **Open app info** (`openAppDetailsSettings`), secondary = Open settings. Not detected → a "It says 'Restricted setting'?" link reveals the same card.
 - Tests: +2 JVM (228), +2 UI tests. To verify on the emulator: `adb shell appops set <pkg> ACCESS_RESTRICTED_SETTINGS deny|allow`.
+
+## 2026-10-11: Fix 3/4, deep space and the Galactic Centre ✅
+
+- The user saw problems at the 18th stop. **Cause:** the star sphere was 500 across and SceneView's default camera far plane is 1000, while the Galactic Centre sits ~420 from the Sun; focusing it put the camera at or past the edge of the drawn world (black sky) and inside the stop's glow.
+- `SolarSystemLayout`: `STARFIELD_RADIUS` 500 → 3000, camera `CAMERA_NEAR` 0.02 / `CAMERA_FAR` 10 000 (set on both the Explore and hero camera nodes).
+- `OrbitCameraState.focusOnExtent(extent, viewFrom)`: deep-space stops are framed from outside their glow (min 1.25×, settle 3.6×, max 8× the extent), so pinch-zoom can't enter them. `JourneyMap.visualExtent`: stars = 5.5 marker radii (halo + dark sky), galaxy = 3.8.
+- **New galaxy look:** a cloud of soft additive glow dots (`SpaceGeometry.glowCloud`: many small spheres merged into ONE mesh = one draw call) laid out by the pure, tested `JourneyMap.galaxyParticles` (fixed seed: 2 spiral arms × 520 blue-violet dots + 140 warm bulge dots), nearly flat, slowly spinning, viewed from an angle. Earlier tries (concentric rings, solid triangle-band arms) looked like a bullseye/Saturn and were dropped.
+- Star halos softened (alpha 0.55, power 7); the next/reached rims around the galaxy hug its core instead of drawing a planet-sized circle.
+- New debug shortcut: `--es debug_focus <DESTINATION>` (debug build only) opens Explore focused on that stop.
+- Verified on the realme: Galactic Centre (next and reached), Vega, Sirius, Proxima, Kuiper Belt. 231 JVM tests ✅.

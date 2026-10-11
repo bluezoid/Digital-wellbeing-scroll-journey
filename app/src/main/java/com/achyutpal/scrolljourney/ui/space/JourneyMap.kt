@@ -67,6 +67,53 @@ object JourneyMap {
         bodyFor(destination)?.radius ?: deepSpace.first { it.destination == destination }.radius
 
     /**
+     * How much room a deep-space stop needs around it in view: its glow plus some dark sky
+     * (the camera stays outside this and frames all of it).
+     */
+    fun visualExtent(destination: Destination): Float {
+        val marker = deepSpace.first { it.destination == destination }
+        return if (destination == Destination.GALACTIC_CENTRE) marker.radius * GALAXY_EXTENT_RADII else marker.radius * STAR_FRAME_RADII
+    }
+
+    /** Star glow halo radius, in marker radii. */
+    const val HALO_RADII = 3.5f
+
+    /** Room framed around a star, in marker radii: the halo plus dark sky around it. */
+    const val STAR_FRAME_RADII = 5.5f
+
+    /** Galaxy size for framing, in marker radii (arms reach ~2.8; extra room so it fits a portrait screen). */
+    const val GALAXY_EXTENT_RADII = 3.8f
+
+    /**
+     * The galaxy's stars, around its centre in its own flat (XZ) plane, for a galaxy of marker
+     * radius [r]: two spiral arms of scattered dots plus a round central bulge. Each entry is a
+     * dot's centre and size. Fixed seed, so the galaxy looks the same every time.
+     */
+    fun galaxyParticles(r: Float): Pair<List<Pair<SpacePoint, Float>>, List<Pair<SpacePoint, Float>>> {
+        val random = kotlin.random.Random(GALAXY_SEED)
+        fun spread() = (random.nextFloat() + random.nextFloat() + random.nextFloat() - 1.5f) / 1.5f // −1..1, mostly near 0
+        val arms = listOf(0f, Math.PI.toFloat()).flatMap { phase ->
+            List(GALAXY_ARM_DOTS) {
+                val t = random.nextFloat()
+                val radius = r * (0.3f + 2.2f * t)
+                val angle = phase + 2f * Math.PI.toFloat() * 1.25f * t + spread() * 0.25f
+                val out = radius + spread() * r * (0.12f + 0.25f * t)
+                SpacePoint(out * cos(angle), spread() * r * 0.06f, out * sin(angle)) to r * (0.025f + 0.035f * random.nextFloat()) * (1.2f - 0.5f * t)
+            }
+        }
+        val bulge = List(GALAXY_BULGE_DOTS) {
+            val angle = random.nextFloat() * 2f * Math.PI.toFloat()
+            val radius = r * 0.55f * random.nextFloat() * random.nextFloat()
+            SpacePoint(radius * cos(angle), spread() * r * 0.12f, radius * sin(angle)) to r * (0.05f + 0.06f * random.nextFloat())
+        }
+        return arms to bulge
+    }
+
+    private const val GALAXY_SEED = 18
+    const val GALAXY_ARM_DOTS = 520
+    const val GALAXY_BULGE_DOTS = 140
+
+    /**
      * The current leg as a smooth flight arc: a quadratic Bézier from just off the last reached
      * stop to just off the next one, lifted above the orbit plane by [ARC_LIFT] × its length.
      * Ends are pushed past the bodies' surfaces (plus a gap; short planet→moon legs shrink the

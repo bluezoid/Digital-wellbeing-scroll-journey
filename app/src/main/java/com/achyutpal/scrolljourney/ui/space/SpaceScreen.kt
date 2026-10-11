@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,7 +96,11 @@ fun SpaceScreen(
     val clock = remember { SceneClock() }
     val camera = remember { OrbitCameraState() }
     var focus by remember { mutableStateOf<SpaceFocus>(SpaceFocus.Overview) }
-    val cameraNode = rememberCameraNode(engine) { transform = FocusOrbitManipulator.cameraTransform(camera) }
+    val cameraNode = rememberCameraNode(engine) {
+        near = SpaceBody.CAMERA_NEAR
+        far = SpaceBody.CAMERA_FAR
+        transform = FocusOrbitManipulator.cameraTransform(camera)
+    }
     val cameraManipulator = rememberCameraManipulator(creator = { FocusOrbitManipulator(camera) })
 
     fun focusOn(target: SpaceFocus) {
@@ -108,7 +113,11 @@ fun SpaceScreen(
             } else {
                 camera.focus(radius = target.body.radius, overview = false)
             }
-            is SpaceFocus.Marker -> camera.focus(radius = JourneyMap.radius(target.destination), overview = false)
+            is SpaceFocus.Marker -> camera.focusOnExtent(
+                JourneyMap.visualExtent(target.destination),
+                // The galaxy is a disc: look at it from above at an angle, not face-on or edge-on.
+                viewFrom = if (target.destination == Destination.GALACTIC_CENTRE) SpacePoint(0.7f, 0.45f, 0.55f) else null,
+            )
             SpaceFocus.Rocket -> camera.focus(
                 radius = ROCKET_FOCUS_RADIUS,
                 overview = false,
@@ -123,6 +132,14 @@ fun SpaceScreen(
         is SpaceFocus.Body -> f.body.positionAt(t)
         is SpaceFocus.Marker -> JourneyMap.anchor(f.destination, t)
         SpaceFocus.Rocket -> JourneyMap.rocketPosition(rocket, t)
+    }
+
+    // Debug builds only: jump straight to a stop (see SpaceViewModel.debugFocusOverride).
+    LaunchedEffect(Unit) {
+        SpaceViewModel.debugFocusOverride?.let { name ->
+            val destination = Destination.entries.firstOrNull { it.name == name } ?: return@let
+            focusOn(JourneyMap.bodyFor(destination)?.let(SpaceFocus::Body) ?: SpaceFocus.Marker(destination))
+        }
     }
 
     var viewSize by remember { mutableStateOf(IntSize.Zero) }

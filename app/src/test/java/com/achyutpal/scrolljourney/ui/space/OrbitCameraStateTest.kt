@@ -98,4 +98,15 @@ class OrbitCameraStateTest {
         c.focus(radius = 0.12f, overview = false, minFocusDistance = 0.72f)
         assertEquals(0.72f, c.desiredDistance, 1e-4f)
     }
+
+    @Test
+    fun `deep-space stops are viewed from outside their glow and can't be pinched inside`() {
+        val c = OrbitCameraState()
+        val extent = JourneyMap.visualExtent(com.achyutpal.scrolljourney.domain.model.Destination.GALACTIC_CENTRE)
+        c.focusOnExtent(extent)
+        assertTrue(c.desiredDistance > extent * 2f)
+        assertTrue(c.minDistance > extent) // pinch-zoom stops before entering the glow
+        assertTrue(c.maxDistance >= OrbitCameraState.MAX_DISTANCE)
+    }
 }
+

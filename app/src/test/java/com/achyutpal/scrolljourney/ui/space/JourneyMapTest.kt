@@ -142,4 +142,29 @@ class JourneyMapTest {
         assertTrue(JourneyMap.clearance(rocket, t, p) > 0f)
         assertEquals(0f, JourneyMap.clearance(rocket, t, JourneyMap.anchor(Destination.EARTH, t)), 0f)
     }
+
+    @Test
+    fun `the camera around the furthest stop stays well inside the star sphere and draw range`() {
+        JourneyMap.deepSpace.forEach { m ->
+            val farthestEye = m.position.distanceTo(SpacePoint.ORIGIN) +
+                JourneyMap.visualExtent(m.destination) * OrbitCameraState.EXTENT_MAX_RADII
+            assertTrue("${m.destination} camera would leave the stars", farthestEye < SpaceBody.STARFIELD_RADIUS)
+            assertTrue(SpaceBody.STARFIELD_RADIUS * 2 < SpaceBody.CAMERA_FAR) // the whole sky is drawn from anywhere inside
+        }
+    }
+
+    @Test
+    fun `the galaxy's stars are the same every time and fit inside its framed size`() {
+        val r = JourneyMap.radius(Destination.GALACTIC_CENTRE)
+        val (arms, bulge) = JourneyMap.galaxyParticles(r)
+        assertEquals(arms, JourneyMap.galaxyParticles(r).first) // fixed seed: no reshuffle between launches
+        assertEquals(JourneyMap.GALAXY_ARM_DOTS * 2, arms.size)
+        assertEquals(JourneyMap.GALAXY_BULGE_DOTS, bulge.size)
+        val extent = JourneyMap.visualExtent(Destination.GALACTIC_CENTRE)
+        (arms + bulge).forEach { (p, size) ->
+            assertTrue(p.distanceTo(SpacePoint.ORIGIN) + size < extent)
+            assertTrue(kotlin.math.abs(p.y) < r * 0.3f) // a flat disc, not a ball
+        }
+    }
 }
+

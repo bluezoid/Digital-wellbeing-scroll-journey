@@ -141,7 +141,10 @@ private fun HeroScene(
     }
 
     val clock = remember { SceneClock() }
-    val cameraNode = rememberCameraNode(engine)
+    val cameraNode = rememberCameraNode(engine) {
+        near = SpaceBody.CAMERA_NEAR
+        far = SpaceBody.CAMERA_FAR
+    }
     var size by remember { mutableStateOf(IntSize.Zero) }
     var yaw by remember { mutableFloatStateOf(HeroCamera.START_YAW_DEGREES) }
 

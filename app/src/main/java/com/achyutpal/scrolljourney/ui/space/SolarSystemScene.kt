@@ -106,19 +106,49 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
             GeometryNode(engine, SpaceGeometry.orbitCircle(engine, JourneyMap.OORT_CLOUD_RADIUS, 260), beltMaterial).decorative()
     }
 
-    /** Deep-space stops: glowing spheres (no texture) at fixed spots, each with a soft light halo. */
+    /**
+     * Deep-space stops: glowing spheres (no texture) at fixed spots, each with a soft light halo.
+     * The Galactic Centre is a small bright core inside a glow, with a tilted spiral-like disc.
+     */
     val markers: Map<Destination, SphereNode> = JourneyMap.deepSpace.associate { m ->
         val (r, g, b) = m.color
-        m.destination to SphereNode(engine, radius = m.radius, materialInstance = flatColor(materialLoader, r, g, b, 1f)).apply {
+        val galaxy = m.destination == Destination.GALACTIC_CENTRE
+        val coreRadius = if (galaxy) m.radius * GALAXY_CORE_RADII else m.radius
+        val core = if (galaxy) flatColor(materialLoader, 1f, 0.93f, 1f, 1f) else flatColor(materialLoader, r, g, b, 1f)
+        m.destination to SphereNode(engine, radius = coreRadius, materialInstance = core).apply {
             position = Position(m.position.x, m.position.y, m.position.z)
         }
     }
     private val markerHalos: List<Node> = JourneyMap.deepSpace.map { m ->
         val (r, g, b) = m.color
-        SphereNode(engine, radius = m.radius * 3.5f, materialInstance = softGlow(materialLoader, r, g, b, 0.9f, power = 4f, rim = false)).apply {
+        val galaxy = m.destination == Destination.GALACTIC_CENTRE
+        val radius = m.radius * if (galaxy) GALAXY_GLOW_RADII else JourneyMap.HALO_RADII
+        val glow = if (galaxy) softGlow(materialLoader, 1f, 0.8f, 0.85f, 0.6f, power = 3f, rim = false)
+        else softGlow(materialLoader, r, g, b, 0.55f, power = 7f, rim = false) // fades fast: a soft corona, not a blob
+        SphereNode(engine, radius = radius, materialInstance = glow).apply {
             position = Position(m.position.x, m.position.y, m.position.z)
         }.decorative()
     }
+
+    /**
+     * The galaxy: a slightly tilted, slowly turning cloud of soft glowing dots, two blue-violet
+     * spiral arms and a warm central bulge.
+     */
+    private val galaxyDisc: Node = run {
+        val m = JourneyMap.deepSpace.first { it.destination == Destination.GALACTIC_CENTRE }
+        val r = m.radius
+        val tilt = Node(engine).decorative().apply {
+            position = Position(m.position.x, m.position.y, m.position.z)
+            rotation = Rotation(z = GALAXY_TILT_DEGREES) // nearly flat; the camera views it from above at an angle
+        }
+        val spin = Node(engine).decorative()
+        val (arms, bulge) = JourneyMap.galaxyParticles(r)
+        spin.addChildNode(GeometryNode(engine, SpaceGeometry.glowCloud(engine, arms), softGlow(materialLoader, 0.6f, 0.65f, 1f, 0.5f, power = 2f, rim = false)).decorative())
+        spin.addChildNode(GeometryNode(engine, SpaceGeometry.glowCloud(engine, bulge), softGlow(materialLoader, 1f, 0.85f, 0.7f, 0.3f, power = 2f, rim = false)).decorative())
+        tilt.addChildNode(spin)
+        tilt
+    }
+    private val galaxySpin: Node get() = galaxyDisc.childNodes.first()
 
     private val sunlight = LightNode(engine, LightManager.Type.POINT) {
         color(1f, 0.96f, 0.9f)
@@ -135,7 +165,7 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
     private val reachedRings: Map<Destination, Node> = Destination.entries.associateWith { d ->
         SphereNode(
             engine = engine,
-            radius = JourneyMap.radius(d) * 1.06f,
+            radius = JourneyMap.radius(d) * if (d == Destination.GALACTIC_CENTRE) GALAXY_CORE_RADII * 1.6f else 1.06f,
             materialInstance = softGlow(materialLoader, 0.35f, 1f, 0.6f, 0.22f, power = 12f, rim = true),
         ).decorative()
     }
@@ -166,7 +196,7 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
         return GeometryNode(engine, geometry, material).decorative()
     }
 
-    val all: List<Node> = listOf(stars, sunlight) + orbits + bodies.values + saturnRing + markers.values + markerHalos +
+    val all: List<Node> = listOf(stars, sunlight) + orbits + bodies.values + saturnRing + markers.values + markerHalos + galaxyDisc +
         reachedRings.values + nextGlow + arcTravelled + arcAhead + rocket.nodes
 
     private val bodyByNode: Map<Node, SpaceBody> = bodies.entries.associate { (body, node) -> node to body } +
@@ -179,6 +209,7 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
     }
 
     fun update(seconds: Float, journey: RocketState, cameraEye: SpacePoint) {
+        galaxySpin.rotation = Rotation(y = seconds * GALAXY_SPIN_DEGREES_PER_SECOND)
         bodies.forEach { (body, node) ->
             val p = body.positionAt(seconds)
             node.position = Position(p.x, p.y, p.z)
@@ -216,7 +247,8 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
         nextGlow.isVisible = next != null
         if (next != null) {
             val pulse = 1f + 0.03f * sin(seconds * 3f)
-            val s = JourneyMap.radius(next) * 1.08f * pulse
+            val core = if (next == Destination.GALACTIC_CENTRE) GALAXY_CORE_RADII * 1.6f else 1.08f
+            val s = JourneyMap.radius(next) * core * pulse
             nextGlow.position = JourneyMap.anchor(next, seconds).toPosition()
             nextGlow.scale = Scale(s, s, s)
         }
@@ -244,6 +276,11 @@ class SolarSystemScene(engine: Engine, materialLoader: MaterialLoader, modelLoad
     private fun SpacePoint.toPosition() = Position(x, y, z)
 
     private companion object {
+        const val GALAXY_CORE_RADII = 0.1f
+        const val GALAXY_GLOW_RADII = 0.7f
+        const val GALAXY_TILT_DEGREES = 8f
+        const val GALAXY_SPIN_DEGREES_PER_SECOND = 4f
+
         const val ARC_SEGMENTS = 40
         const val ARC_DASHES = 20
     }

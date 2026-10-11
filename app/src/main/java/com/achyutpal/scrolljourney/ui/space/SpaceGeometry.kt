@@ -51,4 +51,37 @@ object SpaceGeometry {
             .primitivesIndices(listOf(indices))
             .build(engine)
     }
+
+    /**
+     * Many small spheres merged into one mesh (one draw call): with the additive glow material each
+     * one is a soft dot, and together they read as a cloud of stars (the galaxy's arms and bulge).
+     * [particles] = centre + radius of each dot.
+     */
+    fun glowCloud(engine: Engine, particles: List<Pair<SpacePoint, Float>>, stacks: Int = 5, slices: Int = 8): Geometry {
+        val perParticle = (stacks + 1) * (slices + 1)
+        val vertices = particles.flatMap { (c, size) ->
+            (0..stacks).flatMap { i ->
+                val phi = PI.toFloat() * i / stacks
+                (0..slices).map { j ->
+                    val theta = 2 * PI.toFloat() * j / slices
+                    val n = Direction(sin(phi) * cos(theta), cos(phi), sin(phi) * sin(theta))
+                    Geometry.Vertex(position = Position(c.x + n.x * size, c.y + n.y * size, c.z + n.z * size), normal = n)
+                }
+            }
+        }
+        val indices = particles.indices.flatMap { p ->
+            val base = p * perParticle
+            (0 until stacks).flatMap { i ->
+                (0 until slices).flatMap { j ->
+                    val a = base + i * (slices + 1) + j
+                    val b = a + slices + 1
+                    listOf(a, a + 1, b, a + 1, b + 1, b)
+                }
+            }
+        }
+        return Geometry.Builder(PrimitiveType.TRIANGLES)
+            .vertices(vertices)
+            .primitivesIndices(listOf(indices))
+            .build(engine)
+    }
 }
